@@ -3,9 +3,23 @@
 #include "event.h"
 #include "point.h"
 
-#include "utility"
+#include <utility>
+#include <iostream>
 
-Window::Window(const char* name, const Dimension& dimension):
+int Window::_handeWindowEvent(void* data, SDL_Event* event) {
+    Window* sourceWindow = static_cast<Window*>(data);
+    if (event->type == SDL_WINDOWEVENT &&
+        event->window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
+        SDL_Window* win = SDL_GetWindowFromID(event->window.windowID);
+        if (win == sourceWindow->_window) {
+            sourceWindow->_updateSize();
+        }
+    }
+    sourceWindow->_handleEvent(event);
+    return 0;
+}
+
+Window::Window(std::string name, const Dimension& dimension):
     _name(name),
     _size(dimension),
     _renderLoop([]() {}),
@@ -48,8 +62,15 @@ std::string Window::getErrorMessage()
     return _errorMessage;
 }
 
-void Window::setRenderLoop(const std::function<void()> renderLoop)
+void Window::setName(string name) 
 {
+    _name = name;
+    if (_window == NULL)
+        return;
+    SDL_SetWindowTitle(_window, _name.c_str());
+}
+
+void Window::setRenderLoop(const std::function<void()> renderLoop) {
     _renderLoop = renderLoop;
 }
 
@@ -65,29 +86,48 @@ void Window::endLoop()
 
 Window& Window::_start()
 {
-    SDL_Event e;
     SDL_StartTextInput();
+    SDL_AddEventWatch(_handeWindowEvent, this);
 
     while (!_done) {
-        while (SDL_PollEvent(&e) != 0) {
-            Event event(new SDL_Event(e));
-            _eventLoop(event);
-        }
-
+        SDL_PumpEvents();
         _renderLoop();
-
         SDL_GL_SwapWindow(_window);
     }
 
+    SDL_DelEventWatch(_handeWindowEvent, this);
     //Disable text input
     SDL_StopTextInput();
 
     return *this;
 }
 
+Window& Window::_handleEvent(SDL_Event* e)
+{
+     Event event(e);
+    _eventLoop(event);
+
+    return *this;
+}
+
 void Window::run() {
-    _init();
+    if (_init().isError())
+        return;
     _start();
+}
+
+const Dimension Window::getDimensions()
+{
+    return Dimension(_size.width(), _size.height());
+}
+
+Window& Window::_updateSize()
+{
+    int width, height;
+    SDL_GL_GetDrawableSize(_window, &width, &height);
+    _size = Point(width, height);
+    glViewport(0, 0, width, height);
+    return *this;
 }
 
 Window& Window::_setError(const ErrorType& errorType, const std::string& message)
@@ -109,12 +149,16 @@ Window& Window::_initSdl() {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
     _window = SDL_CreateWindow(
-        _name,
+        _name.c_str(),
         SDL_WINDOWPOS_UNDEFINED,
         SDL_WINDOWPOS_UNDEFINED,
         _size.width(),
         _size.height(),
-        SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI
+        0 
+        | SDL_WINDOW_OPENGL 
+        | SDL_WINDOW_RESIZABLE 
+        | SDL_WINDOW_SHOWN 
+        | SDL_WINDOW_ALLOW_HIGHDPI
     );
     if (_window == NULL) {
         return _setError(ErrorType::ERR_SDL_CREATE_WINDOW, SDL_GetError());

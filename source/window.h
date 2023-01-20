@@ -17,40 +17,47 @@
 
 class Event;
 
+using namespace std;
+
 class Window {
 public:
-    Window(const char* name, const Dimension &dimension);
+    Window(string name, const Dimension &dimension);
 
-    
     void close();
 
     bool isError();
     ErrorType getErrorType();
     std::string getErrorMessage();
 
-
-    void setRenderLoop(std::function<void()> renderLoop);
-    void setEventLoop(std::function<void(Event&)> eventLoop);
+    void setName(string name);
+    void setRenderLoop(function<void()> renderLoop);
+    void setEventLoop(function<void(Event&)> eventLoop);
     
     void endLoop();
-
     void run();
-private:
-    const char                 *_name;
-    SDL_Window                 *_window = NULL;
-    std::string                 _errorMessage;
-    ErrorType                   _errorType = ErrorType::NONE;
-    Dimension                   _size;
-    SDL_GLContext               _glContext = NULL;
-    std::function<void()>       _renderLoop;
-    std::function<void(Event&)> _eventLoop;
-    bool                        _done = false;
 
-    Window& _setError(const ErrorType& errorType, const std::string &message);
+    const Dimension getDimensions();
+private:
+    string                 _name;
+    SDL_Window*            _window = NULL;
+    string                 _errorMessage;
+    ErrorType              _errorType = ErrorType::NONE;
+    Dimension              _size;
+    SDL_GLContext          _glContext = NULL;
+    function<void()>       _renderLoop;
+    function<void(Event&)> _eventLoop;
+    bool                   _done = false;
+
+    static unordered_map<Uint32, Window*> _instances;
+    static int _handeWindowEvent(void* data, SDL_Event* event);
+
+    Window& _updateSize();
+    Window& _setError(const ErrorType& errorType, const string &message);
     Window& _initSdl();
     Window& _initGl();
     Window& _init();
     Window& _start();
+    Window& _handleEvent(SDL_Event* e);
 };
 
 #endif
