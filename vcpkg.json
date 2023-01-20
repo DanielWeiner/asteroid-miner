@@ -2,7 +2,7 @@
   "dependencies": [],
   "features": {
     "system-libs": {
-      "description": "System libraries required to build ES.",
+      "description": "System libraries required to build Asteroid Miner.",
       "dependencies": [
         {
           "name": "glew",

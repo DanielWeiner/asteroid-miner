@@ -28,7 +28,7 @@
       },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
-        "ES_USE_SYSTEM_LIBRARIES": "OFF"
+        "AM_USE_SYSTEM_LIBRARIES": "OFF"
       },
       "condition": {
         "type": "equals",
@@ -48,7 +48,7 @@
       },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
-        "ES_USE_SYSTEM_LIBRARIES": "OFF",
+        "AM_USE_SYSTEM_LIBRARIES": "OFF",
         "BUILD_TESTING": "OFF"
       },
       "condition": {
@@ -78,7 +78,7 @@
       "inherits": "base",
       "cacheVariables": {
         "VCPKG_TARGET_TRIPLET": "x64-linux-dynamic",
-        "ES_GLES": "ON"
+        "AM_GLES": "ON"
       },
       "condition": {
         "type": "equals",
@@ -140,6 +140,42 @@
       }
     },
     {
+      "name": "mingw",
+      "displayName": "MinGW",
+      "description": "Builds with the MinGW compiler toolchain",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "x86_64-w64-mingw32-g++",
+        "CMAKE_RC_COMPILER": "windres",
+        "VCPKG_TARGET_TRIPLET": "x64-mingw-dynamic"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "mingw32",
+      "displayName": "MinGW x86",
+      "description": "Builds with the x86 MinGW compiler toolchain",
+      "inherits": "base",
+      "architecture": {
+        "value": "x86",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "i686-w64-mingw32-g++",
+        "CMAKE_RC_COMPILER": "windres",
+        "VCPKG_TARGET_TRIPLET": "x86-mingw-dynamic"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
       "name": "linux-ci",
       "displayName": "Linux CI",
       "description": "Builds for Linux for CI purposes",
@@ -155,7 +191,7 @@
       "inherits": "ci",
       "cacheVariables": {
         "VCPKG_TARGET_TRIPLET": "linux64-release",
-        "ES_GLES": "ON"
+        "AM_GLES": "ON"
       }
     },
     {
@@ -181,12 +217,34 @@
       }
     },
     {
+      "name": "mingw-ci",
+      "displayName": "MinGW CI",
+      "description": "Builds with MinGW for CI purposes",
+      "inherits": "ci",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "x86_64-w64-mingw32-g++",
+        "CMAKE_RC_COMPILER": "windres",
+        "VCPKG_TARGET_TRIPLET": "win64-release"
+      }
+    },
+    {
+      "name": "mingw32-ci",
+      "displayName": "MinGW x86 CI",
+      "description": "Builds with MinGW x86 for CI purposes",
+      "inherits": "ci",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "i686-w64-mingw32-g++",
+        "CMAKE_RC_COMPILER": "windres",
+        "VCPKG_TARGET_TRIPLET": "win32-release"
+      }
+    },
+    {
       "name": "macos-release",
       "displayName": "MacOS Release",
       "description": "Builds for MacOS like an official release",
       "inherits": "release",
       "cacheVariables": {
-        "ES_CREATE_BUNDLE": "ON",
+        "AM_CREATE_BUNDLE": "ON",
         "CMAKE_CXX_COMPILER_LAUNCHER": "sccache",
         "VCPKG_TARGET_TRIPLET": "macos64-release",
         "CMAKE_OSX_ARCHITECTURES": "x86_64",
@@ -203,7 +261,7 @@
         "strategy": "external"
       },
       "cacheVariables": {
-        "ES_CREATE_BUNDLE": "ON",
+        "AM_CREATE_BUNDLE": "ON",
         "CMAKE_CXX_COMPILER_LAUNCHER": "sccache",
         "VCPKG_TARGET_TRIPLET": "macos-arm64-release",
         "CMAKE_OSX_ARCHITECTURES": "arm64",
@@ -293,6 +351,30 @@
       "inherits": "release"
     },
     {
+      "name": "mingw-debug",
+      "displayName": "Debug",
+      "configurePreset": "mingw",
+      "inherits": "debug"
+    },
+    {
+      "name": "mingw-release",
+      "displayName": "Release",
+      "configurePreset": "mingw",
+      "inherits": "release"
+    },
+    {
+      "name": "mingw32-debug",
+      "displayName": "Debug",
+      "configurePreset": "mingw32",
+      "inherits": "debug"
+    },
+    {
+      "name": "mingw32-release",
+      "displayName": "Release",
+      "configurePreset": "mingw32",
+      "inherits": "release"
+    },
+    {
       "name": "linux-ci",
       "displayName": "Linux CI build",
       "configurePreset": "linux-ci",
@@ -314,6 +396,30 @@
       "name": "clang-cl-ci",
       "displayName": "VS CI build",
       "configurePreset": "clang-cl-ci",
+      "inherits": "ci"
+    },
+    {
+      "name": "mingw-ci",
+      "displayName": "MinGW CI build",
+      "configurePreset": "mingw-ci",
+      "inherits": "ci"
+    },
+    {
+      "name": "mingw32-ci",
+      "displayName": "MinGW x86 CI build",
+      "configurePreset": "mingw32-ci",
+      "inherits": "ci"
+    },
+    {
+      "name": "macos-ci-release",
+      "displayName": "MacOS release build",
+      "configurePreset": "macos-release",
+      "inherits": "ci"
+    },
+    {
+      "name": "macos-arm-ci-release",
+      "displayName": "MacOS ARM release build",
+      "configurePreset": "macos-arm-release",
       "inherits": "ci"
     }
   ],
@@ -533,6 +639,42 @@
       "inherits": "integration-debug"
     },
     {
+      "name": "mingw-test",
+      "displayName": "Tests",
+      "configurePreset": "mingw",
+      "inherits": "test"
+    },
+    {
+      "name": "mingw-benchmark",
+      "displayName": "Benchmarks",
+      "configurePreset": "mingw",
+      "inherits": "benchmark"
+    },
+    {
+      "name": "mingw-integration-debug",
+      "displayName": "Integration Tests (Debug)",
+      "configurePreset": "mingw",
+      "inherits": "integration-debug"
+    },
+    {
+      "name": "mingw32-test",
+      "displayName": "Tests",
+      "configurePreset": "mingw32",
+      "inherits": "test"
+    },
+    {
+      "name": "mingw32-benchmark",
+      "displayName": "Benchmarks",
+      "configurePreset": "mingw32",
+      "inherits": "benchmark"
+    },
+    {
+      "name": "mingw32-integration-debug",
+      "displayName": "Integration Tests (Debug)",
+      "configurePreset": "mingw32",
+      "inherits": "integration-debug"
+    },
+    {
       "name": "linux-ci",
       "displayName": "Linux CI Tests",
       "configurePreset": "linux-ci",
@@ -578,6 +720,18 @@
       "name": "clang-cl-ci-benchmark",
       "displayName": "VS CI Benchmarks",
       "configurePreset": "clang-cl-ci",
+      "inherits": "ci-benchmark"
+    },
+    {
+      "name": "mingw-ci",
+      "displayName": "Mingw CI Tests",
+      "configurePreset": "mingw-ci",
+      "inherits": "ci"
+    },
+    {
+      "name": "mingw-ci-benchmark",
+      "displayName": "Mingw CI Benchmarks",
+      "configurePreset": "mingw-ci",
       "inherits": "ci-benchmark"
     }
   ]
