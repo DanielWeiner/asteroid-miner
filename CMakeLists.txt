@@ -57,7 +57,8 @@ project("Asteroid Miner" VERSION 0.0.0
 # Find the needed library dependencies.
 find_package(SDL2 CONFIG REQUIRED)
 find_package(PNG REQUIRED)
-find_package(JPEG REQUIRED)
+find_package(glm REQUIRED)
+
 if(NOT APPLE)
 	find_package(GLEW REQUIRED)
 endif()

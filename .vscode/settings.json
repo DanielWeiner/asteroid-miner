@@ -80,7 +80,15 @@
         "xtr1common": "cpp",
         "xtree": "cpp",
         "xutility": "cpp",
-        "*.rh": "cpp"
+        "*.rh": "cpp",
+        "*.vert": "glsl",
+        "set": "cpp",
+        "hash_map": "cpp",
+        "hash_set": "cpp",
+        "random": "cpp",
+        "unordered_set": "cpp",
+        "usage": "cpp"
     },
-    "editor.detectIndentation": false
+    "editor.detectIndentation": false,
+    "C_Cpp.default.cppStandard": "c++20"
 }

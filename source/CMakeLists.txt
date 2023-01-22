@@ -12,7 +12,7 @@ else()
 endif()
 
 # Link with the general libraries.
-target_link_libraries(AsteroidMinerLib PUBLIC SDL2::SDL2 PNG::PNG JPEG::JPEG OpenAL::OpenAL
+target_link_libraries(AsteroidMinerLib PUBLIC PNG::PNG SDL2::SDL2 OpenAL::OpenAL glm::glm
 	"$<IF:$<CONFIG:Debug>,${LIBMAD_LIB_DEBUG},${LIBMAD_LIB_RELEASE}>")
 
 # Link the needed OS-specific dependencies, if any.
@@ -47,8 +47,13 @@ target_sources(AsteroidMinerLib PRIVATE
     eventHandler.cpp
     eventHandler.h
 	globalIncludes.h
-	point.cpp
-	point.h
+    shaderProgram.cpp
+    shaderProgram.h
+    sprite.h
+    spriteRenderer.cpp
+    spriteRenderer.h
+    stb_image.h
+    texture.h
 	window.cpp
 	window.h
 )

@@ -4,12 +4,12 @@
     "system-libs": {
       "description": "System libraries required to build Asteroid Miner.",
       "dependencies": [
+        "glm",
         {
           "name": "glew",
           "platform": "!osx"
         },
         "libpng",
-        "libjpeg-turbo",
         "libmad",
         {
           "name": "libuuid",

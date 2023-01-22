@@ -1,7 +1,6 @@
 #include "window.h"
 
 #include "event.h"
-#include "point.h"
 
 #include <utility>
 #include <iostream>
@@ -19,11 +18,17 @@ int Window::_handeWindowEvent(void* data, SDL_Event* event) {
     return 0;
 }
 
-Window::Window(std::string name, const Dimension& dimension):
+void Window::_handleError(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *userParam)
+{
+    std::cout << message << std::endl;
+}
+
+Window::Window(std::string name, ivec2 dimension):
     _name(name),
     _size(dimension),
     _renderLoop([]() {}),
-    _eventLoop([](Event&) {})
+    _eventLoop([](Event&) {}),
+    _onInit([](){})
 {
 }
 
@@ -37,14 +42,11 @@ Window& Window::_init() {
 
 void Window::close()
 {
-    if (_window != NULL) {
-        //Destroy window	
+    if (_window != NULL) {	
         SDL_DestroyWindow(_window);
         _window = NULL;
     }
-    //Quit SDL subsystems
     SDL_Quit();
-
 }
 
 bool Window::isError()
@@ -79,6 +81,11 @@ void Window::setEventLoop(const std::function<void(Event&)> eventLoop)
     _eventLoop = eventLoop;
 }
 
+void Window::onInit(std::function<void()> initCallback) 
+{
+    _onInit = initCallback;
+}
+
 void Window::endLoop()
 {
     _done = true;
@@ -88,7 +95,9 @@ Window& Window::_start()
 {
     SDL_StartTextInput();
     SDL_AddEventWatch(_handeWindowEvent, this);
+    glDebugMessageCallback(_handleError, this);
 
+    _onInit();
     while (!_done) {
         SDL_PumpEvents();
         _renderLoop();
@@ -116,16 +125,16 @@ void Window::run() {
     _start();
 }
 
-const Dimension Window::getDimensions()
+const ivec2 Window::getDimensions()
 {
-    return Dimension(_size.width(), _size.height());
+    return ivec2(_size);
 }
 
 Window& Window::_updateSize()
 {
     int width, height;
     SDL_GL_GetDrawableSize(_window, &width, &height);
-    _size = Point(width, height);
+    _size = ivec2(width, height);
     glViewport(0, 0, width, height);
     return *this;
 }
@@ -152,8 +161,8 @@ Window& Window::_initSdl() {
         _name.c_str(),
         SDL_WINDOWPOS_UNDEFINED,
         SDL_WINDOWPOS_UNDEFINED,
-        _size.width(),
-        _size.height(),
+        _size.x,
+        _size.y,
         0 
         | SDL_WINDOW_OPENGL 
         | SDL_WINDOW_RESIZABLE 
@@ -179,6 +188,8 @@ Window& Window::_initSdl() {
     if (SDL_GL_SetSwapInterval(1) < 0) {
         printf("Warning: Unable to set VSync! SDL Error: %s\n", SDL_GetError());
     }
+
+    _updateSize();
 
     return *this;
 }
