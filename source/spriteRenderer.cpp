@@ -1,5 +1,6 @@
 #include "spriteRenderer.h"
 
+#include "spriteSheet.h"
 #include <memory>
 #include <iostream>
 #include <string>
@@ -48,21 +49,32 @@ SpriteRenderer::SpriteRenderer(const ShaderProgram& shaderProgram)
 {}
 void SpriteRenderer::init() 
 {
-    static const float vertices[] = {
+    SpriteSheet spriteSheet("data/sprites/sprites.json");
+    spriteSheet.load();
+    auto boundingBox = spriteSheet.getSpriteBoundingBox("playerShip1_blue.png");
+    //auto boundingBox = spriteSheet.getSpriteBoundingBox("playerShip1_red.png");
+    auto x = boundingBox.x;
+    auto y = boundingBox.y;
+    auto width = boundingBox.width;
+    auto height = boundingBox.height;
+
+    const float vertices[] = {
          // positions         // colors           // texture coords
-         0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
-         0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
-        -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
-        -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left 
+         0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   x + width, y,   // top right
+         0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   x + width, y - height,   // bottom right
+        -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   x, y - height,   // bottom left
+        -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   x, y    // top left 
     };
 
-    static const unsigned int indices[] = {  // note that we start from 0!
+    const unsigned int indices[] = {  // note that we start from 0!
         0, 1, 3,  // first Triangle
         1, 2, 3   // second Triangle
     };
     
+    
+
     _shaderProgram.loadTexture(
-        "C:\\Users\\danie\\asteroid-miner\\assets\\playerShip1_blue.png",
+        "data/sprites/sprites.png",
         "ourTexture"
     );
     _shaderProgram.addFragmentShader(fragmentShaderSource);
@@ -83,7 +95,6 @@ void SpriteRenderer::init()
 void SpriteRenderer::draw() 
 {
     _shaderProgram.use();
-    _shaderProgram.clearScreen(0.2f, 0.3f, 0.3f, 1.0f);
     _shaderProgram.bindVao();
     _shaderProgram.drawElements();
 }

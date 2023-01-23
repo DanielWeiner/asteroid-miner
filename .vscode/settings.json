@@ -87,8 +87,14 @@
         "hash_set": "cpp",
         "random": "cpp",
         "unordered_set": "cpp",
-        "usage": "cpp"
+        "usage": "cpp",
+        "any": "cpp",
+        "codecvt": "cpp",
+        "filesystem": "cpp",
+        "ranges": "cpp",
+        "valarray": "cpp"
     },
     "editor.detectIndentation": false,
-    "C_Cpp.default.cppStandard": "c++20"
+    "C_Cpp.default.cppStandard": "c++20",
+    "C_Cpp.default.configurationProvider": "ms-vscode.makefile-tools"
 }

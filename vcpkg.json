@@ -9,6 +9,7 @@
           "name": "glew",
           "platform": "!osx"
         },
+        "nlohmann-json",
         "libpng",
         "libmad",
         {

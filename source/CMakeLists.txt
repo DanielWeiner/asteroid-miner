@@ -11,7 +11,7 @@ else()
 		"-Wall" "-pedantic-errors" "-Wold-style-cast" "-fno-rtti" "$<$<CONFIG:Release>:-Werror>")
 endif()
 
-# Link with the general libraries.
+# Link with the general libraries.SS
 target_link_libraries(AsteroidMinerLib PUBLIC PNG::PNG SDL2::SDL2 OpenAL::OpenAL glm::glm
 	"$<IF:$<CONFIG:Debug>,${LIBMAD_LIB_DEBUG},${LIBMAD_LIB_RELEASE}>")
 
@@ -37,7 +37,7 @@ if(UNIX)
 		target_link_libraries(AsteroidMinerLib PUBLIC unofficial::UUID::uuid)
 	endif()
 endif()
-
+target_link_libraries(AsteroidMinerLib PRIVATE nlohmann_json::nlohmann_json)
 # Every source file (and header file) should be listed here, except main.cpp.
 # If you add a new file, add it to this list.
 target_sources(AsteroidMinerLib PRIVATE
@@ -52,6 +52,8 @@ target_sources(AsteroidMinerLib PRIVATE
     sprite.h
     spriteRenderer.cpp
     spriteRenderer.h
+    spriteSheet.cpp
+    spriteSheet.h
     stb_image.h
     texture.h
 	window.cpp

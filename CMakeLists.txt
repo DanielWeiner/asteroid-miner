@@ -58,6 +58,7 @@ project("Asteroid Miner" VERSION 0.0.0
 find_package(SDL2 CONFIG REQUIRED)
 find_package(PNG REQUIRED)
 find_package(glm REQUIRED)
+find_package(nlohmann_json CONFIG REQUIRED)
 
 if(NOT APPLE)
 	find_package(GLEW REQUIRED)
@@ -234,3 +235,7 @@ elseif(UNIX)
 	install(FILES copyright DESTINATION share/doc/asteroid-miner)
 	install(FILES changelog DESTINATION share/doc/asteroid-miner)
 endif()
+
+
+file(COPY data DESTINATION ${CMAKE_BINARY_DIR}/Debug)
+file(COPY data DESTINATION ${CMAKE_BINARY_DIR}/Release)

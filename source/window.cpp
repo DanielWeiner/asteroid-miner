@@ -7,14 +7,22 @@
 
 int Window::_handeWindowEvent(void* data, SDL_Event* event) {
     Window* sourceWindow = static_cast<Window*>(data);
+    bool rerender = false;
     if (event->type == SDL_WINDOWEVENT &&
         event->window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
         SDL_Window* win = SDL_GetWindowFromID(event->window.windowID);
         if (win == sourceWindow->_window) {
             sourceWindow->_updateSize();
+            rerender = true;
         }
     }
     sourceWindow->_handleEvent(event);
+    
+    if (rerender) {
+        sourceWindow->_renderLoop();
+        SDL_GL_SwapWindow(sourceWindow->_window);
+    }
+    
     return 0;
 }
 

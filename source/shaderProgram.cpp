@@ -74,8 +74,8 @@ void ShaderProgram::linkShaders()
         std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
     }
 
-    for (auto it = _shaders.begin(); it < _shaders.end(); it++) {
-        glDeleteShader(*it);
+    for (auto shader : _shaders) {
+        glDeleteShader(shader);
     }
     _shaders.clear();
 }
@@ -120,22 +120,22 @@ void ShaderProgram::drawElements()
 
 void ShaderProgram::bindAttributes() {
     GLsizei stride = 0;
-    for (auto it = _attributes.begin(); it < _attributes.end(); it++) {
-        stride += it->dimensions * it->size;
+    for (auto attribute : _attributes) {
+        stride += attribute.dimensions * attribute.size;
     }
 
     long long offset = 0;
-    for (auto it = _attributes.begin(); it < _attributes.end(); it++) {
+    for (auto attribute : _attributes) {
         glVertexAttribPointer(
-            it->position,
-            it->dimensions,
-            it->type,
+            attribute.position,
+            attribute.dimensions,
+            attribute.type,
             GL_FALSE,
             stride,
             (void*)offset
         );
-        offset += it->dimensions * it->size;
-        glEnableVertexAttribArray(it->position);
+        offset += attribute.dimensions * attribute.size;
+        glEnableVertexAttribArray(attribute.position);
     }
     
     _attributes.clear();
@@ -165,16 +165,16 @@ void ShaderProgram::unbindVao()
 void ShaderProgram::initTextures() 
 {
     int i = 0;
-    for (auto it = _textures.begin(); it < _textures.end(); it++) {
+    for (auto texture : _textures) {
         glActiveTexture(GL_TEXTURE0 + i++);
-        glBindTexture(GL_TEXTURE_2D, *it);
+        glBindTexture(GL_TEXTURE_2D, texture);
     }
 }
 void ShaderProgram::bindTextures() 
 {
     int i = 0;
-    for (auto it = _textures.begin(); it < _textures.end(); it++) {
-        glUniform1i(glGetUniformLocation(_programId, _textureNames[i]), i);
+    for (auto texture : _textures) {
+        glUniform1i(glGetUniformLocation(_programId, _textureNames[i]), texture);
         i++;
     }
 }

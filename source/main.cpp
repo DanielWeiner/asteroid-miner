@@ -23,12 +23,13 @@ int main(int argc, char *argv[])  {
         }
 	});
     
-    
+
     window.onInit([&spriteRenderer]() {
         spriteRenderer.init();
     });
-    
-    window.setRenderLoop([&spriteRenderer]() {
+
+    window.setRenderLoop([&spriteRenderer, &program]() {
+        program.clearScreen();
         spriteRenderer.draw();
     });
 	window.run();

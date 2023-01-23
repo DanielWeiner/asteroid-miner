@@ -41,7 +41,7 @@ public:
 
     void init();
 
-    void clearScreen(float r, float g, float b, float a);
+    void clearScreen(float r = 0., float g = 0., float b = 0., float a = 0.);
     ~ShaderProgram();
 private:
     template<typename>
