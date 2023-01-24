@@ -39,16 +39,16 @@ public:
 
     const ivec2 getDimensions();
 private:
-    string                 _name;
-    SDL_Window*            _window = NULL;
-    string                 _errorMessage;
-    ErrorType              _errorType = ErrorType::NONE;
-    ivec2                  _size;
-    SDL_GLContext          _glContext = NULL;
-    function<void()>       _renderLoop;
-    function<void(Event&)> _eventLoop;
-    function<void()>       _onInit;
-    bool                   _done = false;
+    string                      _name;
+    SDL_Window*                 _window = NULL;
+    string                      _errorMessage;
+    ErrorType                   _errorType = ErrorType::NONE;
+    ivec2                       _size;
+    SDL_GLContext               _glContext = NULL;
+    std::function<void()>       _renderLoop;
+    std::function<void(Event&)> _eventLoop;
+    std::function<void()>       _onInit;
+    bool                        _done = false;
 
     static unordered_map<Uint32, Window*> _instances;
     static int _handeWindowEvent(void* data, SDL_Event* event);

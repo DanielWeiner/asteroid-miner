@@ -12,7 +12,7 @@ int main(int argc, char *argv[])  {
 
 	Window window = Window("Asteroid Miner", { 640, 480 });
     ShaderProgram program;
-    SpriteRenderer spriteRenderer(program);
+    SpriteRenderer spriteRenderer(&program, &window);
 	window.setEventLoop([&window](Event &event) {
 		if (event.type() == EventType::QUIT) {
 			window.endLoop();

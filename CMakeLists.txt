@@ -237,5 +237,16 @@ elseif(UNIX)
 endif()
 
 
-file(COPY data DESTINATION ${CMAKE_BINARY_DIR}/Debug)
-file(COPY data DESTINATION ${CMAKE_BINARY_DIR}/Release)
+file(GLOB_RECURSE ASSETS "${CMAKE_CURRENT_SOURCE_DIR}/data/*")
+target_sources(AsteroidMiner PRIVATE "${ASSETS}")
+
+foreach(FILE ${ASSETS})
+    # # Get the relative path from the root folder to the current file.
+    file(RELATIVE_PATH NEW_FILE "${CMAKE_CURRENT_SOURCE_DIR}" "${FILE}")
+    # # Get the parent directory for the new location.
+    get_filename_component(FILE_PATH "${NEW_FILE}" DIRECTORY)
+    get_filename_component(FILE_NAME "${NEW_FILE}" NAME)
+
+    file(COPY ${FILE} DESTINATION "${CMAKE_BINARY_DIR}/Release/${FILE_PATH}")
+    file(COPY ${FILE} DESTINATION "${CMAKE_BINARY_DIR}/Debug/${FILE_PATH}")
+endforeach()

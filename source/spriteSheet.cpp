@@ -1,6 +1,8 @@
 #include "spriteSheet.h"
 
 #include <fstream>
+#include <glm/glm.hpp>
+#include <glm/ext.hpp>
 #include <nlohmann/json.hpp>
 #include <iostream>
 
@@ -17,25 +19,28 @@ void SpriteSheet::load()
     json data = json::parse(file);
     _width = data["meta"]["size"]["w"];
     _height = data["meta"]["size"]["h"];
+
     auto sprites = data["frames"];
     for (auto& [key, value] : sprites.items()) {
-        _sprites[key] = {
-            .x = value["frame"]["x"],
-            .y = value["frame"]["y"],
-            .width = value["frame"]["w"],
-            .height = value["frame"]["h"]
-        };
+        float x = value["frame"]["x"];
+        float y = value["frame"]["y"];
+        float width = value["frame"]["w"];
+        float height = value["frame"]["h"];
+
+        glm::mat4 spriteMatrix(1.0);
+        spriteMatrix = glm::scale(spriteMatrix, glm::vec3(1 / _width, 1 / _height, 1.0));
+        spriteMatrix = glm::translate(spriteMatrix, glm::vec3(x, _height - y, 0.0));
+        spriteMatrix = glm::scale(spriteMatrix, glm::vec3(width, -height, 1.0));
+
+        _spriteMatrices[key] = spriteMatrix;
+        _dimensions[key] = glm::vec2(width, height);
     }
 }
 
-SpriteSheet::BoundingBox SpriteSheet::getSpriteBoundingBox(const char* itemName)
-{
-    auto box = _sprites[itemName];
+glm::mat4 SpriteSheet::getSpriteMatrix(const char* itemName) { 
+    return _spriteMatrices[itemName];
+}
 
-    return {
-        .x = box.x / _width,
-        .y = (_height - box.y) / _height,
-        .width = box.width / _width,
-        .height = box.height / _height
-    };
+glm::vec2 SpriteSheet::getRawDimensions(const char* itemName) { 
+    return _dimensions[itemName];
 }

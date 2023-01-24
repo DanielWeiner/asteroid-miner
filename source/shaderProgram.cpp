@@ -2,12 +2,42 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #include <iostream>
+#include <algorithm>
+#include <string>
 
-void ShaderProgram::init() 
+namespace {
+    typedef void (*InitFn)(GLsizei, GLuint*);
+
+    void initVar(InitFn fn, std::unique_ptr<GLuint> &ptr) {
+        if (ptr == nullptr) {
+            ptr.reset(new GLuint());
+            fn(1, ptr.get());
+        }
+    }
+
+    void GLAPIENTRY
+    MessageCallback( GLenum source,
+                    GLenum type,
+                    GLuint id,
+                    GLenum severity,
+                    GLsizei length,
+                    const GLchar* message,
+                    const void* userParam )
+    {
+        std::string msg(message);
+        fprintf( stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
+                ( type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : "" ),
+                    type, severity, msg.c_str() );
+    }
+
+    // During init, enable debug output
+    
+}
+
+void ShaderProgram::init()
 {
-    glGenVertexArrays(1, &_vao);
-    glGenBuffers(1, &_vbo);
-    glGenBuffers(1, &_ebo);
+    glEnable              (GL_DEBUG_OUTPUT);
+    glDebugMessageCallback(MessageCallback, 0);
 }
 
 void ShaderProgram::clearScreen(float r, float g, float b, float a) 
@@ -18,9 +48,28 @@ void ShaderProgram::clearScreen(float r, float g, float b, float a)
 
 ShaderProgram::~ShaderProgram() 
 {
-    glDeleteVertexArrays(1, &_vao);
-    glDeleteBuffers(1, &_vbo);
-    glDeleteBuffers(1, &_ebo);
+    if (_vao != nullptr) {
+        glDeleteVertexArrays(1, _vao.get());
+    }
+    if (_vbo != nullptr) {
+        glDeleteBuffers(1, _vbo.get());
+    }
+
+    if (_ebo != nullptr) {
+        glDeleteBuffers(1, _ebo.get());
+    }
+
+    if (_instanceVbo != nullptr) {
+        glDeleteBuffers(1, _instanceVbo.get());
+    }
+
+    for (auto texture : _textures) {
+        glDeleteTextures(1, &texture);
+    }
+
+    if (_programId != nullptr) {
+        glDeleteProgram(*_programId);
+    }
 }
 
 void ShaderProgram::loadTexture(const char* filepath, const char* textureName) {
@@ -64,13 +113,14 @@ void ShaderProgram::addFragmentShader(const char *data)
 
 void ShaderProgram::linkShaders() 
 {
+    GLuint programId = _getOrCreateProgramId();
     int success;
     char infoLog[512];
-    glLinkProgram(_getOrCreateProgramId());
+    glLinkProgram(programId);
     // check for linking errors
-    glGetProgramiv(_getOrCreateProgramId(), GL_LINK_STATUS, &success);
+    glGetProgramiv(programId, GL_LINK_STATUS, &success);
     if (!success) {
-        glGetProgramInfoLog(_getOrCreateProgramId(), 512, NULL, infoLog);
+        glGetProgramInfoLog(programId, 512, NULL, infoLog);
         std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
     }
 
@@ -101,60 +151,102 @@ void ShaderProgram::_addShader(GLenum shaderType, const char* data)
 
 void ShaderProgram::use() 
 {
-    glUseProgram(_programId);
+    glUseProgram(*_programId);
 }
 
 void ShaderProgram::drawArrays() 
 {
-    glUseProgram(_programId);
-    glBindVertexArray(_vao);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glUseProgram(*_programId);
+    glBindVertexArray(*_vao);
+    glDrawArrays(GL_TRIANGLES, 0, _numVertices);
+}
+
+void ShaderProgram::drawInstances() 
+{
+    glUseProgram(*_programId);
+    glBindVertexArray(*_vao);
+    glDrawArraysInstanced(GL_TRIANGLES, 0, _numVertices, _numInstances);
 }
 
 void ShaderProgram::drawElements() 
 {
-    glUseProgram(_programId);
-    glBindVertexArray(_vao);
+    glUseProgram(*_programId);
+    glBindVertexArray(*_vao);
     glDrawElements(GL_TRIANGLES, _numIndices, GL_UNSIGNED_INT, 0);
 }
 
 void ShaderProgram::bindAttributes() {
+    static const auto vec4size = sizeof(glm::vec4);
+
     GLsizei stride = 0;
     for (auto attribute : _attributes) {
         stride += attribute.dimensions * attribute.size;
     }
 
     long long offset = 0;
+    GLuint boundBuffer = 0;
     for (auto attribute : _attributes) {
-        glVertexAttribPointer(
-            attribute.position,
-            attribute.dimensions,
-            attribute.type,
-            GL_FALSE,
-            stride,
-            (void*)offset
-        );
-        offset += attribute.dimensions * attribute.size;
-        glEnableVertexAttribArray(attribute.position);
+        auto instance = attribute.instance;
+        auto dimension = attribute.dimensions;
+        auto size = attribute.size;
+        auto type = attribute.type;
+        auto position = attribute.position;
+        
+        if (instance && boundBuffer != *_instanceVbo) {
+            boundBuffer = *_instanceVbo;
+            glBindBuffer(GL_ARRAY_BUFFER, *_instanceVbo);
+        } else if (!instance && boundBuffer != *_vbo) {
+            boundBuffer = *_vbo;
+            glBindBuffer(GL_ARRAY_BUFFER, *_vbo);
+        }
+
+        GLuint i = 0;
+        for (auto chunkSize = dimension * size; chunkSize > 0; chunkSize -= vec4size) {
+            int realSize = std::min(chunkSize, (int)vec4size);
+            int dim = realSize / (vec4size / 4);
+            glEnableVertexAttribArray(position + i);
+            glVertexAttribPointer(
+                position + i,
+                dim,
+                type,
+                GL_FALSE,
+                stride,
+                (void*)offset
+            );
+            offset += realSize;
+            
+            if (instance) {
+                glVertexAttribDivisor(position + i, 1);
+            }
+            i++;
+        }
     }
     
     _attributes.clear();
     glBindBuffer(GL_ARRAY_BUFFER, 0); 
 }
 
-void ShaderProgram::_defineAttribute(GLuint position, GLint dimensions, GLenum type, std::size_t size)
+void ShaderProgram::_defineAttribute(
+    const char* name, 
+    GLint dimensions, 
+    GLenum type, 
+    GLsizei size,
+    bool instance
+)
 {
+    GLuint position = glGetAttribLocation(*_programId, name);
     _attributes.push_back({
         .position   = position,
         .dimensions = dimensions,
         .type       = type,
-        .size       = size
+        .size       = size,
+        .instance   = instance
     });
 }
 
 void ShaderProgram::bindVao() 
 {
-    glBindVertexArray(_vao);
+    glBindVertexArray(*_vao);
 }
 
 void ShaderProgram::unbindVao() 
@@ -172,30 +264,80 @@ void ShaderProgram::initTextures()
 }
 void ShaderProgram::bindTextures() 
 {
+    use();
     int i = 0;
     for (auto texture : _textures) {
-        glUniform1i(glGetUniformLocation(_programId, _textureNames[i]), texture);
+        glUniform1i(glGetUniformLocation(*_programId, _textureNames[i]), texture);
         i++;
     }
 }
 
 GLuint ShaderProgram::_getOrCreateProgramId() {
-    if (!_programCreated) {
-        _programId = glCreateProgram();
-        _programCreated = true;
+    if (_programId == nullptr) {
+        _programId.reset(new GLuint(glCreateProgram()));
     }
-    return _programId;
+    return *_programId;
 }
 
-void ShaderProgram::_loadData(GLsizeiptr size, const GLvoid* data)
+void ShaderProgram::loadData(GLsizeiptr size, GLsizei count, const GLvoid* data)
 {
-    glBindBuffer(GL_ARRAY_BUFFER, _vbo);
+    _initVao();
+    _initVbo();
+    bindVao();
+    _numVertices = count;
+    glBindBuffer(GL_ARRAY_BUFFER, *_vbo);
     glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
 }
 
-void ShaderProgram::_loadIndices(std::size_t size, const GLuint* data)
+void ShaderProgram::loadIndices(GLsizei size, GLsizei count, const GLuint* data)
 {
-    _numIndices = size;
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ebo);
+    _initVao();
+    _initEbo();
+    bindVao();
+    _numIndices = count;
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *_ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
+}
+
+void ShaderProgram::_initVao() 
+{
+    initVar(glGenVertexArrays, _vao);
+}
+
+void ShaderProgram::_initVbo() 
+{
+    initVar(glGenBuffers, _vbo);
+}
+
+void ShaderProgram::initInstanceBuffer() 
+{
+    _initVao();
+    _initInstanceVbo();
+    bindVao();
+    glBindBuffer(GL_ARRAY_BUFFER, *_instanceVbo);
+}
+
+void ShaderProgram::loadInstanceData(GLsizeiptr size, GLsizei count, const GLvoid *data) 
+{
+    _initVao();
+    _initInstanceVbo();
+    bindVao();
+    _numInstances = count;
+    glBindBuffer(GL_ARRAY_BUFFER, *_instanceVbo);
+    glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
+}
+
+void ShaderProgram::_initInstanceVbo() 
+{
+    initVar(glGenBuffers, _instanceVbo);
+}
+
+void ShaderProgram::_initEbo() 
+{
+    initVar(glGenBuffers, _ebo);
+}
+
+GLuint ShaderProgram::_getUniformLocation(const char *name) 
+{ 
+    return glGetUniformLocation(*_programId, name);
 }

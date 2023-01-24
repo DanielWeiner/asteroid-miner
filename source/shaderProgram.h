@@ -5,26 +5,38 @@
 
 #include <cstddef>
 #include <gl/glew.h>
+#include <glm/glm.hpp>
+#include <glm/ext.hpp>
 #include <vector>
 #include <string>
+#include <memory>
 
 class ShaderProgram {
 public:
     void loadTexture(const char* filePath, const char* textureName);
 
     template<typename>
-    void defineAttribute(GLuint position, GLint dimensions);
+    void defineAttribute(const char* name, GLint dimensions);
+
+    template<typename>
+    void defineInstanceAttribute(const char* name, GLint dimensions);
 
     void addVertexShader(const char* data);
     void addFragmentShader(const char* data);
     void linkShaders();
     void bindAttributes();
 
-    template<std::size_t S, typename T>
+    template<GLsizei S, typename T>
     void loadData(T (&data)[S]);
-
-    template<std::size_t S>
+    template<GLsizei S, typename T>
+    void loadInstanceData(T (&data)[S]);
+    template<GLsizei S>
     void loadIndices(const GLuint (&data)[S]);
+
+    void loadData(GLsizeiptr size, GLsizei count, const GLvoid* data);
+    void loadInstanceData(GLsizeiptr size, GLsizei count, const GLvoid* data);
+    void loadIndices(GLsizei size, GLsizei count, const GLuint* data);
+    void initInstanceBuffer();
 
     void bindVao();
     void unbindVao();
@@ -33,46 +45,52 @@ public:
     void initTextures();
 
     template<typename T>
-    void setUniform(const std::string &name, T value);
+    void setUniform(const char* name, T value);
 
     void use();
     void drawArrays();
     void drawElements();
-
-    void init();
+    void drawInstances();
 
     void clearScreen(float r = 0., float g = 0., float b = 0., float a = 0.);
+
+    void init();
     ~ShaderProgram();
 private:
     template<typename>
     struct GlTypes;
 
     struct Attribute {
-        GLuint      position;
-        GLint       dimensions;
-        GLenum      type;
-        std::size_t size;
+        GLuint  position;
+        GLint   dimensions;
+        GLenum  type;
+        GLsizei size;
+        bool    instance;
     };
 
-    bool                     _programCreated = false;
-    bool                     _vaoInitialized = false;
-    GLuint                   _programId;
-    GLuint                   _vao;
-    GLuint                   _vbo;
-    GLuint                   _ebo;
+    std::unique_ptr<GLuint>  _programId;
+    std::unique_ptr<GLuint>  _vao;
+    std::unique_ptr<GLuint>  _vbo;
+    std::unique_ptr<GLuint>  _ebo;
+    std::unique_ptr<GLuint>  _instanceVbo;
     std::vector<GLuint>      _textures;
     std::vector<const char*> _textureNames;
     std::vector<GLuint>      _shaders;
     std::vector<Attribute>   _attributes;
     GLsizei                  _numIndices;
-
-    
+    GLsizei                  _numVertices;
+    GLsizei                  _numInstances;
 
     void   _addShader(GLenum shaderType, const char* data);
+    void _defineAttribute(const char* name, GLint dimensions, GLenum type, GLsizei size, 
+            bool instance);
+    void _initVao();
+    void _initVbo();
+    void _initInstanceVbo();
+    void _initEbo();
+
     GLuint _getOrCreateProgramId();
-    void _defineAttribute(GLuint position, GLint dimensions, GLenum type, std::size_t size);
-    void _loadData(GLsizeiptr size, const GLvoid* data);
-    void _loadIndices(std::size_t size, const GLuint* data);
+    GLuint _getUniformLocation(const char* name);
 };
 
 template<>
@@ -109,48 +127,70 @@ struct ShaderProgram::GlTypes<double> {
     static constexpr GLenum type = GL_DOUBLE;
 };
 
+template<>
+struct ShaderProgram::GlTypes<glm::vec4> {
+    static constexpr GLenum type = GL_FLOAT;
+};
+
 template <typename T>
-inline void ShaderProgram::defineAttribute(GLuint position, GLint dimensions) 
+inline void ShaderProgram::defineAttribute(const char* name, GLint dimensions) 
 {
     GLenum type = ShaderProgram::GlTypes<T>::type;
-    _defineAttribute(position, dimensions, type, sizeof(T));
+    _defineAttribute(name, dimensions, type, sizeof(T), false);
 }
 
-template<std::size_t S>
-inline void ShaderProgram::loadIndices(const GLuint (&data)[S])
+template <typename T>
+inline void ShaderProgram::defineInstanceAttribute(const char* name, GLint dimensions) 
 {
-    _loadIndices(S * sizeof(GLuint), data);
+    GLenum type = ShaderProgram::GlTypes<T>::type;
+    _defineAttribute(name, dimensions, type, sizeof(T), true);
 }
 
-template<std::size_t size, typename T>
+template <GLsizei S>
+inline void ShaderProgram::loadIndices(const GLuint (&data)[S]) {
+    loadIndices(S * sizeof(GLuint), S, data);
+}
+
+template<GLsizei size, typename T>
 inline void ShaderProgram::loadData(T (&data)[size]) 
 {
-    _loadData(size * sizeof(T), data);
+    loadData(size * sizeof(T), size, data);
 }
 
-
-template<>
-inline void ShaderProgram::setUniform(const std::string& name, bool value)
+template<GLsizei size, typename T>
+inline void ShaderProgram::loadInstanceData(T (&data)[size]) 
 {
-    glUniform1i(glGetUniformLocation(_programId, name.c_str()), static_cast<int>(value));
-}
-
-template<>
-inline void ShaderProgram::setUniform(const std::string& name, int value)
-{
-    glUniform1i(glGetUniformLocation(_programId, name.c_str()), value);
+    loadInstanceData(size * sizeof(T), size, data);
 }
 
 template<>
-inline void ShaderProgram::setUniform(const std::string& name, float value)
+inline void ShaderProgram::setUniform(const char* name, bool value)
 {
-    glUniform1f(glGetUniformLocation(_programId, name.c_str()), value);
+    glUniform1i(_getUniformLocation(name), static_cast<int>(value));
 }
 
 template<>
-inline void ShaderProgram::setUniform(const std::string& name, double value)
+inline void ShaderProgram::setUniform(const char*name, int value)
 {
-    glUniform1d(glGetUniformLocation(_programId, name.c_str()), value);
+    glUniform1i(_getUniformLocation(name), value);
+}
+
+template<>
+inline void ShaderProgram::setUniform(const char* name, float value)
+{
+    glUniform1f(_getUniformLocation(name), value);
+}
+
+template<>
+inline void ShaderProgram::setUniform(const char* name, double value)
+{
+    glUniform1d(_getUniformLocation(name), value);
+}
+
+template<>
+inline void ShaderProgram::setUniform(const char* name, glm::mat4 value)
+{
+    glUniformMatrix4fv(_getUniformLocation(name), 1, GL_FALSE, glm::value_ptr(value));
 }
 
 #endif
