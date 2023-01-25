@@ -1,12 +1,11 @@
 #include "spriteRenderer.h"
 
+#include "sprite.h"
 #include "spriteSheet.h"
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 #include <memory>
-#include <iostream>
 #include <string>
-#include <random>
 
 namespace  {
 
@@ -89,58 +88,41 @@ void SpriteRenderer::init() {
     _shaderProgram->initTextures();
 }
 
+std::shared_ptr<Sprite> SpriteRenderer::createSprite(const char* name)
+{
+    auto sprite = std::shared_ptr<Sprite>(new Sprite(name));
+    sprite->scaleBy(*spriteSheet.getRawDimensions(name));
+    return sprite;
+}
+
+void SpriteRenderer::addSprite(std::shared_ptr<Sprite> sprite) 
+{
+    _sprites.push_back(sprite);
+}
+
 void SpriteRenderer::draw() 
 {
-    static const int numSprites = 1000;
-    static bool initialized = false;
-    static glm::mat4 spriteData[2 * numSprites];
+    if (_sprites.size() == 0) {
+        return;
+    }
 
-    if (!initialized) {
-        initialized = true;
-        std::string sprites[] = {
-            "playerShip1_blue.png",
-            "playerShip1_green.png",
-            "playerShip1_orange.png",
-            "playerShip1_red.png",
-            "playerShip2_blue.png",
-            "playerShip2_green.png",
-            "playerShip2_orange.png",
-            "playerShip2_red.png",
-            "playerShip3_blue.png",
-            "playerShip3_green.png",
-            "playerShip3_orange.png",
-            "playerShip3_red.png"
-        };
+    glm::mat4* buffer = new glm::mat4[_sprites.size() * 2];
 
-        for (int i = 0; i < numSprites; i++) {
-            auto sprite = sprites[rand() % (sizeof(sprites)/sizeof(std::string))];
-            auto x = (float)(rand() % 2560);
-            auto y = (float)(rand() % 1334);
-            auto rotate = (float)(rand() % 360);
-
-            auto texMatrix = spriteSheet.getSpriteMatrix(sprite.c_str());
-            auto dimensions = spriteSheet.getRawDimensions(sprite.c_str());
-            
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, glm::vec3(x - dimensions.x / 2, y - dimensions.y / 2, 0.0f));
-
-            model = glm::translate(model, glm::vec3(0.5f * dimensions.x, 0.5f * dimensions.y, 0.0f)); 
-            model = glm::rotate(model, glm::radians(rotate), glm::vec3(0.0f, 0.0f, 1.0f)); 
-            model = glm::translate(model, glm::vec3(-0.5f * dimensions.x, -0.5f * dimensions.y, 0.0f));
-
-            model = glm::scale(model, glm::vec3(dimensions, 1.0f));
-            
-            spriteData[2 * i] = model;
-            spriteData[2 * i + 1] = texMatrix;
-        }
+    int spriteCount = 0;
+    for (auto& sprite: _sprites) {
+        buffer[spriteCount * 2] = *sprite->getModelMatrix(),
+        buffer[spriteCount * 2 + 1] = *spriteSheet.getSpriteMatrix(sprite->getName());
+        spriteCount++;
     }
 
     glm::mat4 projection = glm::ortho(0.0f, (float)_window->getDimensions().x, 
         (float)_window->getDimensions().y, 0.0f, -1.0f, 1.0f);
 
     _shaderProgram->use();
-    _shaderProgram->loadInstanceData(sizeof(spriteData), numSprites, &spriteData[0]);
+    _shaderProgram->loadInstanceData(sizeof(glm::mat4) * 2 * spriteCount, spriteCount, buffer);
     _shaderProgram->setUniform("projection", projection);
     _shaderProgram->bindVao();
     _shaderProgram->drawInstances();
+    delete[] buffer;
+    _sprites.clear();
 }

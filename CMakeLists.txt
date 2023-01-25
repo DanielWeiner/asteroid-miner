@@ -4,8 +4,6 @@ include(CMakeDependentOption)
 option(AM_USE_VCPKG "Use vcpkg to get dependencies." ON)
 cmake_dependent_option(AM_GLES "Build the game with OpenGL ES" OFF UNIX OFF)
 cmake_dependent_option(AM_USE_SYSTEM_LIBRARIES "Use system libraries instead of the vcpkg ones." ON UNIX OFF)
-cmake_dependent_option(AM_USE_OFFSCREEN
-	"Use SDL's offscreen backend instead of Xvfb for the integration tests" OFF UNIX OFF)
 cmake_dependent_option(AM_CREATE_BUNDLE "Create a Bundle instead of an executable" OFF APPLE OFF)
 
 # Support Debug and Release configurations.
@@ -55,28 +53,11 @@ project("Asteroid Miner" VERSION 0.0.0
 	LANGUAGES CXX)
 
 # Find the needed library dependencies.
-find_package(SDL2 CONFIG REQUIRED)
+find_package(glad CONFIG REQUIRED)
+find_package(glfw3 CONFIG REQUIRED)
 find_package(PNG REQUIRED)
 find_package(glm REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
-
-if(NOT APPLE)
-	find_package(GLEW REQUIRED)
-endif()
-
-# Only very new versions of OpenAL provide a config package, so try to find it manually.
-find_package(OpenAL CONFIG QUIET)
-if(NOT OpenAL_FOUND)
-	find_library(OPENAL openal REQUIRED)
-	add_library(OpenAL UNKNOWN IMPORTED)
-	add_library(OpenAL::OpenAL ALIAS OpenAL)
-	set_target_properties(OpenAL PROPERTIES IMPORTED_LOCATION "${OPENAL}")
-endif()
-
-# libmad doesn't provide native cmake support.
-find_path(LIBMAD_INCLUDE_DIR mad.h)
-find_library(LIBMAD_LIB_DEBUG NAMES mad libmad NAMES_PER_DIR PATHS "${_VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/debug/lib")
-find_library(LIBMAD_LIB_RELEASE NAMES mad libmad NAMES_PER_DIR PATHS "${_VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib")
 
 # Find the MinGW runtime DLLs.
 if(MINGW AND WIN32)
@@ -153,7 +134,7 @@ else()
 endif()
 
 # Link with the library dependencies.
-target_link_libraries(AsteroidMiner PRIVATE AsteroidMinerLib $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main>)
+target_link_libraries(AsteroidMiner PRIVATE AsteroidMinerLib glfw glad::glad)
 
 # Link with OpenGL or OpenGL ES.
 if(AM_GLES)
@@ -167,9 +148,6 @@ else()
 	if(APPLE)
 		# Apple deprecated OpenGL in MacOS 10.14, but we don't care.
 		target_compile_definitions(AsteroidMinerLib PUBLIC GL_SILENCE_DEPRECATION)
-	else()
-		# GLEW is only needed on Linux and Windows.
-		target_link_libraries(AsteroidMiner PRIVATE GLEW::GLEW)
 	endif()
 endif()
 

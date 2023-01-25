@@ -7,9 +7,9 @@ using namespace std;
 
 enum ErrorType {
     NONE,
-
-    ERR_SDL_INIT_VIDEO,
-    ERR_SDL_CREATE_WINDOW,
+    ERR_GLFW_INIT,
+    ERR_GLFW_CREATE_WINDOW,
+    ERR_GLAD_LOADER,
     ERR_SDL_CREATE_CONTEXT,
     ERR_GLEW_INIT
 };
@@ -17,9 +17,9 @@ enum ErrorType {
 namespace AM_Error {
     const unordered_map<ErrorType, const char*> errorNames{
         { ErrorType::NONE,                   "" },
-        { ErrorType::ERR_SDL_INIT_VIDEO,     "SDL initialization error" },
-        { ErrorType::ERR_SDL_CREATE_WINDOW,  "SDL window initialization error" },
-        { ErrorType::ERR_SDL_CREATE_CONTEXT, "SDL context initialization error" },
+        { ErrorType::ERR_GLFW_INIT,          "GLFW initialization error" },
+        { ErrorType::ERR_GLFW_CREATE_WINDOW, "GLFW window creation error" },
+        { ErrorType::ERR_GLAD_LOADER,        "GLAD loader error" },
         { ErrorType::ERR_GLEW_INIT,          "GLEW initialization error" }
     };
 }

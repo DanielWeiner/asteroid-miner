@@ -1,10 +1,8 @@
 #ifndef SHADER_PROGRAM_H_
 #define SHADER_PROGRAM_H_
 
-#include "texture.h"
-
+#include <glad/glad.h>
 #include <cstddef>
-#include <gl/glew.h>
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 #include <vector>
@@ -179,12 +177,6 @@ template<>
 inline void ShaderProgram::setUniform(const char* name, float value)
 {
     glUniform1f(_getUniformLocation(name), value);
-}
-
-template<>
-inline void ShaderProgram::setUniform(const char* name, double value)
-{
-    glUniform1d(_getUniformLocation(name), value);
 }
 
 template<>

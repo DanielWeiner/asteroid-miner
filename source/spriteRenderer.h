@@ -3,23 +3,23 @@
 
 #include "window.h"
 #include "shaderProgram.h"
+#include "sprite.h"
 #include <glm/glm.hpp>
+#include <vector>
+#include <memory>
 
 class SpriteRenderer {
 public:
     SpriteRenderer(ShaderProgram* shaderProgram, Window* window);
     void init();
-    void addSprite(
-        const char* spriteName, 
-        glm::vec2 position,
-        glm::vec2 scale = glm::vec2(1.f),
-        float rotate = 0.f
-    );
+    std::shared_ptr<Sprite> createSprite(const char* spriteName);
+    void addSprite(std::shared_ptr<Sprite> sprite);
     void draw();
 private:
-    ShaderProgram*            _shaderProgram;
-    std::vector<glm::mat4[2]> _sprites;
+    ShaderProgram*                       _shaderProgram;
+    std::vector<std::shared_ptr<Sprite>> _sprites;
     Window* _window;
+
     SpriteRenderer();
 };
 

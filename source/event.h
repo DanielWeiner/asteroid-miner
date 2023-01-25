@@ -1,28 +1,48 @@
 #ifndef EVENT_H_
 #define EVENT_H_
 
-#include <SDL2/SDL.h>
-
 class Window;
 
 using namespace std;
 
-enum EventType {
+enum class EventType {
     UNKNOWN,
 
-    QUIT,
-    RESIZE
+    WINDOW,
+    KEY,
+    TEXT,
+    MOUSE
+};
+
+enum class EventAction {
+    UNKNOWN,
+
+    RESIZE,
+    PRESS,
+    RELEASE,
+    REPEAT,
+    ENTER,
+    LEAVE,
+    HOVER,
+    SCROLL
 };
 
 class Event {
     friend Window;
 public:
-    EventType type();
-
-private:
-    SDL_Event* _event;
-    
-    Event(SDL_Event *event);
+    const EventType    type;
+    const EventAction  action;
+    const int          key;
+    const int          scancode;
+    const unsigned int codepoint;
+    const double       x;
+    const double       y;
+    const int          button;
+    const double       xoffset;
+    const double       yoffset;
+    const int          width;
+    const int          height;
+    const int          mods;
 };
 
 #endif

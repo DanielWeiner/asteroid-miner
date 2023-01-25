@@ -1,9 +1,8 @@
 add_library(AsteroidMinerLib STATIC EXCLUDE_FROM_ALL)
 
 # Set the appropriate compiler flags.
-target_include_directories(AsteroidMinerLib PUBLIC "${LIBMAD_INCLUDE_DIR}")
 if(MSVC)
-	target_compile_options(AsteroidMinerLib PUBLIC "/W3" "/permissive-" "/sdl" "/GR-" "/analyze-"
+	target_compile_options(AsteroidMinerLib PUBLIC "/W3" "/permissive-" "/GR-" "/analyze-"
 		"-Wno-nonportable-include-path" "$<$<CONFIG:Release>:/Gy;/WX;/Oi>")
 	target_compile_definitions(AsteroidMinerLib PUBLIC "_UNICODE" "UNICODE")
 else()
@@ -12,9 +11,7 @@ else()
 endif()
 
 # Link with the general libraries.SS
-target_link_libraries(AsteroidMinerLib PUBLIC PNG::PNG SDL2::SDL2 OpenAL::OpenAL glm::glm
-	"$<IF:$<CONFIG:Debug>,${LIBMAD_LIB_DEBUG},${LIBMAD_LIB_RELEASE}>")
-
+target_link_libraries(AsteroidMinerLib PUBLIC PNG::PNG glm::glm nlohmann_json::nlohmann_json glfw glad::glad)
 # Link the needed OS-specific dependencies, if any.
 if(WIN32)
 	target_link_libraries(AsteroidMinerLib PUBLIC rpcrt4 Winmm)
@@ -37,25 +34,22 @@ if(UNIX)
 		target_link_libraries(AsteroidMinerLib PUBLIC unofficial::UUID::uuid)
 	endif()
 endif()
-target_link_libraries(AsteroidMinerLib PRIVATE nlohmann_json::nlohmann_json)
+
 # Every source file (and header file) should be listed here, except main.cpp.
 # If you add a new file, add it to this list.
 target_sources(AsteroidMinerLib PRIVATE
 	error.h	
-    event.cpp
     event.h
-    eventHandler.cpp
-    eventHandler.h
 	globalIncludes.h
     shaderProgram.cpp
     shaderProgram.h
+    sprite.cpp
     sprite.h
     spriteRenderer.cpp
     spriteRenderer.h
     spriteSheet.cpp
     spriteSheet.h
     stb_image.h
-    texture.h
 	window.cpp
 	window.h
 )

@@ -37,10 +37,10 @@ void SpriteSheet::load()
     }
 }
 
-glm::mat4 SpriteSheet::getSpriteMatrix(const char* itemName) { 
-    return _spriteMatrices[itemName];
+glm::mat4* SpriteSheet::getSpriteMatrix(const char* itemName) { 
+    return &_spriteMatrices[itemName];
 }
 
-glm::vec2 SpriteSheet::getRawDimensions(const char* itemName) { 
-    return _dimensions[itemName];
+glm::vec2* SpriteSheet::getRawDimensions(const char* itemName) { 
+    return &_dimensions[itemName];
 }

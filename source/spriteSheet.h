@@ -16,8 +16,8 @@ public:
 
     SpriteSheet(const char* path);
     void load();
-    glm::mat4 getSpriteMatrix(const char* itemName);
-    glm::vec2 getRawDimensions(const char* itemName);
+    glm::mat4* getSpriteMatrix(const char* itemName);
+    glm::vec2* getRawDimensions(const char* itemName);
 private:
     const char* _file;
     float       _width;
