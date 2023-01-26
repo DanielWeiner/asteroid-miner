@@ -26,7 +26,13 @@ namespace {
         _currentErrorMessage = message;
     }
 
+    struct ButtonState {
+        bool pressed = false;
+        float x = 0.f;
+        float y = 0.f;
+    };
 
+    ButtonState _buttonStates[GLFW_MOUSE_BUTTON_LAST + 1];
 }
 
 void Window::_handleError(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *userParam)
@@ -107,17 +113,31 @@ void Window::_handleMouseButton(GLFWwindow* window, int button, int action, int 
     glfwGetCursorPos(window, &x, &y);
     
     EventAction eventAction;
+    EventAction additionalAction = EventAction::UNKNOWN;
     switch (action) {
         case GLFW_PRESS:
             eventAction = EventAction::PRESS;
+
+            _buttonStates[button].pressed = true;
+            _buttonStates[button].x = x;
+            _buttonStates[button].y = y;
             break;
         case GLFW_RELEASE:
             eventAction = EventAction::RELEASE;
+
+            if (_buttonStates[button].pressed) {
+                if (_buttonStates[button].x == x && _buttonStates[button].y == y) {
+                    additionalAction = EventAction::CLICK;
+                } else {
+                    additionalAction = EventAction::DRAG;
+                }
+            }
+
+            _buttonStates[button].pressed = false;
             break;
         default:
             eventAction = EventAction::UNKNOWN;
     }
-    
 
     _windowInstances[window]->_handleEvent({
         .type = EventType::MOUSE,
@@ -127,6 +147,33 @@ void Window::_handleMouseButton(GLFWwindow* window, int button, int action, int 
         .button = button,
         .mods = mods
     });
+
+    switch(additionalAction) {
+        case EventAction::CLICK:
+            _windowInstances[window]->_handleEvent({
+                .type = EventType::MOUSE,
+                .action = additionalAction,
+                .x = x,
+                .y = y,
+                .button = button,
+                .mods = mods
+            });
+            return;
+        case EventAction::DRAG:
+            _windowInstances[window]->_handleEvent({
+                .type = EventType::MOUSE,
+                .action = additionalAction,
+                .x = x,
+                .y = y,
+                .button = button,
+                .xoffset = _buttonStates[button].x - x,
+                .yoffset = _buttonStates[button].y - y,
+                .mods = mods
+            });
+            return;
+        default:
+            return;
+    } 
 }
 
 void Window::_handleScroll(GLFWwindow* window, double xoffset, double yoffset)
