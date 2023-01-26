@@ -98,13 +98,6 @@ endif()
 # Add the library target.
 add_subdirectory(source)
 
-file(GLOB_RECURSE ASSETS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/data")
-file(COPY data/sprites/sprites.png DESTINATION "${CMAKE_BINARY_DIR}/Release/data/sprites")
-file(COPY data/sprites/sprites.png DESTINATION "${CMAKE_BINARY_DIR}/Debug/data/sprites")
-file(COPY data/sprites/sprites.json DESTINATION "${CMAKE_BINARY_DIR}/Release/data/sprites")
-file(COPY data/sprites/sprites.json DESTINATION "${CMAKE_BINARY_DIR}/Debug/data/sprites")
-
-
 # Create game target.
 if(APPLE AND AM_CREATE_BUNDLE)
 	add_executable(AsteroidMiner MACOSX_BUNDLE source/main.cpp)
@@ -236,3 +229,23 @@ elseif(UNIX)
 	install(FILES copyright DESTINATION share/doc/asteroid-miner)
 	install(FILES changelog DESTINATION share/doc/asteroid-miner)
 endif()
+
+if (WIN32)
+    set(AM_TEXUREPACKER_BIN "C:/Program\ Files/CodeAndWeb/TexturePacker/bin/TexturePacker.exe")
+endif()
+
+foreach(BUILD_TARGET "Debug" "Release")
+    add_custom_target(
+        "AmSprites_${BUILD_TARGET}"
+        ALL
+        COMMAND
+            ${AM_TEXUREPACKER_BIN} sprites.tps
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMAND
+            COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/data/sprites/sprites.json" "${PROJECT_BINARY_DIR}/${BUILD_TARGET}/data/sprites/sprites.json"
+            COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/data/sprites/sprites.png" "${PROJECT_BINARY_DIR}/${BUILD_TARGET}/data/sprites/sprites.png"
+    )
+    add_dependencies(AsteroidMiner "AmSprites_${BUILD_TARGET}")
+endforeach()
+
+
