@@ -85,10 +85,14 @@ void SpriteRenderer::init() {
     _shaderProgram.defineAttribute<float>("aPos", 2);
     _shaderProgram.bindAttributes();
 
-    _shaderProgram.initInstanceBuffer();
-    _shaderProgram.defineInstanceAttribute<glm::vec4>("instanceModel", 4);
-    _shaderProgram.defineInstanceAttribute<glm::vec4>("instanceTexModel", 4);
-    _shaderProgram.bindAttributes();
+    _vbo1 = _shaderProgram.initInstanceBuffer();
+    _shaderProgram.defineInstanceAttribute<glm::vec4>(_vbo1, "instanceModel", 4);
+    _shaderProgram.bindAttributes(_vbo1);
+
+    _vbo2 = _shaderProgram.initInstanceBuffer();
+    _shaderProgram.defineInstanceAttribute<glm::vec4>(_vbo2, "instanceTexModel", 4);
+    _shaderProgram.bindAttributes(_vbo2);
+
     _shaderProgram.initTextures();
 }
 
@@ -96,7 +100,8 @@ void SpriteRenderer::setBuffer(const unsigned int size)
 {
     _bufSize = size;
     _length = 0;
-    _buffer = std::unique_ptr<glm::mat4[]>(new glm::mat4[MATRIX_COUNT * size]);
+    _buffer = std::unique_ptr<glm::mat4[]>(new glm::mat4[size]);
+    _texBuffer = std::unique_ptr<glm::mat4[]>(new glm::mat4[size]);
 }
 
 void SpriteRenderer::updateDimensions(float width, float height) 
@@ -110,10 +115,11 @@ std::unique_ptr<Sprite> SpriteRenderer::createSprite(const char* name)
     if (_length >= _bufSize) {
         throw std::exception("Sprite buffer exceeded");
     }
-    glm::mat4* buf = &_buffer[_length * MATRIX_COUNT];
+    _spritesDirty = true;
+    glm::mat4* buf = &_buffer[_length];
     
     auto sprite = std::make_unique<Sprite>(Sprite(name, buf));
-    spriteSheet.writeSpriteMatrix(name, &_buffer[ _length * MATRIX_COUNT + 1]);
+    spriteSheet.writeSpriteMatrix(name, &_texBuffer[ _length]);
     
     ++_length;
     
@@ -126,7 +132,11 @@ void SpriteRenderer::draw()
     glm::mat4 projection = glm::ortho(0.0f, _width, _height, 0.0f, -1.0f, 1.0f);
 
     _shaderProgram.use();
-    _shaderProgram.loadInstanceData(sizeof(glm::mat4) * MATRIX_COUNT * _length, _length, _buffer.get());
+    if (_spritesDirty) {
+        _shaderProgram.loadInstanceData(_vbo2, sizeof(glm::mat4) * _length, _length, _texBuffer.get());
+        _spritesDirty = false;
+    }
+    _shaderProgram.loadInstanceData(_vbo1, sizeof(glm::mat4) * _length, _length, _buffer.get());
     _shaderProgram.setUniform("projection", projection);
     _shaderProgram.bindVao();
     _shaderProgram.drawInstances();

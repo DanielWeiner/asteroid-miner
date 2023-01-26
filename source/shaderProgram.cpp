@@ -52,6 +52,7 @@ ShaderProgram::~ShaderProgram()
     if (_vao != nullptr) {
         glDeleteVertexArrays(1, _vao.get());
     }
+
     if (_vbo != nullptr) {
         glDeleteBuffers(1, _vbo.get());
     }
@@ -60,8 +61,8 @@ ShaderProgram::~ShaderProgram()
         glDeleteBuffers(1, _ebo.get());
     }
 
-    if (_instanceVbo != nullptr) {
-        glDeleteBuffers(1, _instanceVbo.get());
+    for(auto& vbo : _instanceVbos) {
+        glDeleteBuffers(1, vbo.get());
     }
 
     for (auto texture : _textures) {
@@ -177,30 +178,36 @@ void ShaderProgram::drawElements()
 }
 
 void ShaderProgram::bindAttributes() {
+    _bindAttributes(*_vbo);
+}
+
+void ShaderProgram::bindAttributes(unsigned int id) {
+    _bindAttributes(*_instanceVbos[id]);
+}
+
+void ShaderProgram::_bindAttributes(GLuint id) {
     static const auto vec4size = sizeof(glm::vec4);
 
     GLsizei stride = 0;
     for (auto attribute : _attributes) {
-        stride += attribute.dimensions * attribute.size;
+        if (attribute.vbo == id) {
+            stride += attribute.dimensions * attribute.size;
+        }
     }
 
     long long offset = 0;
     GLuint boundBuffer = 0;
     for (auto attribute : _attributes) {
+        if (boundBuffer != attribute.vbo) {
+            glBindBuffer(GL_ARRAY_BUFFER, id);
+        }
+
         auto instance = attribute.instance;
         auto dimension = attribute.dimensions;
         auto size = attribute.size;
         auto type = attribute.type;
         auto position = attribute.position;
         
-        if (instance && boundBuffer != *_instanceVbo) {
-            boundBuffer = *_instanceVbo;
-            glBindBuffer(GL_ARRAY_BUFFER, *_instanceVbo);
-        } else if (!instance && boundBuffer != *_vbo) {
-            boundBuffer = *_vbo;
-            glBindBuffer(GL_ARRAY_BUFFER, *_vbo);
-        }
-
         GLuint i = 0;
         for (auto chunkSize = dimension * size; chunkSize > 0; chunkSize -= vec4size) {
             int realSize = std::min(chunkSize, (int)vec4size);
@@ -232,7 +239,8 @@ void ShaderProgram::_defineAttribute(
     GLint dimensions, 
     GLenum type, 
     GLsizei size,
-    bool instance
+    bool instance,
+    GLuint vbo
 )
 {
     GLuint position = glGetAttribLocation(*_programId, name);
@@ -241,7 +249,8 @@ void ShaderProgram::_defineAttribute(
         .dimensions = dimensions,
         .type       = type,
         .size       = size,
-        .instance   = instance
+        .instance   = instance,
+        .vbo        = vbo
     });
 }
 
@@ -310,27 +319,32 @@ void ShaderProgram::_initVbo()
     initVar(glGenBuffers, _vbo);
 }
 
-void ShaderProgram::initInstanceBuffer() 
-{
-    _initVao();
-    _initInstanceVbo();
-    bindVao();
-    glBindBuffer(GL_ARRAY_BUFFER, *_instanceVbo);
-}
-
-void ShaderProgram::loadInstanceData(GLsizeiptr size, GLsizei count, const GLvoid *data) 
-{
-    _initVao();
-    _initInstanceVbo();
-    bindVao();
-    _numInstances = count;
-    glBindBuffer(GL_ARRAY_BUFFER, *_instanceVbo);
-    glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
-}
-
 void ShaderProgram::_initInstanceVbo() 
 {
-    initVar(glGenBuffers, _instanceVbo);
+    std::unique_ptr<GLuint> instanceVbo;
+    initVar(glGenBuffers, instanceVbo);
+    _instanceVbos.push_back(std::move(instanceVbo));
+}
+
+const unsigned int ShaderProgram::initInstanceBuffer() 
+{
+    auto id = _instanceVbos.size();
+
+    _initVao();
+    _initInstanceVbo();
+    bindVao();
+    glBindBuffer(GL_ARRAY_BUFFER, *_instanceVbos[id]);
+
+    return id;
+}
+
+void ShaderProgram::loadInstanceData(unsigned int id, GLsizeiptr size, GLsizei count, const GLvoid *data) 
+{
+    _initVao();
+    bindVao();
+    _numInstances = count;
+    glBindBuffer(GL_ARRAY_BUFFER, *_instanceVbos[id]);
+    glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
 }
 
 void ShaderProgram::_initEbo() 

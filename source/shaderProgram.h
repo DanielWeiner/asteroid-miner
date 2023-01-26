@@ -17,24 +17,25 @@ public:
     void defineAttribute(const char* name, GLint dimensions);
 
     template<typename>
-    void defineInstanceAttribute(const char* name, GLint dimensions);
+    void defineInstanceAttribute(unsigned int id, const char* name, GLint dimensions);
 
     void addVertexShader(const char* data);
     void addFragmentShader(const char* data);
     void linkShaders();
     void bindAttributes();
+    void bindAttributes(unsigned int id);
 
     template<GLsizei S, typename T>
     void loadData(T (&data)[S]);
     template<GLsizei S, typename T>
-    void loadInstanceData(T (&data)[S]);
+    void loadInstanceData(unsigned int id, T (&data)[S]);
     template<GLsizei S>
     void loadIndices(const GLuint (&data)[S]);
 
     void loadData(GLsizeiptr size, GLsizei count, const GLvoid* data);
-    void loadInstanceData(GLsizeiptr size, GLsizei count, const GLvoid* data);
+    void loadInstanceData(unsigned int id, GLsizeiptr size, GLsizei count, const GLvoid* data);
     void loadIndices(GLsizei size, GLsizei count, const GLuint* data);
-    void initInstanceBuffer();
+    const unsigned int initInstanceBuffer();
 
     void bindVao();
     void unbindVao();
@@ -64,28 +65,29 @@ private:
         GLenum  type;
         GLsizei size;
         bool    instance;
+        GLuint  vbo;
     };
 
-    std::unique_ptr<GLuint>  _programId;
-    std::unique_ptr<GLuint>  _vao;
-    std::unique_ptr<GLuint>  _vbo;
-    std::unique_ptr<GLuint>  _ebo;
-    std::unique_ptr<GLuint>  _instanceVbo;
-    std::vector<GLuint>      _textures;
-    std::vector<const char*> _textureNames;
-    std::vector<GLuint>      _shaders;
-    std::vector<Attribute>   _attributes;
-    GLsizei                  _numIndices;
-    GLsizei                  _numVertices;
-    GLsizei                  _numInstances;
-
+    std::unique_ptr<GLuint>               _programId;
+    std::unique_ptr<GLuint>               _vao;
+    std::unique_ptr<GLuint>               _vbo;
+    std::unique_ptr<GLuint>               _ebo;
+    std::vector<std::unique_ptr<GLuint>>  _instanceVbos;
+    std::vector<GLuint>                   _textures;
+    std::vector<const char*>              _textureNames;
+    std::vector<GLuint>                   _shaders;
+    std::vector<Attribute>                _attributes;
+    GLsizei                               _numIndices;
+    GLsizei                               _numVertices;
+    GLsizei                               _numInstances;
     void   _addShader(GLenum shaderType, const char* data);
     void _defineAttribute(const char* name, GLint dimensions, GLenum type, GLsizei size, 
-            bool instance);
+            bool instance, GLuint vbo);
     void _initVao();
     void _initVbo();
     void _initInstanceVbo();
     void _initEbo();
+    void _bindAttributes(GLuint id);
 
     GLuint _getOrCreateProgramId();
     GLuint _getUniformLocation(const char* name);
@@ -134,14 +136,14 @@ template <typename T>
 inline void ShaderProgram::defineAttribute(const char* name, GLint dimensions) 
 {
     GLenum type = ShaderProgram::GlTypes<T>::type;
-    _defineAttribute(name, dimensions, type, sizeof(T), false);
+    _defineAttribute(name, dimensions, type, sizeof(T), false, *_vbo);
 }
 
 template <typename T>
-inline void ShaderProgram::defineInstanceAttribute(const char* name, GLint dimensions) 
+inline void ShaderProgram::defineInstanceAttribute(unsigned int id, const char* name, GLint dimensions) 
 {
     GLenum type = ShaderProgram::GlTypes<T>::type;
-    _defineAttribute(name, dimensions, type, sizeof(T), true);
+    _defineAttribute(name, dimensions, type, sizeof(T), true, *_instanceVbos[id]);
 }
 
 template <GLsizei S>
@@ -156,9 +158,9 @@ inline void ShaderProgram::loadData(T (&data)[size])
 }
 
 template<GLsizei size, typename T>
-inline void ShaderProgram::loadInstanceData(T (&data)[size]) 
+inline void ShaderProgram::loadInstanceData(unsigned int id, T (&data)[size]) 
 {
-    loadInstanceData(size * sizeof(T), size, data);
+    loadInstanceData(id, size * sizeof(T), size, data);
 }
 
 template<>

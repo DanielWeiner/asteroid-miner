@@ -10,7 +10,6 @@
 
 class SpriteRenderer {
 public:
-    static constexpr unsigned int MATRIX_COUNT = 2;
     SpriteRenderer();
     SpriteRenderer(float width, float height);
     void init();
@@ -26,7 +25,11 @@ private:
     float                                _height;
     unsigned int                         _bufSize;
     std::unique_ptr<glm::mat4[]>         _buffer;
+    std::unique_ptr<glm::mat4[]>         _texBuffer;
     unsigned int                         _length = 0;
+    unsigned int                         _vbo1;
+    unsigned int                         _vbo2;
+    bool                                 _spritesDirty = false;
 };
 
 #endif
