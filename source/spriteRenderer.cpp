@@ -2,6 +2,7 @@
 
 #include "sprite.h"
 #include "spriteSheet.h"
+#include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 #include <algorithm>
@@ -85,7 +86,7 @@ void SpriteRenderer::init() {
     _shaderProgram.defineAttribute<float>("aPos", 2);
     _shaderProgram.bindAttributes();
 
-    _vbo1 = _shaderProgram.initInstanceBuffer();
+    _vbo1 = _shaderProgram.initInstanceBuffer(GL_STREAM_DRAW);
     _shaderProgram.defineInstanceAttribute<glm::vec4>(_vbo1, "instanceModel", 4);
     _shaderProgram.bindAttributes(_vbo1);
 

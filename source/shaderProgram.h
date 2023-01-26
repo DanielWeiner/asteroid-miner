@@ -35,7 +35,7 @@ public:
     void loadData(GLsizeiptr size, GLsizei count, const GLvoid* data);
     void loadInstanceData(unsigned int id, GLsizeiptr size, GLsizei count, const GLvoid* data);
     void loadIndices(GLsizei size, GLsizei count, const GLuint* data);
-    const unsigned int initInstanceBuffer();
+    const unsigned int initInstanceBuffer(GLenum type = GL_STATIC_DRAW);
 
     void bindVao();
     void unbindVao();
@@ -68,18 +68,19 @@ private:
         GLuint  vbo;
     };
 
-    std::unique_ptr<GLuint>               _programId;
-    std::unique_ptr<GLuint>               _vao;
-    std::unique_ptr<GLuint>               _vbo;
-    std::unique_ptr<GLuint>               _ebo;
-    std::vector<std::unique_ptr<GLuint>>  _instanceVbos;
-    std::vector<GLuint>                   _textures;
-    std::vector<const char*>              _textureNames;
-    std::vector<GLuint>                   _shaders;
-    std::vector<Attribute>                _attributes;
-    GLsizei                               _numIndices;
-    GLsizei                               _numVertices;
-    GLsizei                               _numInstances;
+    std::unique_ptr<GLuint>  _programId;
+    std::unique_ptr<GLuint>  _vao;
+    std::unique_ptr<GLuint>  _vbo;
+    std::unique_ptr<GLuint>  _ebo;
+    std::vector<GLuint>      _instanceVbos;
+    std::vector<GLenum>      _instanceVboTypes;
+    std::vector<GLuint>      _textures;
+    std::vector<const char*> _textureNames;
+    std::vector<GLuint>      _shaders;
+    std::vector<Attribute>   _attributes;
+    GLsizei                  _numIndices;
+    GLsizei                  _numVertices;
+    GLsizei                  _numInstances;
     void   _addShader(GLenum shaderType, const char* data);
     void _defineAttribute(const char* name, GLint dimensions, GLenum type, GLsizei size, 
             bool instance, GLuint vbo);
@@ -143,7 +144,7 @@ template <typename T>
 inline void ShaderProgram::defineInstanceAttribute(unsigned int id, const char* name, GLint dimensions) 
 {
     GLenum type = ShaderProgram::GlTypes<T>::type;
-    _defineAttribute(name, dimensions, type, sizeof(T), true, *_instanceVbos[id]);
+    _defineAttribute(name, dimensions, type, sizeof(T), true, _instanceVbos[id]);
 }
 
 template <GLsizei S>

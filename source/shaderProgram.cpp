@@ -9,11 +9,8 @@
 namespace {
     typedef void (*InitFn)(GLsizei, GLuint*);
 
-    void initVar(InitFn fn, std::unique_ptr<GLuint> &ptr) {
-        if (ptr == nullptr) {
-            ptr.reset(new GLuint());
-            fn(1, ptr.get());
-        }
+    void initVar(InitFn fn, GLuint* ptr) {
+        fn(1, ptr);
     }
 
     void GLAPIENTRY
@@ -49,27 +46,27 @@ void ShaderProgram::clearScreen(float r, float g, float b, float a)
 
 ShaderProgram::~ShaderProgram() 
 {
-    if (_vao != nullptr) {
+    if (_vao) {
         glDeleteVertexArrays(1, _vao.get());
     }
 
-    if (_vbo != nullptr) {
+    if (_vbo) {
         glDeleteBuffers(1, _vbo.get());
     }
 
-    if (_ebo != nullptr) {
+    if (_ebo) {
         glDeleteBuffers(1, _ebo.get());
     }
 
-    for(auto& vbo : _instanceVbos) {
-        glDeleteBuffers(1, vbo.get());
+    for(auto vbo : _instanceVbos) {
+        glDeleteBuffers(1, &vbo);
     }
 
     for (auto texture : _textures) {
         glDeleteTextures(1, &texture);
     }
 
-    if (_programId != nullptr) {
+    if (_programId) {
         glDeleteProgram(*_programId);
     }
 }
@@ -182,7 +179,7 @@ void ShaderProgram::bindAttributes() {
 }
 
 void ShaderProgram::bindAttributes(unsigned int id) {
-    _bindAttributes(*_instanceVbos[id]);
+    _bindAttributes(_instanceVbos[id]);
 }
 
 void ShaderProgram::_bindAttributes(GLuint id) {
@@ -311,29 +308,38 @@ void ShaderProgram::loadIndices(GLsizei size, GLsizei count, const GLuint* data)
 
 void ShaderProgram::_initVao() 
 {
-    initVar(glGenVertexArrays, _vao);
+    if (!_vao) {
+        GLuint vao;
+        initVar(glGenVertexArrays, &vao);
+        _vao = std::make_unique<GLuint>(vao);
+    }
 }
 
 void ShaderProgram::_initVbo() 
 {
-    initVar(glGenBuffers, _vbo);
+    if (!_vbo) {
+        GLuint vbo;
+        initVar(glGenBuffers, &vbo);
+        _vbo = std::make_unique<GLuint>(vbo);
+    }
 }
 
 void ShaderProgram::_initInstanceVbo() 
 {
-    std::unique_ptr<GLuint> instanceVbo;
-    initVar(glGenBuffers, instanceVbo);
-    _instanceVbos.push_back(std::move(instanceVbo));
+    GLuint instanceVbo;
+    initVar(glGenBuffers, &instanceVbo);
+    _instanceVbos.push_back(instanceVbo);
 }
 
-const unsigned int ShaderProgram::initInstanceBuffer() 
+const unsigned int ShaderProgram::initInstanceBuffer(GLenum bufType) 
 {
     auto id = _instanceVbos.size();
+    _instanceVboTypes.push_back(bufType);
 
     _initVao();
     _initInstanceVbo();
     bindVao();
-    glBindBuffer(GL_ARRAY_BUFFER, *_instanceVbos[id]);
+    glBindBuffer(GL_ARRAY_BUFFER, _instanceVbos[id]);
 
     return id;
 }
@@ -343,13 +349,17 @@ void ShaderProgram::loadInstanceData(unsigned int id, GLsizeiptr size, GLsizei c
     _initVao();
     bindVao();
     _numInstances = count;
-    glBindBuffer(GL_ARRAY_BUFFER, *_instanceVbos[id]);
-    glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, _instanceVbos[id]);
+    glBufferData(GL_ARRAY_BUFFER, size, data, _instanceVboTypes[id]);
 }
 
 void ShaderProgram::_initEbo() 
 {
-    initVar(glGenBuffers, _ebo);
+    if (!_ebo) {
+        GLuint ebo;
+        initVar(glGenBuffers, &ebo);
+        _ebo = std::make_unique<GLuint>(ebo);
+    }
 }
 
 GLuint ShaderProgram::_getUniformLocation(const char *name) 
