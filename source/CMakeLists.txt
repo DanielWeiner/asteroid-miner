@@ -38,8 +38,12 @@ endif()
 # Every source file (and header file) should be listed here, except main.cpp.
 # If you add a new file, add it to this list.
 target_sources(AsteroidMinerLib PRIVATE
+    game/drone.cpp
+    game/drone.h
 	error.h	
     event.h
+    game.cpp
+    game.h
 	globalIncludes.h
     shaderProgram.cpp
     shaderProgram.h
@@ -52,4 +56,5 @@ target_sources(AsteroidMinerLib PRIVATE
     stb_image.h
 	window.cpp
 	window.h
+    windowedApplication.h
 )

@@ -1,5 +1,4 @@
 #include "window.h"
-
 #include "event.h"
 
 #include <utility>
@@ -8,6 +7,13 @@
 #include <unordered_map>
 #include <functional>
 #include <string>
+#include <filesystem>
+
+#ifdef _WIN32
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <GLFW/glfw3native.h>
+#include "shellapi.h"
+#endif
 
 namespace {
     int         _currentErrorCode;
@@ -19,6 +25,8 @@ namespace {
         _currentErrorCode = errorCode;
         _currentErrorMessage = message;
     }
+
+
 }
 
 void Window::_handleError(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *userParam)
@@ -95,6 +103,9 @@ void Window::_handleCursorEnter(GLFWwindow* window, int entered)
 
 void Window::_handleMouseButton(GLFWwindow* window, int button, int action, int mods)
 {
+    double x, y;
+    glfwGetCursorPos(window, &x, &y);
+    
     EventAction eventAction;
     switch (action) {
         case GLFW_PRESS:
@@ -106,8 +117,7 @@ void Window::_handleMouseButton(GLFWwindow* window, int button, int action, int 
         default:
             eventAction = EventAction::UNKNOWN;
     }
-    double x, y;
-    glfwGetCursorPos(window, &x, &y);
+    
 
     _windowInstances[window]->_handleEvent({
         .type = EventType::MOUSE,
@@ -134,12 +144,38 @@ void Window::_handleScroll(GLFWwindow* window, double xoffset, double yoffset)
     });
 }
 
-Window::Window(std::string name, ivec2 dimension):
-    _name(name),
-    _size(dimension),
-    _renderLoop([]() {}),
-    _eventLoop([](Event&) {}),
-    _onInit([](){})
+void Window::_handleWindowRefresh(GLFWwindow* window)
+{
+    _windowInstances[window]->_render();
+}
+
+void Window::_render() {
+    if (_application.getName() != _name) {
+        _name = _application.getName();
+
+        glfwSetWindowTitle(_window, _application.getName());
+    }
+    _application.render();
+    glfwSwapBuffers(_window);
+}
+
+void Window::_populateIcon() 
+{
+#ifdef _WIN32
+    HWND hwnd = glfwGetWin32Window(_window);
+    TCHAR filename[MAX_PATH + 1];
+    GetModuleFileName(NULL, filename, MAX_PATH);
+    HICON icon = ExtractIcon((HINSTANCE)_hinstance, filename, 0);
+    SendMessage(hwnd, (UINT)WM_SETICON, ICON_SMALL, (LPARAM)icon);
+    SendMessage(hwnd, (UINT)WM_SETICON, ICON_BIG, (LPARAM)icon);
+#endif
+}
+
+Window::Window(HInstance hinstance, WindowedApplication& application):
+    _name(application.getName()),
+    _size(ivec2(application.getWidth(), application.getHeight())),
+    _hinstance(hinstance),
+    _application(application)
 {
 }
 
@@ -175,28 +211,6 @@ std::string Window::getErrorMessage()
     return _errorMessage;
 }
 
-void Window::setName(string name) 
-{
-    _name = name;
-    if (_window == NULL)
-        return;
-    glfwSetWindowTitle(_window, _name.c_str());
-}
-
-void Window::setRenderLoop(const std::function<void()> renderLoop) {
-    _renderLoop = renderLoop;
-}
-
-void Window::setEventLoop(const std::function<void(const Event&)> eventLoop)
-{
-    _eventLoop = eventLoop;
-}
-
-void Window::onInit(std::function<void()> initCallback) 
-{
-    _onInit = initCallback;
-}
-
 void Window::endLoop()
 {
     _done = true;
@@ -206,11 +220,11 @@ Window& Window::_start()
 {
     glDebugMessageCallback(_handleError, this);
 
-    _onInit();
+    _application.init();
     while (!glfwWindowShouldClose(_window)) {
-        _renderLoop();
+        
         glfwPollEvents();
-        glfwSwapBuffers(_window);
+        _render();
     }
     
     _windowInstances.erase(_window);
@@ -222,8 +236,7 @@ Window& Window::_start()
 
 Window& Window::_handleEvent(const Event& e)
 {
-     Event event(e);
-    _eventLoop(event);
+    _application.handleEvent(e);
 
     return *this;
 }
@@ -232,11 +245,6 @@ void Window::run() {
     if (_init().isError())
         return;
     _start();
-}
-
-const ivec2 Window::getDimensions()
-{
-    return ivec2(_size);
 }
 
 Window& Window::_updateSize(int width, int height)
@@ -284,6 +292,8 @@ Window& Window::_initGlfw() {
         return _setError(ErrorType::ERR_GLFW_CREATE_WINDOW, _currentErrorMessage);
     }
 
+    _populateIcon();
+
     glfwMakeContextCurrent(_window);
 
     if(!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -302,11 +312,12 @@ Window& Window::_initGlfw() {
     glfwSetCursorEnterCallback(_window, _handleCursorEnter);
     glfwSetMouseButtonCallback(_window, _handleMouseButton);
     glfwSetScrollCallback(_window, _handleScroll);
+    glfwSetWindowRefreshCallback(_window, _handleWindowRefresh);
 
     //Use Vsync
     glfwSwapInterval(1);
 
-    _updateSize(_size.x, _size.y);
+    glfwMaximizeWindow(_window);
 
     return *this;
 }

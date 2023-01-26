@@ -12,7 +12,6 @@
         {
             "name": "glad",
             "features": [
-                "gl-api-33",
                 "extensions",
                 "loader"
             ]

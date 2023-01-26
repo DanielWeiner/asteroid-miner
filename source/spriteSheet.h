@@ -5,19 +5,18 @@
 
 #include <string>
 #include <unordered_map>
+#include <memory>
 #include <vector>
-
-
 
 class SpriteSheet {
 public:
-    using SpriteMap = std::unordered_map<std::string, glm::mat4>;
-    using DimensionMap = std::unordered_map<std::string, glm::vec2>;
+    using SpriteMap = std::unordered_map<std::string, std::unique_ptr<glm::mat4>>;
+    using DimensionMap = std::unordered_map<std::string, std::unique_ptr<glm::vec2>>;
 
     SpriteSheet(const char* path);
     void load();
-    glm::mat4* getSpriteMatrix(const char* itemName);
-    glm::vec2* getRawDimensions(const char* itemName);
+    void writeSpriteMatrix(const char* itemName, glm::mat4* buffer);
+    glm::vec2& getRawDimensions(const char* itemName);
 private:
     const char* _file;
     float       _width;

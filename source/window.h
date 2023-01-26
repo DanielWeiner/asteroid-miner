@@ -3,14 +3,13 @@
 
 #include "globalIncludes.h"
 #include "error.h"
-
+#include "windowedApplication.h"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
 #include <string>
-#include <functional>
 
 class Event;
 
@@ -19,33 +18,31 @@ using ivec2  = glm::ivec2;
 
 class Window {
 public:
-    Window(string name, ivec2 dimension);
-
+#ifdef _WIN32
+    typedef HINSTANCE HInstance;
+#else
+    typedef void* HInstance;
+#endif
+    Window(HInstance hinstance, WindowedApplication& application);
     void close();
 
     bool isError();
     ErrorType getErrorType();
     string getErrorMessage();
-
-    void setName(string name);
-    void setRenderLoop(std::function<void()> renderLoop);
-    void setEventLoop(std::function<void(const Event&)> eventLoop);
-    void onInit(std::function<void()> initCallback);
     
     void endLoop();
     void run();
 
     const ivec2 getDimensions();
 private:
-    string                      _name;
-    GLFWwindow*                 _window = NULL;
-    string                      _errorMessage;
-    ErrorType                   _errorType = ErrorType::NONE;
-    ivec2                       _size;
-    std::function<void()>       _renderLoop;
-    std::function<void(Event&)> _eventLoop;
-    std::function<void()>       _onInit;
-    bool                        _done = false;
+    string               _name;
+    GLFWwindow*          _window = NULL;
+    string               _errorMessage;
+    ErrorType            _errorType = ErrorType::NONE;
+    ivec2                _size;
+    bool                 _done = false;
+    HInstance            _hinstance;
+    WindowedApplication& _application;
 
     static void _handleError(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *userParam);
     static void _handleResize(GLFWwindow* window, int width, int height);
@@ -55,6 +52,10 @@ private:
     static void _handleCursorEnter(GLFWwindow* window, int entered);
     static void _handleMouseButton(GLFWwindow* window, int button, int action, int mods);
     static void _handleScroll(GLFWwindow* window, double xoffset, double yoffset);
+    static void _handleWindowRefresh(GLFWwindow *window);
+    
+    void _populateIcon();
+    void _render();
 
     Window& _updateSize(int width, int height);
     Window& _setError(const ErrorType& errorType, const string &message);

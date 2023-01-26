@@ -92,7 +92,8 @@
         "codecvt": "cpp",
         "filesystem": "cpp",
         "ranges": "cpp",
-        "valarray": "cpp"
+        "valarray": "cpp",
+        "numbers": "cpp"
     },
     "editor.detectIndentation": false,
     "C_Cpp.default.cppStandard": "c++20",

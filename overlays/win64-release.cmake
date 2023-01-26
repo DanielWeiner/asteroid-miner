@@ -6,3 +6,4 @@ set(VCPKG_BUILD_TYPE release)
 
 set(VCPKG_CMAKE_SYSTEM_NAME MinGW)
 set(VCPKG_POLICY_DLLS_WITHOUT_LIBS enabled)
+set(AM_TEXUREPACKER_BIN C:/Program\ Files/CodeAndWeb/TexturePacker/bin/TexturePacker.exe)

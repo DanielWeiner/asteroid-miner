@@ -18,13 +18,19 @@ enum class EventAction {
     UNKNOWN,
 
     RESIZE,
+
+    HOVER,
+    SCROLL,
+
     PRESS,
     RELEASE,
     REPEAT,
+
+    CLICK,
+    DRAG,
+
     ENTER,
-    LEAVE,
-    HOVER,
-    SCROLL
+    LEAVE
 };
 
 class Event {

@@ -52,6 +52,22 @@ project("Asteroid Miner" VERSION 0.0.0
 	DESCRIPTION ""
 	LANGUAGES CXX)
 
+# file(GLOB_RECURSE ASSETS "${CMAKE_CURRENT_SOURCE_DIR}/data/*")
+# set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/data")
+
+# foreach(FILE ${ASSETS})
+#     set_property(SOURCE APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${FILE}")
+#     # # Get the relative path from the root folder to the current file.
+#     file(RELATIVE_PATH NEW_FILE "${CMAKE_CURRENT_SOURCE_DIR}" "${FILE}")
+#     # # Get the parent directory for the new location.
+#     get_filename_component(FILE_PATH "${NEW_FILE}" DIRECTORY)
+
+#     file(COPY ${FILE} DESTINATION "${CMAKE_BINARY_DIR}/Release/${FILE_PATH}")
+#     file(COPY ${FILE} DESTINATION "${CMAKE_BINARY_DIR}/Debug/${FILE_PATH}")
+# endforeach()
+# target_sources(AsteroidMiner PRIVATE "${ASSETS}")
+
+
 # Find the needed library dependencies.
 find_package(glad CONFIG REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
@@ -81,6 +97,13 @@ endif()
 
 # Add the library target.
 add_subdirectory(source)
+
+file(GLOB_RECURSE ASSETS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/data")
+file(COPY data/sprites/sprites.png DESTINATION "${CMAKE_BINARY_DIR}/Release/data/sprites")
+file(COPY data/sprites/sprites.png DESTINATION "${CMAKE_BINARY_DIR}/Debug/data/sprites")
+file(COPY data/sprites/sprites.json DESTINATION "${CMAKE_BINARY_DIR}/Release/data/sprites")
+file(COPY data/sprites/sprites.json DESTINATION "${CMAKE_BINARY_DIR}/Debug/data/sprites")
+
 
 # Create game target.
 if(APPLE AND AM_CREATE_BUNDLE)
@@ -213,18 +236,3 @@ elseif(UNIX)
 	install(FILES copyright DESTINATION share/doc/asteroid-miner)
 	install(FILES changelog DESTINATION share/doc/asteroid-miner)
 endif()
-
-
-file(GLOB_RECURSE ASSETS "${CMAKE_CURRENT_SOURCE_DIR}/data/*")
-target_sources(AsteroidMiner PRIVATE "${ASSETS}")
-
-foreach(FILE ${ASSETS})
-    # # Get the relative path from the root folder to the current file.
-    file(RELATIVE_PATH NEW_FILE "${CMAKE_CURRENT_SOURCE_DIR}" "${FILE}")
-    # # Get the parent directory for the new location.
-    get_filename_component(FILE_PATH "${NEW_FILE}" DIRECTORY)
-    get_filename_component(FILE_NAME "${NEW_FILE}" NAME)
-
-    file(COPY ${FILE} DESTINATION "${CMAKE_BINARY_DIR}/Release/${FILE_PATH}")
-    file(COPY ${FILE} DESTINATION "${CMAKE_BINARY_DIR}/Debug/${FILE_PATH}")
-endforeach()
