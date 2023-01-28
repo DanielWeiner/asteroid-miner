@@ -1,35 +1,42 @@
 #ifndef SPRITE_RENDERER_H_
 #define SPRITE_RENDERER_H_
 
-#include "window.h"
-#include "shaderProgram.h"
 #include "sprite.h"
+#include "shaderProgram.h"
 #include <glm/glm.hpp>
+#include <unordered_map>
 #include <vector>
 #include <memory>
 
+class SpriteBuffer;
+
 class SpriteRenderer {
 public:
-    SpriteRenderer();
-    SpriteRenderer(float width, float height);
+    SpriteRenderer(
+        std::shared_ptr<SpriteSheet> spriteSheet,
+        std::shared_ptr<SpriteBuffer> spriteBuffer,
+        float width,
+        float height
+    );
+
     void init();
-    void setBuffer(const unsigned int size);
     void updateDimensions(float width, float height);
-    std::unique_ptr<Sprite> createSprite(const char* spriteName);
+    
     void draw();
     void clearScreen();
 private:
-    ShaderProgram                        _shaderProgram;
-    std::vector<std::shared_ptr<Sprite>> _sprites;
-    float                                _width;
-    float                                _height;
-    unsigned int                         _bufSize;
-    std::unique_ptr<glm::mat4[]>         _buffer;
-    std::unique_ptr<glm::mat4[]>         _texBuffer;
-    unsigned int                         _length = 0;
-    unsigned int                         _vbo1;
-    unsigned int                         _vbo2;
-    bool                                 _spritesDirty = false;
+    std::unique_ptr<ShaderProgram>                     _shaderProgram;
+    std::shared_ptr<SpriteSheet>                       _spriteSheet;
+    std::shared_ptr<SpriteBuffer>                      _spriteBuffer;
+    float                                              _width;
+    float                                              _height;
+    unsigned int                                       _vbo1;
+    unsigned int                                       _vbo2;
+    bool                                               _spritesDirty = false;
+    unsigned int                                       _lastSpriteId = 0;
+
+    friend Sprite::~Sprite();
+
 };
 
 #endif

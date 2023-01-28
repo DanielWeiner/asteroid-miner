@@ -49,6 +49,10 @@ target_sources(AsteroidMinerLib PRIVATE
     shaderProgram.h
     sprite.cpp
     sprite.h
+    spriteBuffer.cpp
+    spriteBuffer.h
+    spriteFactory.cpp
+    spriteFactory.h
     spriteRenderer.cpp
     spriteRenderer.h
     spriteSheet.cpp

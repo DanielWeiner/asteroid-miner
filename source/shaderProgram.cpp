@@ -1,6 +1,4 @@
 #include "shaderProgram.h"
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
 
 #include <iostream>
 #include <algorithm>
@@ -71,7 +69,7 @@ ShaderProgram::~ShaderProgram()
     }
 }
 
-void ShaderProgram::loadTexture(const char* filepath, const char* textureName) {
+void ShaderProgram::loadTexture(unsigned char* image, int width, int height, const char* textureName) {
     GLuint texture;
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -82,20 +80,10 @@ void ShaderProgram::loadTexture(const char* filepath, const char* textureName) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    stbi_set_flip_vertically_on_load(true);
-    // load and generate the texture
-    int width, height, nrChannels;
-    unsigned char *data = stbi_load(filepath, &width, &height, &nrChannels, 0);
-    if (data)
-    {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-    }
-    else
-    {
-        std::cout << "Failed to load texture" << std::endl;
-    }
-    stbi_image_free(data);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
     _textures.push_back(texture);
     _textureNames.push_back(textureName);
 }

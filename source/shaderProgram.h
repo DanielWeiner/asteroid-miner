@@ -11,7 +11,7 @@
 
 class ShaderProgram {
 public:
-    void loadTexture(const char* filePath, const char* textureName);
+    void loadTexture(unsigned char* image, int width, int height, const char* textureName);
 
     template<typename>
     void defineAttribute(const char* name, GLint dimensions);
@@ -81,7 +81,7 @@ private:
     GLsizei                  _numIndices;
     GLsizei                  _numVertices;
     GLsizei                  _numInstances;
-    void   _addShader(GLenum shaderType, const char* data);
+    void  _addShader(GLenum shaderType, const char* data);
     void _defineAttribute(const char* name, GLint dimensions, GLenum type, GLsizei size, 
             bool instance, GLuint vbo);
     void _initVao();

@@ -1,5 +1,7 @@
 #include "spriteRenderer.h"
 
+#include "shaderProgram.h"
+#include "spriteBuffer.h"
 #include "sprite.h"
 #include "spriteSheet.h"
 #include <glad/glad.h>
@@ -49,22 +51,16 @@ void main()
 
 }
 
-namespace {
-    SpriteSheet spriteSheet("data/sprites/sprites.json");
-}
-
-SpriteRenderer::SpriteRenderer() : SpriteRenderer(0.f, 0.f) {}
-
 SpriteRenderer::SpriteRenderer(
-    float width,
+    std::shared_ptr<SpriteSheet> spriteSheet,
+    std::shared_ptr<SpriteBuffer> spriteBuffer, 
+    float width, 
     float height
-) 
-: _shaderProgram(ShaderProgram()), _width(width), _height(height)
+) : _spriteSheet(spriteSheet), _spriteBuffer(spriteBuffer), _width(width), _height(height) 
 {}
 
 void SpriteRenderer::init() {
-    spriteSheet.load();
-
+    _shaderProgram = std::make_unique<ShaderProgram>();
     const float vertices[] = {
         // positions
          1.0f, 0.0f, // top right
@@ -75,34 +71,27 @@ void SpriteRenderer::init() {
          0.0f, 1.0f, // bottom left
          0.0f, 0.0f // top left 
     };
+    auto sheetSize = _spriteSheet->getRawDimensions();
 
-    _shaderProgram.init();
-    _shaderProgram.loadTexture("data/sprites/sprites.png", "spriteSheet");
-    _shaderProgram.addFragmentShader(fragmentShaderSource);
-    _shaderProgram.addVertexShader(vertexShaderSource);
-    _shaderProgram.linkShaders();
+    _shaderProgram->init();
+    _shaderProgram->loadTexture(_spriteSheet->getRawImage(), sheetSize.x, sheetSize.y, "spriteSheet");
+    _shaderProgram->addFragmentShader(fragmentShaderSource);
+    _shaderProgram->addVertexShader(vertexShaderSource);
+    _shaderProgram->linkShaders();
 
-    _shaderProgram.loadData(vertices);
-    _shaderProgram.defineAttribute<float>("aPos", 2);
-    _shaderProgram.bindAttributes();
+    _shaderProgram->loadData(vertices);
+    _shaderProgram->defineAttribute<float>("aPos", 2);
+    _shaderProgram->bindAttributes();
 
-    _vbo1 = _shaderProgram.initInstanceBuffer(GL_STREAM_DRAW);
-    _shaderProgram.defineInstanceAttribute<glm::vec4>(_vbo1, "instanceModel", 4);
-    _shaderProgram.bindAttributes(_vbo1);
+    _vbo1 = _shaderProgram->initInstanceBuffer(GL_STREAM_DRAW);
+    _shaderProgram->defineInstanceAttribute<glm::vec4>(_vbo1, "instanceModel", 4);
+    _shaderProgram->bindAttributes(_vbo1);
 
-    _vbo2 = _shaderProgram.initInstanceBuffer();
-    _shaderProgram.defineInstanceAttribute<glm::vec4>(_vbo2, "instanceTexModel", 4);
-    _shaderProgram.bindAttributes(_vbo2);
+    _vbo2 = _shaderProgram->initInstanceBuffer();
+    _shaderProgram->defineInstanceAttribute<glm::vec4>(_vbo2, "instanceTexModel", 4);
+    _shaderProgram->bindAttributes(_vbo2);
 
-    _shaderProgram.initTextures();
-}
-
-void SpriteRenderer::setBuffer(const unsigned int size) 
-{
-    _bufSize = size;
-    _length = 0;
-    _buffer = std::unique_ptr<glm::mat4[]>(new glm::mat4[size]);
-    _texBuffer = std::unique_ptr<glm::mat4[]>(new glm::mat4[size]);
+    _shaderProgram->initTextures();
 }
 
 void SpriteRenderer::updateDimensions(float width, float height) 
@@ -111,39 +100,21 @@ void SpriteRenderer::updateDimensions(float width, float height)
     _height = height;
 }
 
-std::unique_ptr<Sprite> SpriteRenderer::createSprite(const char* name)
-{
-    if (_length >= _bufSize) {
-        throw std::exception("Sprite buffer exceeded");
-    }
-    _spritesDirty = true;
-    glm::mat4* buf = &_buffer[_length];
-    
-    auto sprite = std::make_unique<Sprite>(Sprite(name, buf));
-    spriteSheet.writeSpriteMatrix(name, &_texBuffer[ _length]);
-    
-    ++_length;
-    
-    sprite->scaleBy(spriteSheet.getRawDimensions(name));
-    return std::move(sprite);
-}
-
-void SpriteRenderer::draw() 
-{
+void SpriteRenderer::draw() {
     glm::mat4 projection = glm::ortho(0.0f, _width, _height, 0.0f, -1.0f, 1.0f);
 
-    _shaderProgram.use();
-    if (_spritesDirty) {
-        _shaderProgram.loadInstanceData(_vbo2, sizeof(glm::mat4) * _length, _length, _texBuffer.get());
-        _spritesDirty = false;
+    _shaderProgram->use();
+    if (_spriteBuffer->areTexturesDirty()) {
+        _shaderProgram->loadInstanceData(_vbo2, sizeof(glm::mat4) * _spriteBuffer->size(), _spriteBuffer->size(), _spriteBuffer->textureData());
     }
-    _shaderProgram.loadInstanceData(_vbo1, sizeof(glm::mat4) * _length, _length, _buffer.get());
-    _shaderProgram.setUniform("projection", projection);
-    _shaderProgram.bindVao();
-    _shaderProgram.drawInstances();
+    _shaderProgram->loadInstanceData(_vbo1, sizeof(glm::mat4) *  _spriteBuffer->size(), _spriteBuffer->size(), _spriteBuffer->modelData());
+    _shaderProgram->setUniform("projection", projection);
+    _shaderProgram->bindVao();
+    _shaderProgram->drawInstances();
+    _spriteBuffer->resetDirtyFlag();
 }
 
 void SpriteRenderer::clearScreen() 
 {
-    _shaderProgram.clearScreen();
+    _shaderProgram->clearScreen();
 }

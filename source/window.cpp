@@ -8,6 +8,7 @@
 #include <functional>
 #include <string>
 #include <filesystem>
+#include <cmath>
 
 #ifdef _WIN32
 #define GLFW_EXPOSE_NATIVE_WIN32
@@ -16,6 +17,7 @@
 #endif
 
 namespace {
+    const int CLICK_THRESHOLD = 5;
     int         _currentErrorCode;
     std::string _currentErrorMessage;
     
@@ -126,7 +128,7 @@ void Window::_handleMouseButton(GLFWwindow* window, int button, int action, int 
             eventAction = EventAction::RELEASE;
 
             if (_buttonStates[button].pressed) {
-                if (_buttonStates[button].x == x && _buttonStates[button].y == y) {
+                if (abs(_buttonStates[button].x - x) <= CLICK_THRESHOLD && abs(_buttonStates[button].y - y) <= CLICK_THRESHOLD) {
                     additionalAction = EventAction::CLICK;
                 } else {
                     additionalAction = EventAction::DRAG;
@@ -269,7 +271,6 @@ Window& Window::_start()
 
     _application.init();
     while (!glfwWindowShouldClose(_window)) {
-        
         glfwPollEvents();
         _render();
     }
