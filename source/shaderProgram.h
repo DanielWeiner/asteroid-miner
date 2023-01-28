@@ -36,6 +36,7 @@ public:
     void loadInstanceData(unsigned int id, GLsizeiptr size, GLsizei count, const GLvoid* data);
     void loadIndices(GLsizei size, GLsizei count, const GLuint* data);
     const unsigned int initInstanceBuffer(GLenum type = GL_STATIC_DRAW);
+    void initVertexBuffer(GLenum type = GL_STATIC_DRAW);
 
     void bindVao();
     void unbindVao();
@@ -50,8 +51,6 @@ public:
     void drawArrays();
     void drawElements();
     void drawInstances();
-
-    void clearScreen(float r = 0., float g = 0., float b = 0., float a = 0.);
 
     void init();
     ~ShaderProgram();
@@ -81,6 +80,9 @@ private:
     GLsizei                  _numIndices;
     GLsizei                  _numVertices;
     GLsizei                  _numInstances;
+
+    GLenum                   _vboType = GL_STATIC_DRAW;
+    
     void  _addShader(GLenum shaderType, const char* data);
     void _defineAttribute(const char* name, GLint dimensions, GLenum type, GLsizei size, 
             bool instance, GLuint vbo);

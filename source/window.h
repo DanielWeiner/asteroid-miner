@@ -10,11 +10,12 @@
 #include <glm/glm.hpp>
 
 #include <string>
+#include <memory>
+#include <vector>
 
 class Event;
 
 using string = std::string;
-using ivec2  = glm::ivec2;
 
 class Window {
 public:
@@ -23,26 +24,31 @@ public:
 #else
     typedef void* HInstance;
 #endif
-    Window(HInstance hinstance, WindowedApplication& application);
+    Window(string name, float width, float height, HInstance hinstance);
     void close();
 
     bool isError();
     ErrorType getErrorType();
     string getErrorMessage();
     
+    void setTitle(std::string title);
+    void addApplication(std::shared_ptr<WindowedApplication> app);
+    
     void endLoop();
     void run();
 
-    const ivec2 getDimensions();
+    glm::vec2 getSize();
 private:
-    string               _name;
-    GLFWwindow*          _window = NULL;
-    string               _errorMessage;
-    ErrorType            _errorType = ErrorType::NONE;
-    ivec2                _size;
-    bool                 _done = false;
-    HInstance            _hinstance;
-    WindowedApplication& _application;
+    using AppArray = std::vector<std::shared_ptr<WindowedApplication>>;
+
+    string      _title;
+    GLFWwindow* _window = NULL;
+    string      _errorMessage;
+    ErrorType   _errorType = ErrorType::NONE;
+    glm::vec2   _size;
+    bool        _done = false;
+    HInstance   _hinstance;
+    AppArray    _applications;
 
     static void _handleError(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *userParam);
     static void _handleResize(GLFWwindow* window, int width, int height);

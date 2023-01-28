@@ -3,9 +3,7 @@
 
 #include <utility>
 #include <iostream>
-#include <mutex>
 #include <unordered_map>
-#include <functional>
 #include <string>
 #include <filesystem>
 #include <cmath>
@@ -199,12 +197,11 @@ void Window::_handleWindowRefresh(GLFWwindow* window)
 }
 
 void Window::_render() {
-    if (_application.getName() != _name) {
-        _name = _application.getName();
-
-        glfwSetWindowTitle(_window, _application.getName());
+    glClearColor(0, 0, 0, 1);
+    glClear(GL_COLOR_BUFFER_BIT);
+    for (auto application : _applications) {
+        application->render();
     }
-    _application.render();
     glfwSwapBuffers(_window);
 }
 
@@ -220,11 +217,10 @@ void Window::_populateIcon()
 #endif
 }
 
-Window::Window(HInstance hinstance, WindowedApplication& application):
-    _name(application.getName()),
-    _size(ivec2(application.getWidth(), application.getHeight())),
-    _hinstance(hinstance),
-    _application(application)
+Window::Window(string name, float width, float height, HInstance hinstance) :
+    _title(name),
+    _size(glm::vec2(width, height)),
+    _hinstance(hinstance)
 {
 }
 
@@ -260,6 +256,17 @@ std::string Window::getErrorMessage()
     return _errorMessage;
 }
 
+void Window::setTitle(std::string title) 
+{
+    _title = title;
+    glfwSetWindowTitle(_window, title.c_str());
+}
+
+void Window::addApplication(std::shared_ptr<WindowedApplication> app) 
+{
+    _applications.push_back(app);
+}
+
 void Window::endLoop()
 {
     _done = true;
@@ -269,7 +276,10 @@ Window& Window::_start()
 {
     glDebugMessageCallback(_handleError, this);
 
-    _application.init();
+    for (auto application : _applications) {
+        application->init();
+    }
+    
     while (!glfwWindowShouldClose(_window)) {
         glfwPollEvents();
         _render();
@@ -284,7 +294,9 @@ Window& Window::_start()
 
 Window& Window::_handleEvent(const Event& e)
 {
-    _application.handleEvent(e);
+    for (auto application : _applications) {
+        application->handleEvent(e);
+    }
 
     return *this;
 }
@@ -295,9 +307,14 @@ void Window::run() {
     _start();
 }
 
+glm::vec2 Window::getSize()
+{
+    return glm::vec2(_size);
+}
+
 Window& Window::_updateSize(int width, int height)
 {
-    _size = ivec2(width, height);
+    _size = glm::vec2(width, height);
 
     glViewport(0, 0, width, height);
 
@@ -332,7 +349,7 @@ Window& Window::_initGlfw() {
     _window = glfwCreateWindow(
         _size.x,
         _size.y,
-        _name.c_str(),
+        _title.c_str(),
         NULL,
         NULL
     );

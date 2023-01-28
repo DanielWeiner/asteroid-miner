@@ -36,12 +36,6 @@ void ShaderProgram::init()
     glDebugMessageCallback(MessageCallback, 0);
 }
 
-void ShaderProgram::clearScreen(float r, float g, float b, float a) 
-{
-    glClearColor(r, g, b, a);
-    glClear(GL_COLOR_BUFFER_BIT);
-}
-
 ShaderProgram::~ShaderProgram() 
 {
     if (_vao) {
@@ -281,7 +275,7 @@ void ShaderProgram::loadData(GLsizeiptr size, GLsizei count, const GLvoid* data)
     bindVao();
     _numVertices = count;
     glBindBuffer(GL_ARRAY_BUFFER, *_vbo);
-    glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, size, data, _vboType);
 }
 
 void ShaderProgram::loadIndices(GLsizei size, GLsizei count, const GLuint* data)
@@ -330,6 +324,15 @@ const unsigned int ShaderProgram::initInstanceBuffer(GLenum bufType)
     glBindBuffer(GL_ARRAY_BUFFER, _instanceVbos[id]);
 
     return id;
+}
+
+void ShaderProgram::initVertexBuffer(GLenum type)
+{
+    _vboType = type;
+    _initVao();
+    _initVbo();
+    bindVao();
+    glBindBuffer(GL_ARRAY_BUFFER, *_vbo);
 }
 
 void ShaderProgram::loadInstanceData(unsigned int id, GLsizeiptr size, GLsizei count, const GLvoid *data) 

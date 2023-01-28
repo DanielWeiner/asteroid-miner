@@ -3,7 +3,7 @@
 #include <numbers>
 
 namespace {
-    glm::vec2 gravity(0., 0.02);
+    glm::vec2 gravity(0., 0.06);
 }
 
 Drone::Drone(std::unique_ptr<Sprite>& sprite) : _sprite(std::move(sprite)) {}

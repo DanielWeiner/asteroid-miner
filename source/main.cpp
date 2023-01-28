@@ -16,8 +16,9 @@ int WinMain(HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmdshow) {
 #else
     void* hInst;
 #endif
-    std::unique_ptr<WindowedApplication> game = std::make_unique<Game>("Asteroid Miner", 2560, 1334);
-    Window window(hInst, *game);
-    window.run();
+    auto window = std::make_shared<Window>("Asteroid Miner", 2560, 1334, hInst);
+    auto game = std::make_shared<Game>(window);
+    window->addApplication(game);
+    window->run();
     return 0;
 }

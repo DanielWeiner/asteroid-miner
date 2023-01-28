@@ -1,17 +1,14 @@
 #include "spriteFactory.h"
-#include "spriteBuffer.h"
-#include "sprite.h"
-#include "spriteSheet.h"
-#include "spriteRenderer.h"
-
 
 SpriteFactory::SpriteFactory(
     std::shared_ptr<SpriteSheet> spriteSheet,
-    std::shared_ptr<SpriteBuffer> spriteBuffer
+    std::shared_ptr<SpriteBuffer> spriteBuffer,
+    std::shared_ptr<Window>       window
 )
 : 
 _spriteSheet(spriteSheet),
-_spriteBuffer(spriteBuffer)
+_spriteBuffer(spriteBuffer),
+_window(window)
 {}
 
 std::unique_ptr<Sprite> SpriteFactory::createSprite(std::string name)
@@ -29,7 +26,7 @@ std::unique_ptr<Sprite> SpriteFactory::createSprite(std::string name)
     return std::move(sprite);
 }
 
-std::unique_ptr<SpriteRenderer> SpriteFactory::createRenderer(float width, float height)
+std::unique_ptr<SpriteRenderer> SpriteFactory::createRenderer()
 {
-    return std::make_unique<SpriteRenderer>(_spriteSheet, _spriteBuffer, width, height);
+    return std::make_unique<SpriteRenderer>(_window, _spriteSheet, _spriteBuffer);
 }

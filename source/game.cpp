@@ -1,5 +1,8 @@
 #include "game.h"
 
+#include "window.h"
+
+#include "spriteFactory.h"
 #include "spriteBuffer.h"
 #include "spriteSheet.h"
 #include "spriteRenderer.h"
@@ -9,12 +12,14 @@
 
 #include <string>
 #include <random>
+#include <GLFW/glfw3.h>
 
 namespace {
-    const int numDrones = 500;
+    const int numDrones = 10000;
     const int maxAsteroids = 25;
 
     Sprite* selectedAsteroid = NULL;
+    glm::vec2 selectedAsteroidOffset(0.f, 0.f);
 
     std::default_random_engine e;
     double random(double peak, double spread)
@@ -36,31 +41,37 @@ namespace {
     }
 }
 
-Game::Game(const char* name, float width, float height)
-    : _width(width), _height(height), _displayName(name) {}
+Game::Game(std::shared_ptr<Window> window)
+    : _window(window) {}
 
 void Game::handleEvent(const Event &event) {
   if (event.action == EventAction::RESIZE) {
-    _width = event.width;
-    _height = event.height;
-    _displayName = "(" + to_string((int)_width) + ", " + to_string((int)_height)+ ")";
-    _renderer->updateDimensions(_width, _height);
+    _window->setTitle("(" + to_string((int)event.width) + ", " + to_string((int)event.height)+ ")");
   }
 
   if (event.type == EventType::MOUSE && event.action == EventAction::PRESS) {
-    int i = 0;
-    for (auto& asteroid : _asteroids) {
+    int i = _asteroids.size();
+    for (auto it = _asteroids.rbegin(); it < _asteroids.rend(); it++) {
+        i--;
+        auto& asteroid = *it;
+        
         if (asteroid->pointIsInHitbox(event.x, event.y)) {
+            if (event.button == GLFW_MOUSE_BUTTON_2) {
+                _asteroids.erase(_asteroids.begin() + i);
+                selectedAsteroid = NULL;
+                break;
+            }
+
+            selectedAsteroidOffset = asteroid->getPosition() - glm::vec2(event.x, event.y);
             auto newSprite = _spriteFactory->createSprite(asteroid->getName());
             *newSprite = *asteroid;
-            _asteroids.erase(_asteroids.begin() + i);
             selectedAsteroid = newSprite.get();
-            auto dimensions = selectedAsteroid->getRawDimensions();
-            selectedAsteroid->moveTo(event.x - dimensions.x / 2, event.y - dimensions.y / 2);
+
+            _asteroids.erase(_asteroids.begin() + i);
             _asteroids.push_back(std::move(newSprite));
             break;
         }
-        i++;
+        
     }
   }
 
@@ -70,18 +81,27 @@ void Game::handleEvent(const Event &event) {
 
   if (event.action == EventAction::HOVER || event.action == EventAction::REPEAT) {
     if (selectedAsteroid != NULL) {
-        auto dimensions = selectedAsteroid->getRawDimensions();
-        selectedAsteroid->moveTo(event.x - dimensions.x / 2, event.y - dimensions.y / 2);
+        selectedAsteroid->moveTo(glm::vec2(event.x, event.y) + selectedAsteroidOffset);
     }
   }
 
   if (event.action == EventAction::CLICK) {
-    if (_asteroids.size() < maxAsteroids) {
-        auto sprite = _spriteFactory->createSprite("Enemies/enemyGreen3.png");
-        auto dimensions = sprite->getRawDimensions();
-        sprite->moveTo(event.x - dimensions.x / 2, event.y - dimensions.y / 2);
+    if (_asteroids.size() < maxAsteroids && event.button == GLFW_MOUSE_BUTTON_1) {
+        bool inHitbox = false;
+        for (auto& asteroid : _asteroids) {
+            if (asteroid->pointIsInHitbox(event.x, event.y)) {
+                inHitbox = true;
+                break;
+            }
+        }
 
-        _asteroids.push_back(std::move(sprite));
+        if (!inHitbox) {
+            auto sprite = _spriteFactory->createSprite("Enemies/enemyGreen3.png");
+            auto dimensions = sprite->getRawDimensions();
+            sprite->moveTo(event.x - dimensions.x / 2, event.y - dimensions.y / 2);
+
+            _asteroids.push_back(std::move(sprite));
+        }
     }
   }
 }
@@ -92,8 +112,8 @@ void Game::init()
     auto spriteBuffer = std::make_shared<SpriteBuffer>();
     auto spriteSheet = std::make_shared<SpriteSheet>("data/sprites/sprites.json", "data/sprites/sprites.png");
     spriteSheet->load();
-    _spriteFactory = std::make_unique<SpriteFactory>(spriteSheet, spriteBuffer);
-    _renderer = _spriteFactory->createRenderer(_width, _height);
+    _spriteFactory = std::make_unique<SpriteFactory>(spriteSheet, spriteBuffer, _window);
+    _renderer = _spriteFactory->createRenderer();
     _renderer->init();
 
     const char* names[] = {
@@ -124,9 +144,9 @@ void Game::init()
 
         auto drone = std::make_unique<Drone>(sprite);
 
-        randomizeDrone(_height, *drone);
+        randomizeDrone(_window->getSize().y, *drone);
         for (int i = rand() % 250; i >= 0; i--) {
-            stepDrone(_width, _height, *drone);
+            stepDrone(_window->getSize().x, _window->getSize().y, *drone);
         }
 
         _drones.push_back(std::move(drone));
@@ -135,24 +155,8 @@ void Game::init()
 
 void Game::render() 
 {
-    _renderer->clearScreen();
     for (auto& drone : _drones) {
-        stepDrone(_width, _height, *drone);
+        stepDrone(_window->getSize().x, _window->getSize().y, *drone);
     }
     _renderer->draw();
-}
-
-const char* Game::getName()
-{
-    return _displayName.c_str();
-}
-
-float Game::getWidth()
-{
-    return _width;
-}
-
-float Game::getHeight()
-{
-    return _height;
 }

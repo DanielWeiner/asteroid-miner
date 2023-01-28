@@ -45,6 +45,8 @@ target_sources(AsteroidMinerLib PRIVATE
     game.cpp
     game.h
 	globalIncludes.h
+    lineRenderer.cpp
+    lineRenderer.h
     shaderProgram.cpp
     shaderProgram.h
     sprite.cpp

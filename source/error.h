@@ -24,6 +24,4 @@ namespace AM_Error {
     };
 }
 
-
-
 #endif

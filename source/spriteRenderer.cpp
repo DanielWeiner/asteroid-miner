@@ -11,6 +11,7 @@
 #include <memory>
 #include <string>
 #include <exception>
+#include "window.h"
 
 namespace  {
 
@@ -52,11 +53,13 @@ void main()
 }
 
 SpriteRenderer::SpriteRenderer(
+    std::shared_ptr<Window> window,
     std::shared_ptr<SpriteSheet> spriteSheet,
-    std::shared_ptr<SpriteBuffer> spriteBuffer, 
-    float width, 
-    float height
-) : _spriteSheet(spriteSheet), _spriteBuffer(spriteBuffer), _width(width), _height(height) 
+    std::shared_ptr<SpriteBuffer> spriteBuffer
+) : 
+_window(window), 
+_spriteSheet(spriteSheet), 
+_spriteBuffer(spriteBuffer)
 {}
 
 void SpriteRenderer::init() {
@@ -94,14 +97,9 @@ void SpriteRenderer::init() {
     _shaderProgram->initTextures();
 }
 
-void SpriteRenderer::updateDimensions(float width, float height) 
-{
-    _width = width;
-    _height = height;
-}
-
 void SpriteRenderer::draw() {
-    glm::mat4 projection = glm::ortho(0.0f, _width, _height, 0.0f, -1.0f, 1.0f);
+    glm::vec2 size = _window->getSize();
+    glm::mat4 projection = glm::ortho(0.0f, size.x, size.y, 0.0f, -1.0f, 1.0f);
 
     _shaderProgram->use();
     if (_spriteBuffer->areTexturesDirty()) {
@@ -112,9 +110,4 @@ void SpriteRenderer::draw() {
     _shaderProgram->bindVao();
     _shaderProgram->drawInstances();
     _spriteBuffer->resetDirtyFlag();
-}
-
-void SpriteRenderer::clearScreen() 
-{
-    _shaderProgram->clearScreen();
 }
