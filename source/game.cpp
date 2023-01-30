@@ -15,7 +15,7 @@
 #include <GLFW/glfw3.h>
 
 namespace {
-    const int numDrones = 10000;
+    const int numDrones = 500;
     const int maxAsteroids = 25;
 
     Sprite* selectedAsteroid = NULL;
@@ -160,5 +160,5 @@ void Game::render()
     }
     
     _spriteRenderer->draw();
-    _lineRenderer->lineTo(glm::vec2(0.f, 0.f), glm::vec2(500.f, 750.f),  glm::vec4(0.f, 1.f, 1.f, 1.f));
+    //_lineRenderer->lineTo(glm::vec2(0.f, 0.f), glm::vec2(500.f, 750.f),  glm::vec4(0.f, 1.f, 1.f, 1.f));
 }

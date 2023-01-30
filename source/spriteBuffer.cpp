@@ -78,5 +78,8 @@ void SpriteBuffer::destroyResource(unsigned int id)
         }
     }
     
+    _models.erase(_models.begin() + resourceIndex);
+    _textures.erase(_textures.begin() + resourceIndex);
+
     _texturesDirty = true;
 }
