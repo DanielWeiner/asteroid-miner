@@ -11,7 +11,7 @@
 
 class ShaderProgram {
 public:
-    void loadTexture(unsigned char* image, int width, int height, const char* textureName);
+    GLuint loadTexture(unsigned char* image, int width, int height);
 
     template<typename>
     void defineAttribute(const char* name, GLint dimensions);
@@ -32,7 +32,7 @@ public:
     template<GLsizei S>
     void loadIndices(const GLuint (&data)[S]);
 
-    void loadData(GLsizeiptr size, GLsizei count, const GLvoid* data);
+    void loadData(GLsizei size, GLsizei count, const GLvoid* data);
     void loadInstanceData(unsigned int id, GLsizeiptr size, GLsizei count, const GLvoid* data);
     void loadIndices(GLsizei size, GLsizei count, const GLuint* data);
     const unsigned int initInstanceBuffer(GLenum type = GL_STATIC_DRAW);
@@ -41,14 +41,14 @@ public:
     void bindVao();
     void unbindVao();
 
-    void bindTextures();
-    void initTextures();
+    void bindTexture(GLuint texture);
+    void unbindTextures();
 
     template<typename T>
     void setUniform(const char* name, T value);
 
     void use();
-    void drawArrays();
+    void drawArrays(GLenum arrayType = GL_TRIANGLES);
     void drawElements();
     void drawInstances();
 
@@ -74,7 +74,6 @@ private:
     std::vector<GLuint>      _instanceVbos;
     std::vector<GLenum>      _instanceVboTypes;
     std::vector<GLuint>      _textures;
-    std::vector<const char*> _textureNames;
     std::vector<GLuint>      _shaders;
     std::vector<Attribute>   _attributes;
     GLsizei                  _numIndices;
@@ -182,6 +181,12 @@ template<>
 inline void ShaderProgram::setUniform(const char* name, float value)
 {
     glUniform1f(_getUniformLocation(name), value);
+}
+
+template<>
+inline void ShaderProgram::setUniform(const char* name, glm::vec4 value)
+{
+    glUniform4f(_getUniformLocation(name), value[0], value[1], value[2], value[3]);
 }
 
 template<>

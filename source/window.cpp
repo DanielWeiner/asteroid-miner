@@ -197,8 +197,8 @@ void Window::_handleWindowRefresh(GLFWwindow* window)
 }
 
 void Window::_render() {
-    glClearColor(0, 0, 0, 1);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClearColor(0.0, 0.0, 0.0, 1.0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     for (auto application : _applications) {
         application->render();
     }
@@ -279,6 +279,10 @@ Window& Window::_start()
     for (auto application : _applications) {
         application->init();
     }
+    
+    glViewport(0, 0, _size.x, _size.y);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_ALWAYS);
     
     while (!glfwWindowShouldClose(_window)) {
         glfwPollEvents();

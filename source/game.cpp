@@ -113,8 +113,10 @@ void Game::init()
     auto spriteSheet = std::make_shared<SpriteSheet>("data/sprites/sprites.json", "data/sprites/sprites.png");
     spriteSheet->load();
     _spriteFactory = std::make_unique<SpriteFactory>(spriteSheet, spriteBuffer, _window);
-    _renderer = _spriteFactory->createRenderer();
-    _renderer->init();
+    _spriteRenderer = _spriteFactory->createRenderer();
+    _lineRenderer = std::make_unique<LineRenderer>(_window);
+    _spriteRenderer->init();
+    _lineRenderer->init();
 
     const char* names[] = {
         "playerShip1_blue.png",
@@ -134,8 +136,6 @@ void Game::init()
         "ufoRed.png",
         "ufoYellow.png"
     };
-
-    
 
     for (int i = 0; i < numDrones; i++) {
         auto spriteName = names[rand() % (sizeof(names) / sizeof(char*))];
@@ -158,5 +158,7 @@ void Game::render()
     for (auto& drone : _drones) {
         stepDrone(_window->getSize().x, _window->getSize().y, *drone);
     }
-    _renderer->draw();
+    
+    _spriteRenderer->draw();
+    _lineRenderer->lineTo(glm::vec2(0.f, 0.f), glm::vec2(500.f, 750.f),  glm::vec4(0.f, 1.f, 1.f, 1.f));
 }

@@ -32,11 +32,8 @@ private:
     std::unordered_map<unsigned int, unsigned int> _resourceIds;
     bool                                           _texturesDirty = false;
     unsigned int                                   _lastResourceId = 0;
-    std::unique_ptr<glm::mat4[]>                   _models;
-    std::unique_ptr<glm::mat4[]>                   _textures;
-
-    int                                            _capacity = 1;
-    unsigned int                                   _length = 0;
+    std::vector<glm::mat4>                         _models;
+    std::vector<glm::mat4>                         _textures;
 };
 
 #endif

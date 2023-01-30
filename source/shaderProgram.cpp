@@ -63,7 +63,7 @@ ShaderProgram::~ShaderProgram()
     }
 }
 
-void ShaderProgram::loadTexture(unsigned char* image, int width, int height, const char* textureName) {
+GLuint ShaderProgram::loadTexture(unsigned char* image, int width, int height) {
     GLuint texture;
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -79,7 +79,8 @@ void ShaderProgram::loadTexture(unsigned char* image, int width, int height, con
     glGenerateMipmap(GL_TEXTURE_2D);
 
     _textures.push_back(texture);
-    _textureNames.push_back(textureName);
+
+    return texture;
 }
 
 void ShaderProgram::addVertexShader(const char *data) 
@@ -135,25 +136,28 @@ void ShaderProgram::use()
     glUseProgram(*_programId);
 }
 
-void ShaderProgram::drawArrays() 
+void ShaderProgram::drawArrays(GLenum arrayType) 
 {
-    glUseProgram(*_programId);
     glBindVertexArray(*_vao);
-    glDrawArrays(GL_TRIANGLES, 0, _numVertices);
+    glDrawArrays(arrayType, 0, _numVertices);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    unbindVao();
 }
 
 void ShaderProgram::drawInstances() 
 {
-    glUseProgram(*_programId);
     glBindVertexArray(*_vao);
     glDrawArraysInstanced(GL_TRIANGLES, 0, _numVertices, _numInstances);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    unbindVao();
 }
 
 void ShaderProgram::drawElements() 
 {
-    glUseProgram(*_programId);
     glBindVertexArray(*_vao);
     glDrawElements(GL_TRIANGLES, _numIndices, GL_UNSIGNED_INT, 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    unbindVao();
 }
 
 void ShaderProgram::bindAttributes() {
@@ -178,7 +182,12 @@ void ShaderProgram::_bindAttributes(GLuint id) {
     GLuint boundBuffer = 0;
     for (auto attribute : _attributes) {
         if (boundBuffer != attribute.vbo) {
-            glBindBuffer(GL_ARRAY_BUFFER, id);
+            if (id == attribute.vbo) {
+                glBindBuffer(GL_ARRAY_BUFFER, id);
+            }
+            else {
+                continue;
+            }
         }
 
         auto instance = attribute.instance;
@@ -241,24 +250,18 @@ void ShaderProgram::bindVao()
 void ShaderProgram::unbindVao() 
 {
     glBindVertexArray(0);
+    glUseProgram(0);
 }
 
-void ShaderProgram::initTextures() 
+void ShaderProgram::bindTexture(GLuint texture) 
 {
-    int i = 0;
-    for (auto texture : _textures) {
-        glActiveTexture(GL_TEXTURE0 + i++);
-        glBindTexture(GL_TEXTURE_2D, texture);
-    }
+    glActiveTexture(GL_TEXTURE0 + texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
 }
-void ShaderProgram::bindTextures() 
+void ShaderProgram::unbindTextures() 
 {
-    use();
-    int i = 0;
-    for (auto texture : _textures) {
-        glUniform1i(glGetUniformLocation(*_programId, _textureNames[i]), texture);
-        i++;
-    }
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glActiveTexture(GL_TEXTURE0);
 }
 
 GLuint ShaderProgram::_getOrCreateProgramId() {
@@ -268,7 +271,7 @@ GLuint ShaderProgram::_getOrCreateProgramId() {
     return *_programId;
 }
 
-void ShaderProgram::loadData(GLsizeiptr size, GLsizei count, const GLvoid* data)
+void ShaderProgram::loadData(GLsizei size, GLsizei count, const GLvoid* data)
 {
     _initVao();
     _initVbo();
@@ -342,6 +345,7 @@ void ShaderProgram::loadInstanceData(unsigned int id, GLsizeiptr size, GLsizei c
     _numInstances = count;
     glBindBuffer(GL_ARRAY_BUFFER, _instanceVbos[id]);
     glBufferData(GL_ARRAY_BUFFER, size, data, _instanceVboTypes[id]);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void ShaderProgram::_initEbo() 

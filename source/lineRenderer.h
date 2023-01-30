@@ -5,18 +5,20 @@
 #include <vector>
 #include <glm/glm.hpp>
 
+#include "window.h"
+
 class ShaderProgram;
 
 class LineRenderer {
 public:
+    LineRenderer(std::shared_ptr<Window> window);
     void init();
-    void lineTo(glm::vec2 from, glm::vec2 to);
-    void draw();
+    void lineTo(glm::vec2 from, glm::vec2 to, glm::vec4 color, float width = 1);
 private:
-    using VertexColor = glm::vec<6, float>;
-    
+    static constexpr unsigned int  VERTEX_SIZE = 2;
     std::unique_ptr<ShaderProgram> _shaderProgram;
-    std::vector<VertexColor>       _vertices;
+    std::shared_ptr<Window>        _window;
+    std::vector<float>             _vertices;
 };
 
 #endif

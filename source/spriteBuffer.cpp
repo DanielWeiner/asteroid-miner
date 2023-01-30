@@ -36,7 +36,7 @@ void SpriteBuffer::resetDirtyFlag()
 
 unsigned int SpriteBuffer::size()
 {
-    return _length;
+    return _models.size();
 }
 
 glm::mat4* SpriteBuffer::modelData()
@@ -58,24 +58,11 @@ glm::mat4 SpriteBuffer::getModelMatrix(unsigned int id)
 unsigned int SpriteBuffer::createResource()
 {
     unsigned int lastResourceId = _lastResourceId++;
-    auto index = _length;
+    auto index = _models.size();
 
-    if (!_models) {
-        _models = std::unique_ptr<glm::mat4[]>(new glm::mat4[_capacity]);
-        _textures = std::unique_ptr<glm::mat4[]>(new glm::mat4[_capacity]);
-    }
-    else if (_length == _capacity) {
-        std::unique_ptr<glm::mat4[]> newBuffer(new glm::mat4[_capacity << 1]);
-        std::copy(&_models[0], &_models[_length], &newBuffer[0]);
-        std::swap(_models, newBuffer);
+    _models.push_back(glm::mat4(1.0));
+    _textures.push_back(glm::mat4(1.0));
 
-        std::unique_ptr<glm::mat4[]> newTexBuffer(new glm::mat4[_capacity << 1]);
-        std::copy(&_textures[0], &_textures[_length], &newTexBuffer[0]);
-        std::swap(_textures, newTexBuffer);
-
-        _capacity <<= 1;
-    }
-    _length++;
     _resourceIds[lastResourceId] = index;
     return lastResourceId;
 }
@@ -92,8 +79,4 @@ void SpriteBuffer::destroyResource(unsigned int id)
     }
     
     _texturesDirty = true;
-    std::copy(&_textures[resourceIndex + 1], &_textures[_length], &_textures[resourceIndex]);
-    std::copy(&_models[resourceIndex + 1], &_models[_length], &_models[resourceIndex]);
-    
-    --_length;
 }

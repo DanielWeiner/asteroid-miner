@@ -31,7 +31,7 @@ private:
     unsigned int                   _vbo2;
     bool                           _spritesDirty = false;
     unsigned int                   _lastSpriteId = 0;
-
+    GLuint                         _texture;
     friend Sprite::~Sprite();
 
 };
