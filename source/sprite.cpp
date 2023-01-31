@@ -89,7 +89,7 @@ glm::vec2 Sprite::getPosition()
     return glm::vec2(_x, _y);
 }
 
-glm::vec2 Sprite::getRawDimensions()
+glm::vec2 Sprite::getSize()
 {
     return glm::vec2(_width, _height);
 }

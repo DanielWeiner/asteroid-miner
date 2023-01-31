@@ -32,8 +32,13 @@ namespace {
 
 void ShaderProgram::init()
 {
-    glEnable              (GL_DEBUG_OUTPUT);
-    glDebugMessageCallback(MessageCallback, 0);
+    static bool initialized = false;
+    if (!initialized) {
+        glEnable              (GL_DEBUG_OUTPUT);
+        glDebugMessageCallback(MessageCallback, 0);
+        
+        initialized = true;
+    }
 }
 
 ShaderProgram::~ShaderProgram() 

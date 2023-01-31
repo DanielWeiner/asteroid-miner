@@ -33,7 +33,7 @@ public:
 
     std::string getName();
     glm::vec2 getPosition();
-    glm::vec2 getRawDimensions();
+    glm::vec2 getSize();
 
     void updateModelMatrix();
     void updateTextureMatrix();

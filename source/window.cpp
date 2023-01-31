@@ -1,4 +1,5 @@
 #include "window.h"
+#include "winConsole.h"
 #include "event.h"
 
 #include <utility>
@@ -7,6 +8,8 @@
 #include <string>
 #include <filesystem>
 #include <cmath>
+#include <format>
+#include <string>
 
 #ifdef _WIN32
 #define GLFW_EXPOSE_NATIVE_WIN32
@@ -211,16 +214,15 @@ void Window::_populateIcon()
     HWND hwnd = glfwGetWin32Window(_window);
     TCHAR filename[MAX_PATH + 1];
     GetModuleFileName(NULL, filename, MAX_PATH);
-    HICON icon = ExtractIcon((HINSTANCE)_hinstance, filename, 0);
+    HICON icon = ExtractIcon(GetModuleHandle(NULL), filename, 0);
     SendMessage(hwnd, (UINT)WM_SETICON, ICON_SMALL, (LPARAM)icon);
     SendMessage(hwnd, (UINT)WM_SETICON, ICON_BIG, (LPARAM)icon);
 #endif
 }
 
-Window::Window(string name, float width, float height, HInstance hinstance) :
+Window::Window(string name, float width, float height) :
     _title(name),
-    _size(glm::vec2(width, height)),
-    _hinstance(hinstance)
+    _size(glm::vec2(width, height))
 {
 }
 
@@ -370,7 +372,7 @@ Window& Window::_initGlfw() {
         return _setError(ErrorType::ERR_GLAD_LOADER, "GLAD loader error");
     }
 
-    std::cout << "OpenGL version: %s\n", glGetString(GL_VERSION);
+    std::cout << std::format("OpenGL version: {}\n", std::string((const char*)glGetString(GL_VERSION)));
 
     _windowInstances[_window] = this;
 

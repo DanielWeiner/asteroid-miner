@@ -21,7 +21,16 @@ private:
     std::unique_ptr<LineRenderer>        _lineRenderer;
     std::vector<std::unique_ptr<Drone>>  _drones;
     std::vector<std::unique_ptr<Sprite>> _asteroids;
+    float                                _fov;
+    float                                _zpos;
 
+    void stepDrone(float width, float height, Drone& drone);
+    void randomizeDrone(float height, Drone& drone);
+    glm::vec3 _toNdc(glm::vec2 coords);
+    glm::mat4 _getProjection();
+    glm::mat4 _getView();
+    glm::vec2 _toWorldCoordinates(glm::vec2 screenCoords);
+    float     _getBaseZpos(float fov);
     void handleEvent(const Event& event);
     void render();
     void init();

@@ -20,6 +20,8 @@ public:
     );
 
     void init();
+    void setView(glm::mat4 view);
+    void setProjection(glm::mat4 projection);
     
     void draw();
 private:
@@ -32,6 +34,9 @@ private:
     bool                           _spritesDirty = false;
     unsigned int                   _lastSpriteId = 0;
     GLuint                         _texture;
+    float                          _fov;
+    glm::mat4                      _view;
+    glm::mat4                      _projection;
     friend Sprite::~Sprite();
 
 };

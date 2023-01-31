@@ -1,7 +1,7 @@
 #ifndef WINDOW_H_
 #define WINDOW_H_
 
-#include "globalIncludes.h"
+#include "global.h"
 #include "error.h"
 #include "windowedApplication.h"
 
@@ -19,12 +19,7 @@ using string = std::string;
 
 class Window {
 public:
-#ifdef _WIN32
-    typedef HINSTANCE HInstance;
-#else
-    typedef void* HInstance;
-#endif
-    Window(string name, float width, float height, HInstance hinstance);
+    Window(string name, float width, float height);
     void close();
 
     bool isError();
@@ -47,7 +42,6 @@ private:
     ErrorType   _errorType = ErrorType::NONE;
     glm::vec2   _size;
     bool        _done = false;
-    HInstance   _hinstance;
     AppArray    _applications;
 
     static void _handleError(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *userParam);

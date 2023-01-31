@@ -18,8 +18,8 @@ public:
     void load();
     glm::mat4 getSpriteMatrix(const char* itemName);
     glm::u8vec4 pixelAt(const char* spriteName, float x, float y);
-    glm::vec2& getRawDimensions(const char* itemName);
-    glm::vec2 getRawDimensions();
+    glm::vec2& getSize(const char* itemName);
+    glm::vec2 getSize();
 
     unsigned char* getRawImage();
 

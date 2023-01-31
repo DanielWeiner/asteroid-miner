@@ -11,6 +11,7 @@
 #include <memory>
 #include <string>
 #include <exception>
+#include <iostream>
 #include "window.h"
 
 namespace  {
@@ -25,10 +26,11 @@ layout (location = 5) in mat4 instanceTexModel;
 out vec2 TexCoord;
 
 uniform mat4 projection;
+uniform mat4 view;
 
 void main()
 {
-    gl_Position = projection * instanceModel * vec4(aPos.xy, 0.0, 1.0);
+    gl_Position = projection * view * instanceModel * vec4(aPos.xy, 0.0, 1.0);
     TexCoord = vec2(instanceTexModel * vec4(aPos.xy, 0.0, 1.0));
 }  
 /*--------------------------------------------*/
@@ -64,6 +66,8 @@ _spriteBuffer(spriteBuffer)
 
 void SpriteRenderer::init() {
     _shaderProgram = std::make_unique<ShaderProgram>();
+    _view = glm::mat4(1.0);
+    _fov = 45.f;
     const float vertices[] = {
         // positions
          1.0f, 0.0f, // top right
@@ -74,7 +78,7 @@ void SpriteRenderer::init() {
          0.0f, 1.0f, // bottom left
          0.0f, 0.0f // top left 
     };
-    auto sheetSize = _spriteSheet->getRawDimensions();
+    auto sheetSize = _spriteSheet->getSize();
 
     _shaderProgram->init();
     _texture = _shaderProgram->loadTexture(_spriteSheet->getRawImage(), sheetSize.x, sheetSize.y);
@@ -95,10 +99,17 @@ void SpriteRenderer::init() {
     _shaderProgram->bindAttributes(_vbo2);
 }
 
-void SpriteRenderer::draw() {
-    glm::vec2 size = _window->getSize();
-    glm::mat4 projection = glm::ortho(0.0f, size.x, size.y, 0.0f, -1.0f, 1.0f);
+void SpriteRenderer::setView(glm::mat4 view) 
+{
+    _view = view;
+}
 
+void SpriteRenderer::setProjection(glm::mat4 projection) 
+{
+    _projection = projection;
+}
+
+void SpriteRenderer::draw() {
     _shaderProgram->use();
     _shaderProgram->bindTexture(_texture);
     if (_spriteBuffer->areTexturesDirty()) {
@@ -106,7 +117,8 @@ void SpriteRenderer::draw() {
     }
     _shaderProgram->loadInstanceData(_vbo1, sizeof(glm::mat4) *  _spriteBuffer->size(), _spriteBuffer->size(), _spriteBuffer->modelData());
     _shaderProgram->setUniform<int>("spriteSheet", _texture);
-    _shaderProgram->setUniform("projection", projection);
+    _shaderProgram->setUniform("projection", _projection);
+    _shaderProgram->setUniform("view", _view);
     _shaderProgram->drawInstances();
     _shaderProgram->unbindTextures();
     _shaderProgram->unbindVao();

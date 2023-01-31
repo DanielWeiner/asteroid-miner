@@ -14,6 +14,7 @@ endif()
 target_link_libraries(AsteroidMinerLib PUBLIC PNG::PNG glm::glm nlohmann_json::nlohmann_json glfw glad::glad)
 # Link the needed OS-specific dependencies, if any.
 if(WIN32)
+    target_link_options(AsteroidMinerLib PRIVATE "/SUBSYSTEM:WINDOWS" "/ENTRY:mainCRTStartup")
 	target_link_libraries(AsteroidMinerLib PUBLIC rpcrt4 Winmm)
 else()
 	target_link_libraries(AsteroidMinerLib PUBLIC pthread)
@@ -44,7 +45,8 @@ target_sources(AsteroidMinerLib PRIVATE
     event.h
     game.cpp
     game.h
-	globalIncludes.h
+    global.cpp
+	global.h
     lineRenderer.cpp
     lineRenderer.h
     shaderProgram.cpp
@@ -60,6 +62,8 @@ target_sources(AsteroidMinerLib PRIVATE
     spriteSheet.cpp
     spriteSheet.h
     stb_image.h
+    winConsole.cpp
+    winConsole.h
 	window.cpp
 	window.h
     windowedApplication.h

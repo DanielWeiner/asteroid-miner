@@ -183,6 +183,7 @@ endif()
 if(APPLE)
 	install(TARGETS AsteroidMiner CONFIGURATIONS Release BUNDLE DESTINATION .)
 elseif(WIN32)
+    target_link_options(AsteroidMiner PRIVATE "/SUBSYSTEM:WINDOWS" "/ENTRY:mainCRTStartup")
 	# Install the binary.
 	install(TARGETS AsteroidMiner CONFIGURATIONS Release RUNTIME DESTINATION .)
 
@@ -247,5 +248,3 @@ foreach(BUILD_TARGET "Debug" "Release")
     )
     add_dependencies(AsteroidMiner "AmSprites_${BUILD_TARGET}")
 endforeach()
-
-

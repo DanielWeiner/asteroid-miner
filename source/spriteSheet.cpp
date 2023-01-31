@@ -1,4 +1,5 @@
 #include "spriteSheet.h"
+#include "global.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -9,7 +10,6 @@
 #include <nlohmann/json.hpp>
 #include <iostream>
 
-
 using json = nlohmann::json;
 
 SpriteSheet::SpriteSheet(const char* jsonPath, const char* imagePath) 
@@ -19,7 +19,7 @@ SpriteSheet::SpriteSheet(const char* jsonPath, const char* imagePath)
 
 void SpriteSheet::load() 
 {
-    auto file = std::ifstream(_jsonFile);
+    auto file = std::ifstream(Global::GetExeDir() + "/" + _jsonFile);
     json data = json::parse(file);
     _width = data["meta"]["size"]["w"];
     _height = data["meta"]["size"]["h"];
@@ -44,7 +44,7 @@ void SpriteSheet::load()
     stbi_set_flip_vertically_on_load(true);
     // load and generate the texture
     int width, height;
-    unsigned char *imageData = stbi_load(_imageFile, &width, &height, &_numChannels, 0);
+    unsigned char *imageData = stbi_load((Global::GetExeDir() + "/" + _imageFile).c_str(), &width, &height, &_numChannels, 0);
     if (imageData)
     {
         _image = imageData;
@@ -69,11 +69,11 @@ glm::u8vec4 SpriteSheet::pixelAt(const char* spriteName, float x, float y)
     return glm::u8vec4(pixel[0], pixel[1], pixel[2], pixel[3]);
 }
 
-glm::vec2& SpriteSheet::getRawDimensions(const char* itemName) { 
+glm::vec2& SpriteSheet::getSize(const char* itemName) { 
     return *_dimensions[itemName];
 }
 
-glm::vec2 SpriteSheet::getRawDimensions()
+glm::vec2 SpriteSheet::getSize()
 {
     return glm::vec2(_width, _height);
 }

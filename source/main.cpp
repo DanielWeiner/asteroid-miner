@@ -1,24 +1,32 @@
-#include "globalIncludes.h"
+#include "global.h"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include "winConsole.h"
 #include "window.h"
 #include "game.h"
-
+#include <iostream>
 #include <memory>
+#include <filesystem>
 
-int main()  {
+
+int main(int argc, char** argv) 
+{
+    auto str = std::filesystem::weakly_canonical(std::filesystem::path(argv[0])).parent_path().string();
+    Global::SetExeDir(str.c_str());
 #ifdef _WIN32
-}
-int WinMain(HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmdshow) {
     SetProcessDPIAware();
     timeBeginPeriod(1);
-#else
-    void* hInst;
+    WinConsole::CreateNewConsole();
 #endif
-    auto window = std::make_shared<Window>("Asteroid Miner", 2560, 1334, hInst);
+    std::cout << "hello";
+    auto window = std::make_shared<Window>("Asteroid Miner", 2560, 1334);
     auto game = std::make_shared<Game>(window);
     window->addApplication(game);
     window->run();
-    return 0;
+#ifdef _WIN32
+    WinConsole::ReleaseConsole();
+#endif
+    exit(0);
 }
+

@@ -2,9 +2,6 @@
 #include <cmath>
 #include <numbers>
 
-namespace {
-    glm::vec2 gravity(0., 0.06);
-}
 
 Drone::Drone(std::unique_ptr<Sprite>& sprite) : _sprite(std::move(sprite)) {}
 
@@ -21,8 +18,12 @@ void Drone::moveTo(glm::vec2 position)
 void Drone::step() 
 {
     _sprite->move(_speed);
-    _speed += gravity;
     _sprite->rotateTo(std::numbers::pi - atan2(_speed.x, _speed.y));
+}
+
+glm::vec2 Drone::getSpeed()
+{
+    return _speed;
 }
 
 Sprite& Drone::getSprite()
@@ -33,6 +34,11 @@ Sprite& Drone::getSprite()
 glm::vec2 Drone::getPosition()
 {
     return _sprite->getPosition();
+}
+
+glm::vec2 Drone::getSize()
+{
+    return _sprite->getSize();
 }
 
 void Drone::_rotateDirection() 
