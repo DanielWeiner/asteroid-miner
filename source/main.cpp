@@ -4,7 +4,8 @@
 
 #include "winConsole.h"
 #include "window.h"
-#include "game.h"
+#include "demo/game.h"
+#include "game/game.h"
 #include <iostream>
 #include <memory>
 #include <filesystem>
@@ -19,7 +20,6 @@ int main(int argc, char** argv)
     timeBeginPeriod(1);
     WinConsole::CreateNewConsole();
 #endif
-    std::cout << "hello";
     auto window = std::make_shared<Window>("Asteroid Miner", 2560, 1334);
     auto game = std::make_shared<Game>(window);
     window->addApplication(game);

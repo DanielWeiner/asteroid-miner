@@ -34,6 +34,7 @@ public:
     std::string getName();
     glm::vec2 getPosition();
     glm::vec2 getSize();
+    float getRotation();
 
     void updateModelMatrix();
     void updateTextureMatrix();

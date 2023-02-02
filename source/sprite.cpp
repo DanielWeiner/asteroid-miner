@@ -94,6 +94,11 @@ glm::vec2 Sprite::getSize()
     return glm::vec2(_width, _height);
 }
 
+float Sprite::getRotation()
+{
+    return _rotate;
+}
+
 void Sprite::updateModelMatrix()
 {
     _buffer->initializeModel(_id, glm::mat4(1.0f));
