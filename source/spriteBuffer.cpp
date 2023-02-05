@@ -83,3 +83,30 @@ void SpriteBuffer::destroyResource(unsigned int id)
 
     _texturesDirty = true;
 }
+
+void SpriteBuffer::moveToEnd(unsigned int id) 
+{
+    glm::mat4 model(_models[_resourceIds[id]]);
+    glm::mat4 texture(_textures[_resourceIds[id]]);
+
+    destroyResource(id);
+
+    _resourceIds[id] = _models.size();
+    _models.push_back(model);
+    _textures.push_back(texture);
+}
+
+unsigned int SpriteBuffer::getStep()
+{
+    return _step;
+}
+
+unsigned int SpriteBuffer::getNextStep()
+{
+    return (_step + 1) % 2; 
+}
+
+void SpriteBuffer::step() 
+{
+    _step = getNextStep();
+}

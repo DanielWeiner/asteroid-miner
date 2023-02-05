@@ -28,12 +28,19 @@ public:
 
     unsigned int createResource();
     void destroyResource(unsigned int id);
+    void moveToEnd(unsigned int id);
+
+    unsigned int getStep();
+    unsigned int getNextStep();
+
+    void step();
 private:
     std::unordered_map<unsigned int, unsigned int> _resourceIds;
     bool                                           _texturesDirty = false;
     unsigned int                                   _lastResourceId = 0;
     std::vector<glm::mat4>                         _models;
     std::vector<glm::mat4>                         _textures;
+    unsigned int                                   _step = 0;
 };
 
 #endif

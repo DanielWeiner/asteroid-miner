@@ -51,7 +51,8 @@ glm::vec2 FlatScene::toWorldCoordinates(glm::vec2 coords)
 
 void FlatScene::zoomIn(float percent) 
 {
-    _zoomLevel += percent;
+    _zoomLevel -= percent;
+    _zoomLevel = glm::max(0.f, glm::min(1000.f, _zoomLevel));
 }
 
 void FlatScene::translate(glm::vec2 xy) 

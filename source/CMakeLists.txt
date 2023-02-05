@@ -43,8 +43,14 @@ target_sources(AsteroidMinerLib PRIVATE
     game/asteroid.h
     game/asteroidSpawner.cpp
     game/asteroidSpawner.h
+    constants.h
+    game/constants.h
+    demo/drone.cpp
+    demo/drone.h
     game/drone.cpp
     game/drone.h
+    game/droneFactory.cpp
+    game/droneFactory.h
 	error.h	
     event.h
     flatScene.cpp
@@ -57,6 +63,10 @@ target_sources(AsteroidMinerLib PRIVATE
 	global.h
     lineRenderer.cpp
     lineRenderer.h
+    game/outerSpaceScene.cpp
+    game/outerSpaceScene.h
+    game/outerSpaceUi.cpp
+    game/outerSpaceUi.h
     random.cpp
     random.h
     shaderProgram.cpp
@@ -72,6 +82,8 @@ target_sources(AsteroidMinerLib PRIVATE
     spriteSheet.cpp
     spriteSheet.h
     stb_image.h
+    time.cpp
+    time.h
     winConsole.cpp
     winConsole.h
 	window.cpp

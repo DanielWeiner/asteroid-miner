@@ -15,13 +15,19 @@ Sprite::Sprite(
     _buffer(spriteBuffer)
 {}
 
+unsigned int Sprite::id() const
+{
+    return _id;
+}
+
 Sprite& Sprite::operator=(const Sprite& sprite)
 {
     _name = sprite._name;
-    _x = sprite._x;
-    _y = sprite._y;
-    _width = sprite._width;
-    _height = sprite._height;
+    _states[_buffer->getStep()] = sprite._states[_buffer->getStep()];
+    _states[_buffer->getNextStep()] = sprite._states[_buffer->getNextStep()];
+
+    _textureUpdated = true;
+
     _buffer = sprite._buffer;
     _sheet = sprite._sheet;
 
@@ -33,7 +39,9 @@ Sprite& Sprite::operator=(const Sprite& sprite)
 
 void Sprite::moveTo(float x, float y) 
 {
-    return move(x - _x, y - _y);
+    SpriteState* nextState;
+    _useNextState(nextState);
+    return move(x - nextState->_x, y - nextState->_y);
 }
 
 void Sprite::moveTo(glm::vec2 xy) 
@@ -43,8 +51,10 @@ void Sprite::moveTo(glm::vec2 xy)
 
 void Sprite::move(float x, float y) 
 {
-    _x += x;
-    _y += y;
+    SpriteState* nextState;
+    _useNextState(nextState);
+    nextState->_x = nextState->_x + x;
+    nextState->_y = nextState->_y + y;
 
     updateModelMatrix();
 }
@@ -56,20 +66,26 @@ void Sprite::move(glm::vec2 xy)
 
 void Sprite::rotate(float radians) 
 {
-    _rotate += radians;
+    SpriteState* nextState;
+    _useNextState(nextState);
+    nextState->_rotate = nextState->_rotate + radians;
 
     updateModelMatrix();
 }
 
 void Sprite::rotateTo(float radians) 
 {
-    return rotate(radians - _rotate);
+    SpriteState* nextState;
+    _useNextState(nextState);
+    return rotate(radians - nextState->_rotate);
 }
 
 void Sprite::scaleBy(float x, float y) 
 {
-    _width *= x;
-    _height *= y;
+    SpriteState* nextState;
+    _useNextState(nextState);
+    nextState->_width =  nextState->_width * x;
+    nextState->_height = nextState->_height * y;
 
     updateModelMatrix();
 }
@@ -86,29 +102,55 @@ std::string Sprite::getName()
 
 glm::vec2 Sprite::getPosition()
 {
-    return glm::vec2(_x, _y);
+    SpriteState* state;
+    _useCurrentState(state);
+    return glm::vec2(state->_x, state->_y);
 }
+
+glm::vec2 Sprite::getNextSize()
+{
+    SpriteState* state;
+    _useNextState(state);
+    return glm::vec2(state->_width, state->_height);
+}
+
 
 glm::vec2 Sprite::getSize()
 {
-    return glm::vec2(_width, _height);
+    SpriteState* state;
+    _useCurrentState(state);
+    return glm::vec2(state->_width, state->_height);
 }
 
 float Sprite::getRotation()
 {
-    return _rotate;
+    SpriteState* state;
+    _useCurrentState(state);
+    return state->_rotate;
+}
+
+glm::vec2 Sprite::getNextPosition()
+{
+    SpriteState* state;
+    _useNextState(state);
+    return glm::vec2(state->_x, state->_y);
 }
 
 void Sprite::updateModelMatrix()
 {
+    SpriteState* state;
+    _useNextState(state);
+
     _buffer->initializeModel(_id, glm::mat4(1.0f));
-    _buffer->translateModel(_id, glm::vec3(_x, _y, 0.0f));
+    _buffer->translateModel(_id, glm::vec3(state->_x, state->_y, 0.0f));
 
-    _buffer->translateModel(_id, glm::vec3(0.5f * _width, 0.5f * _height, 0.0f));
-    _buffer->rotateModel(_id, _rotate, glm::vec3(0.0f, 0.0f, 1.0f));
-    _buffer->translateModel(_id, glm::vec3(-0.5f * _width, -0.5f * _height, 0.0f));
+    _buffer->translateModel(_id, glm::vec3(0.5f * state->_width, 0.5f * state->_height, 0.0f));
+    _buffer->rotateModel(_id, state->_rotate, glm::vec3(0.0f, 0.0f, 1.0f));
+    _buffer->translateModel(_id, glm::vec3(-0.5f * state->_width, -0.5f * state->_height, 0.0f));
 
-    _buffer->scaleModel(_id, glm::vec3(_width, _height, 1.0f));
+    _buffer->scaleModel(_id, glm::vec3(state->_width, state->_height, 1.0f));
+
+    _lastModel = _buffer->getModelMatrix(_id);
 }
 
 void Sprite::updateTextureMatrix() 
@@ -118,8 +160,7 @@ void Sprite::updateTextureMatrix()
 
 bool Sprite::pointIsInHitbox(float x, float y)
 {
-    auto modelMatrix = _buffer->getModelMatrix(_id);
-    glm::vec2 pos = modelMatrix / glm::vec4(x, y, 0.0, 1.0);
+    glm::vec2 pos = _lastModel / glm::vec4(x, y, 0.0, 1.0);
 
     if (!(pos.x < 1.f && pos.x >= 0.f && pos.y < 1.f && pos.y >= 0.f)) {
         return false;
@@ -128,9 +169,44 @@ bool Sprite::pointIsInHitbox(float x, float y)
     return _sheet->pixelAt(_name.c_str(), pos.x, pos.y).a;
 }
 
+void Sprite::moveToEndOfBuffer() 
+{
+    _buffer->moveToEnd(_id);
+}
+
+void Sprite::init() 
+{
+    if (!_initialized) {
+        _initialized = true;
+        _states[_buffer->getStep()] = _states[_buffer->getNextStep()];
+    }
+}
+
 Sprite::~Sprite() 
 {
     if (_buffer) {
         _buffer->destroyResource(_id);
     }
+}
+
+void Sprite::_useNextState(SpriteState*& state)
+{
+    if (_lastStep != _buffer->getStep()) {
+        update();
+        _lastStep = _buffer->getStep();
+    }
+    state = &_states[_buffer->getNextStep()];
+}
+
+void Sprite::_useCurrentState(SpriteState*& state)
+{
+    if (_lastStep != _buffer->getStep()) {
+        update();
+        _lastStep = _buffer->getStep();
+    }
+    state = &_states[_buffer->getStep()];
+}
+
+void Sprite::update(){
+    _states[_buffer->getStep()] = _states[_buffer->getNextStep()];
 }

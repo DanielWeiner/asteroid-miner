@@ -16,7 +16,8 @@ public:
     SpriteRenderer(
         std::shared_ptr<Window> window,
         std::shared_ptr<SpriteSheet> spriteSheet,
-        std::shared_ptr<SpriteBuffer> spriteBuffer
+        std::shared_ptr<SpriteBuffer> spriteBuffer,
+        std::shared_ptr<ShaderProgram> shaderProgram
     );
 
     void init();
@@ -26,9 +27,9 @@ public:
     void draw();
 private:
     std::shared_ptr<Window>        _window;
-    std::unique_ptr<ShaderProgram> _shaderProgram;
     std::shared_ptr<SpriteSheet>   _spriteSheet;
     std::shared_ptr<SpriteBuffer>  _spriteBuffer;
+    std::shared_ptr<ShaderProgram> _shaderProgram;
     unsigned int                   _vbo1;
     unsigned int                   _vbo2;
     bool                           _spritesDirty = false;

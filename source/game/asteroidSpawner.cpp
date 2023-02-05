@@ -5,10 +5,15 @@
 #include <glm/ext.hpp>
 #include <iostream>
 
-AsteroidSpawner::AsteroidSpawner(std::shared_ptr<SpriteFactory> factory,
+AsteroidSpawner::AsteroidSpawner(std::unique_ptr<SpriteFactory>&& factory,
                                  std::shared_ptr<FlatScene> scene) 
-: _spriteFactory(factory), _scene(scene)
+: _spriteFactory(std::move(factory)), _scene(scene)
 {}
+
+void AsteroidSpawner::setDensity(float density) 
+{
+    _asteroidsPerChunk = _chunkSize.x * _chunkSize.y * density;
+}
 
 void AsteroidSpawner::step() {
   _populateChunks();
@@ -17,27 +22,40 @@ void AsteroidSpawner::step() {
   }
 }
 
-std::vector<std::unique_ptr<Asteroid>>& AsteroidSpawner::asteroids()
+std::span<std::shared_ptr<Asteroid>> AsteroidSpawner::asteroids()
 {
-    return _asteroids;
+    std::span<std::shared_ptr<Asteroid>> asteroids{ _asteroids };
+
+    return asteroids;
 }
 
 void AsteroidSpawner::_populateChunks() 
 {   
-    auto screenTopLeft = (glm::floor(_scene->getWorldPosition() / CHUNK_SIZE) - 1.f) * CHUNK_SIZE;
-    auto screenBottomRight = (glm::ceil((_scene->getWorldPosition() + _scene->getWorldSize()) / CHUNK_SIZE) + 2.f) * CHUNK_SIZE;
+    using vec2 = glm::vec2;
+    using vec4 = glm::vec4;
 
-    auto topLeft = glm::vec2(glm::min(screenTopLeft.x, _topLeft.x), glm::min(screenTopLeft.y, _topLeft.y));
-    auto bottomRight = glm::vec2(glm::max(screenBottomRight.x, _bottomRight.x), glm::max(screenBottomRight.y, _bottomRight.y));
+    auto worldTopLeft = _scene->getWorldPosition();
+    auto worldBottomRight = _scene->getWorldPosition() + _scene->getWorldSize();
+
+    auto chunkTopLeft = glm::floor(worldTopLeft / _chunkSize);
+    auto chunkBottomRight = glm::ceil(worldBottomRight / _chunkSize);
+
+    auto corners = vec4(chunkTopLeft, chunkBottomRight);
+    auto paddedCorners = corners + vec4(vec2(-_chunkPadding), vec2(_chunkPadding));
+
+    auto worldCorners = paddedCorners * vec4(_chunkSize, _chunkSize);
+
+    auto topLeft = vec2(glm::min(worldCorners.x, _topLeft.x), glm::min(worldCorners.y, _topLeft.y));
+    auto bottomRight = vec2(glm::max(worldCorners.z, _bottomRight.x), glm::max(worldCorners.w, _bottomRight.y));
 
     if (topLeft == _topLeft && bottomRight == _bottomRight) {
         return;
     }
 
-    _fillWithAsteroids(topLeft,                               glm::vec2(bottomRight.x, _topLeft.y));
-    _fillWithAsteroids(glm::vec2(topLeft.x, _topLeft.y),      glm::vec2(_topLeft.x, _bottomRight.y));
-    _fillWithAsteroids(glm::vec2(_bottomRight.x, _topLeft.y), glm::vec2(bottomRight.x, _bottomRight.y));
-    _fillWithAsteroids(glm::vec2(topLeft.x, _bottomRight.y),  glm::vec2(bottomRight.x, bottomRight.y));
+    _fillWithAsteroids(topLeft,                          vec2(bottomRight.x, _topLeft.y));
+    _fillWithAsteroids(vec2(topLeft.x, _topLeft.y),      vec2(_topLeft.x, _bottomRight.y));
+    _fillWithAsteroids(vec2(_bottomRight.x, _topLeft.y), vec2(bottomRight.x, _bottomRight.y));
+    _fillWithAsteroids(vec2(topLeft.x, _bottomRight.y),  vec2(bottomRight.x, bottomRight.y));
 
     _topLeft = topLeft;
     _bottomRight = bottomRight;
@@ -45,23 +63,23 @@ void AsteroidSpawner::_populateChunks()
 
 void AsteroidSpawner::_fillWithAsteroids(glm::vec2 topLeft, glm::vec2 bottomRight) 
 {
-    auto chunks = (bottomRight - topLeft) / CHUNK_SIZE;
+    auto chunks = (bottomRight - topLeft) / _chunkSize;
     auto numChunks = chunks.x * chunks.y;
 
-    for (int i = 0; i < numChunks * ASTEROIDS_PER_CHUNK; i++) {
+    for (int i = 0; i < numChunks * _asteroidsPerChunk; i++) {
         auto sprite = _spriteFactory->createSprite("Meteors/meteorGrey_med1.png");
         sprite->moveTo(glm::vec2(
             topLeft.x + Random::uniform() * (bottomRight.x - topLeft.x),
             topLeft.y + Random::uniform() * (bottomRight.y - topLeft.y)
         ));
         
-        auto angle = Random::uniform() * 2.0 * glm::pi<double>();
-        auto velocity = Random::normal(2, 4);
+        auto angle = Random::uniform() * TWO_PI;
+        auto velocity = Random::normal(_avgSpeed, _speedSigma);
 
         auto speed = glm::vec2(glm::cos(angle) * velocity, glm::sin(angle) * velocity);
-        auto spin = Random::uniform() * 0.03;
+        auto spin = (Random::uniform()  * 2.f - 1.f) * _maxSpin;
         
-        auto asteroid = std::make_unique<Asteroid>(std::move(sprite), speed, spin);
-        _asteroids.push_back(std::move(asteroid));
+        auto asteroid = std::make_shared<Asteroid>(std::move(sprite), speed, spin);
+        _asteroids.push_back(asteroid);
     }
 }

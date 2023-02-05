@@ -1,18 +1,20 @@
 #include "spriteFactory.h"
 
 SpriteFactory::SpriteFactory(
-    std::shared_ptr<SpriteSheet> spriteSheet,
-    std::shared_ptr<SpriteBuffer> spriteBuffer,
-    std::shared_ptr<Window>       window
+    std::shared_ptr<SpriteSheet>   spriteSheet,
+    std::shared_ptr<Window>        window
 )
 : 
 _spriteSheet(spriteSheet),
-_spriteBuffer(spriteBuffer),
 _window(window)
 {}
 
 std::unique_ptr<Sprite> SpriteFactory::createSprite(std::string name)
 {
+    if (!_spriteBuffer) {
+        _spriteBuffer = std::make_unique<SpriteBuffer>();
+    }
+
     auto spriteId = _spriteBuffer->createResource();
     auto sprite = std::make_unique<Sprite>(
         name,
@@ -22,11 +24,22 @@ std::unique_ptr<Sprite> SpriteFactory::createSprite(std::string name)
     );
     sprite->updateTextureMatrix();
     sprite->scaleBy(_spriteSheet->getSize(name.c_str()));
+    sprite->init();
 
     return std::move(sprite);
 }
 
 std::unique_ptr<SpriteRenderer> SpriteFactory::createRenderer()
 {
-    return std::make_unique<SpriteRenderer>(_window, _spriteSheet, _spriteBuffer);
+    if (!_spriteBuffer) {
+        _spriteBuffer = std::make_shared<SpriteBuffer>();
+    }
+
+    auto shaderProgram = std::make_shared<ShaderProgram>();
+    shaderProgram->init();
+
+    auto renderer = std::make_unique<SpriteRenderer>(_window, _spriteSheet, _spriteBuffer, shaderProgram);
+    renderer->init();
+    
+    return std::move(renderer);
 }

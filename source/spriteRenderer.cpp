@@ -57,15 +57,16 @@ void main()
 SpriteRenderer::SpriteRenderer(
     std::shared_ptr<Window> window,
     std::shared_ptr<SpriteSheet> spriteSheet,
-    std::shared_ptr<SpriteBuffer> spriteBuffer
+    std::shared_ptr<SpriteBuffer> spriteBuffer,
+    std::shared_ptr<ShaderProgram> shaderProgram
 ) : 
 _window(window), 
 _spriteSheet(spriteSheet), 
-_spriteBuffer(spriteBuffer)
+_spriteBuffer(spriteBuffer),
+_shaderProgram(shaderProgram)
 {}
 
 void SpriteRenderer::init() {
-    _shaderProgram = std::make_unique<ShaderProgram>();
     _view = glm::mat4(1.0);
     _fov = 45.f;
     const float vertices[] = {
@@ -80,7 +81,7 @@ void SpriteRenderer::init() {
     };
     auto sheetSize = _spriteSheet->getSize();
 
-    _shaderProgram->init();
+
     _texture = _shaderProgram->loadTexture(_spriteSheet->getRawImage(), sheetSize.x, sheetSize.y);
     _shaderProgram->addFragmentShader(fragmentShaderSource);
     _shaderProgram->addVertexShader(vertexShaderSource);
@@ -110,6 +111,9 @@ void SpriteRenderer::setProjection(glm::mat4 projection)
 }
 
 void SpriteRenderer::draw() {
+    if (_spriteBuffer->size() == 0) {
+        return;
+    }
     _shaderProgram->use();
     _shaderProgram->bindTexture(_texture);
     if (_spriteBuffer->areTexturesDirty()) {
@@ -123,4 +127,5 @@ void SpriteRenderer::draw() {
     _shaderProgram->unbindTextures();
     _shaderProgram->unbindVao();
     _spriteBuffer->resetDirtyFlag();
+    _spriteBuffer->step();
 }

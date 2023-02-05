@@ -1,5 +1,7 @@
 #include "global.h"
 
+#include <chrono>
+
 namespace {
     std::string exeDir = "";
 }

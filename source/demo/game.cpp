@@ -27,17 +27,18 @@ namespace {
     }
 }
 
-void DemoGame::randomizeDrone(float height, Drone& drone) {
+void DemoGame::randomizeDrone(float height, DemoDrone& drone) {
     drone.moveTo(_scene->toWorldCoordinates(glm::vec2(0, height / 2)));
     drone.setSpeed(glm::vec2(random(2, .5), random(0, .5)));
+    drone.update();
 }
 
-void DemoGame::stepDrone(float width, float height, Drone& drone) {
+void DemoGame::stepDrone(float width, float height, DemoDrone& drone) {
     auto topLeft = _scene->toWorldCoordinates(glm::vec2(0, 0));
     auto bottomRight = _scene->toWorldCoordinates(_window->getSize());
 
     drone.step();
-    if (drone.getPosition().y < topLeft.y || drone.getPosition().x < topLeft.x || drone.getPosition().y > bottomRight.y || drone.getPosition().x > bottomRight.x) {
+    if (drone.getNextPosition().y < topLeft.y || drone.getNextPosition().x < topLeft.x || drone.getNextPosition().y > bottomRight.y || drone.getNextPosition().x > bottomRight.x) {
         randomizeDrone(height, drone);
     }
 }
@@ -64,7 +65,7 @@ void DemoGame::handleEvent(const Event &event) {
                       break;
                   }
       
-                  selectedAsteroidOffset = asteroid->getPosition() - glm::vec2(mouse.x, mouse.y);
+                  selectedAsteroidOffset = asteroid->getNextPosition() - glm::vec2(mouse.x, mouse.y);
                   auto newSprite = _spriteFactory->createSprite(asteroid->getName());
                   *newSprite = *asteroid;
                   selectedAsteroid = newSprite.get();
@@ -110,7 +111,7 @@ void DemoGame::handleEvent(const Event &event) {
     }
 
     if (event.action == EventAction::SCROLL) {
-      _scene->zoomIn(-10.f * (float)event.yoffset);
+      _scene->zoomIn(10.f * (float)event.yoffset);
     }
 
     if (event.type == EventType::KEY) {
@@ -140,16 +141,14 @@ void DemoGame::handleEvent(const Event &event) {
 
 void DemoGame::init() 
 {
-    auto spriteBuffer = std::make_shared<SpriteBuffer>();
     auto spriteSheet = std::make_shared<SpriteSheet>("data/sprites/sprites.json", "data/sprites/sprites.png");
+
     spriteSheet->load();
-    _spriteFactory = std::make_unique<SpriteFactory>(spriteSheet, spriteBuffer, _window);
-    
+    _spriteFactory = std::make_unique<SpriteFactory>(spriteSheet, _window);
     _scene = std::make_shared<FlatScene>(_window, glm::radians(45.f));
 
     _spriteRenderer = _spriteFactory->createRenderer();
     _lineRenderer = std::make_unique<LineRenderer>(_window);
-    _spriteRenderer->init();
     _lineRenderer->init();
 
     const char* names[] = {
@@ -172,7 +171,7 @@ void DemoGame::init()
         auto sprite = _spriteFactory->createSprite(spriteName);
         sprite->scaleBy(glm::vec2(0.5));
 
-        auto drone = std::make_unique<Drone>(sprite);
+        auto drone = std::make_unique<DemoDrone>(sprite);
 
         randomizeDrone(_window->getSize().y, *drone);
         for (int i = rand() % 250; i >= 0; i--) {
@@ -185,11 +184,14 @@ void DemoGame::init()
 
 void DemoGame::render() 
 {
-
+    for (auto& asteroid : _asteroids) {
+        asteroid->update();
+    }
+    
     for (auto& drone : _drones) {
         for (auto& asteroid : _asteroids) {
-            auto dronePosition = drone->getPosition() + (drone->getSize() / 2.f);
-            auto asteroidPosition = asteroid->getPosition() + (asteroid->getSize() / 2.f);
+            auto dronePosition = drone->getNextPosition() + (drone->getSize() / 2.f);
+            auto asteroidPosition = asteroid->getNextPosition() + (asteroid->getSize() / 2.f);
             auto distance = glm::distance(dronePosition, asteroidPosition);
             float pull = 50.f / distance;
             auto diff = asteroidPosition - dronePosition;
