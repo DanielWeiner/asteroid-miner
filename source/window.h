@@ -33,6 +33,7 @@ public:
     void run();
 
     glm::vec2 getSize();
+    int getDpi();
 private:
     using AppArray = std::vector<std::shared_ptr<WindowedApplication>>;
 
@@ -59,8 +60,6 @@ private:
 
     Window& _updateSize(int width, int height);
     Window& _setError(const ErrorType& errorType, const string &message);
-    Window& _initGlfw();
-    Window& _initGl();
     Window& _init();
     Window& _start();
     Window& _handleEvent(const Event& e);

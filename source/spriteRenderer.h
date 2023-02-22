@@ -17,7 +17,8 @@ public:
         std::shared_ptr<Window> window,
         std::shared_ptr<SpriteSheet> spriteSheet,
         std::shared_ptr<SpriteBuffer> spriteBuffer,
-        std::shared_ptr<ShaderProgram> shaderProgram
+        std::shared_ptr<ShaderProgram> shaderProgram,
+        bool useLinearScaling = true
     );
 
     void init();
@@ -38,6 +39,7 @@ private:
     float                          _fov;
     glm::mat4                      _view;
     glm::mat4                      _projection;
+    bool                           _useLinearScaling;
     friend Sprite::~Sprite();
 
 };

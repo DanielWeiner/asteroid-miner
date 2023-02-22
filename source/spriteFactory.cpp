@@ -29,8 +29,8 @@ std::unique_ptr<Sprite> SpriteFactory::createSprite(std::string name)
     return std::move(sprite);
 }
 
-std::unique_ptr<SpriteRenderer> SpriteFactory::createRenderer()
-{
+std::unique_ptr<SpriteRenderer>
+SpriteFactory::createRenderer(bool useLinearScaling) {
     if (!_spriteBuffer) {
         _spriteBuffer = std::make_shared<SpriteBuffer>();
     }
@@ -38,7 +38,7 @@ std::unique_ptr<SpriteRenderer> SpriteFactory::createRenderer()
     auto shaderProgram = std::make_shared<ShaderProgram>();
     shaderProgram->init();
 
-    auto renderer = std::make_unique<SpriteRenderer>(_window, _spriteSheet, _spriteBuffer, shaderProgram);
+    auto renderer = std::make_unique<SpriteRenderer>(_window, _spriteSheet, _spriteBuffer, shaderProgram, useLinearScaling);
     renderer->init();
     
     return std::move(renderer);

@@ -34,9 +34,16 @@ void OuterSpaceScene::step()
 
 void OuterSpaceScene::init() 
 {
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < 1; i++) {
         auto drone = _droneFactory->createDrone();
         drone->moveTo(_scene->toWorldCoordinates(glm::vec2(0)) + _scene->getWorldSize() / 2.f);
         _drones.push_back(std::move(drone));
+    }
+}
+
+void OuterSpaceScene::render(LineRenderer& lineRenderer)
+{
+    for (auto& drone: drones()) {
+        drone->render(lineRenderer);
     }
 }

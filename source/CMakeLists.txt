@@ -10,8 +10,8 @@ else()
 		"-Wall" "-pedantic-errors" "-Wold-style-cast" "-fno-rtti" "$<$<CONFIG:Release>:-Werror>")
 endif()
 
-# Link with the general libraries.SS
-target_link_libraries(AsteroidMinerLib PUBLIC PNG::PNG glm::glm nlohmann_json::nlohmann_json glfw glad::glad)
+# Link with the general libraries.
+target_link_libraries(AsteroidMinerLib PUBLIC msdf-atlas-gen::msdf-atlas-gen Freetype::Freetype msdfgen::msdfgen msdfgen::msdfgen-ext PNG::PNG glm::glm nlohmann_json::nlohmann_json glfw glad::glad)
 # Link the needed OS-specific dependencies, if any.
 if(WIN32)
     target_link_options(AsteroidMinerLib PRIVATE "/SUBSYSTEM:WINDOWS" "/ENTRY:mainCRTStartup")
@@ -45,8 +45,6 @@ target_sources(AsteroidMinerLib PRIVATE
     game/asteroidSpawner.h
     constants.h
     game/constants.h
-    demo/drone.cpp
-    demo/drone.h
     game/drone.cpp
     game/drone.h
     game/droneFactory.cpp
@@ -55,20 +53,20 @@ target_sources(AsteroidMinerLib PRIVATE
     event.h
     flatScene.cpp
     flatScene.h
-    demo/game.cpp
-    demo/game.h
     game/game.cpp
     game/game.h
     global.cpp
 	global.h
     lineRenderer.cpp
     lineRenderer.h
+    util/multiRange.h
     game/outerSpaceScene.cpp
     game/outerSpaceScene.h
     game/outerSpaceUi.cpp
     game/outerSpaceUi.h
     random.cpp
     random.h
+    util/range.h
     shaderProgram.cpp
     shaderProgram.h
     sprite.cpp
@@ -82,6 +80,9 @@ target_sources(AsteroidMinerLib PRIVATE
     spriteSheet.cpp
     spriteSheet.h
     stb_image.h
+    util/string.h
+    textRenderer.cpp
+    textRenderer.h
     time.cpp
     time.h
     winConsole.cpp

@@ -19,7 +19,7 @@ public:
     );
 
     std::unique_ptr<Sprite> createSprite(std::string name);
-    std::unique_ptr<SpriteRenderer> createRenderer();
+    std::unique_ptr<SpriteRenderer> createRenderer(bool useLinearScaling = false);
 private:
     std::shared_ptr<SpriteSheet>   _spriteSheet;
     std::shared_ptr<SpriteBuffer>  _spriteBuffer;

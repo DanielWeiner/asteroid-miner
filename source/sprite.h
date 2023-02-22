@@ -34,11 +34,11 @@ public:
 
     std::string getName();
     glm::vec2 getPosition();
+    glm::vec2 getCenter();
     glm::vec2 getSize();
     float getRotation();
 
     glm::vec2 getNextPosition();
-    glm::vec2 getNextSize();
 
     void updateModelMatrix();
     void updateTextureMatrix();
@@ -49,7 +49,7 @@ public:
 
     void init();
 
-    void update();
+    
 
     ~Sprite();
 private:
@@ -75,6 +75,7 @@ private:
 
     void _useNextState(SpriteState*& state);
     void _useCurrentState(SpriteState*& state);
+    void _update();
 };
 
 #endif

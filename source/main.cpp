@@ -2,11 +2,10 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include "util/range.h"
 #include "winConsole.h"
 #include "window.h"
-#include "demo/game.h"
 #include "game/game.h"
-#include <iostream>
 #include <memory>
 #include <filesystem>
 
@@ -17,7 +16,7 @@ int main(int argc, char** argv)
     Global::SetExeDir(str.c_str());
 #ifdef _WIN32
     SetProcessDPIAware();
-    timeBeginPeriod(1);
+    timeBeginPeriod(2);
     WinConsole::CreateNewConsole();
 #endif
     auto window = std::make_shared<Window>("Asteroid Miner", 2560, 1334);

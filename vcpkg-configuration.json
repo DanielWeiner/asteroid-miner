@@ -1,7 +1,10 @@
 {
   "default-registry": {
     "kind": "builtin",
-    "baseline": "0ba60bfef5dea4cb2599daa7ad8364e309835a68"
+    "baseline": "master"
   },
-  "overlay-triplets": [ "./overlays" ]
+  "overlay-triplets": [ "./overlays" ],
+  "overlay-ports": [
+    "vcpkg-ports"
+  ]
 }

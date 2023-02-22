@@ -12,6 +12,7 @@ public:
     void         setSpeed(glm::vec2 speed);
     glm::vec2    getSpeed();
     glm::vec2    getPosition();
+    glm::vec2    getCenter();
     glm::vec2    getSize();
     void         step(glm::vec2 topLeft, glm::vec2 bottomRight);
 private:

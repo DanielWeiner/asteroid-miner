@@ -107,13 +107,13 @@ glm::vec2 Sprite::getPosition()
     return glm::vec2(state->_x, state->_y);
 }
 
-glm::vec2 Sprite::getNextSize()
+glm::vec2 Sprite::getCenter()
 {
     SpriteState* state;
-    _useNextState(state);
-    return glm::vec2(state->_width, state->_height);
+    _useCurrentState(state);
+    
+    return glm::vec2(state->_x, state->_y) + glm::vec2(state->_width, state->_height) / 2.f;
 }
-
 
 glm::vec2 Sprite::getSize()
 {
@@ -191,22 +191,19 @@ Sprite::~Sprite()
 
 void Sprite::_useNextState(SpriteState*& state)
 {
-    if (_lastStep != _buffer->getStep()) {
-        update();
-        _lastStep = _buffer->getStep();
-    }
+    _update();
     state = &_states[_buffer->getNextStep()];
 }
 
 void Sprite::_useCurrentState(SpriteState*& state)
 {
-    if (_lastStep != _buffer->getStep()) {
-        update();
-        _lastStep = _buffer->getStep();
-    }
+    _update();
     state = &_states[_buffer->getStep()];
 }
 
-void Sprite::update(){
-    _states[_buffer->getStep()] = _states[_buffer->getNextStep()];
+void Sprite::_update(){
+    if (_lastStep != _buffer->getStep()) {
+        _states[_buffer->getNextStep()] = _states[_buffer->getStep()];
+    }
+    _lastStep = _buffer->getStep();
 }

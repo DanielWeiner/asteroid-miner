@@ -9,6 +9,8 @@
         "nlohmann-json",
         "libpng",
         "glfw3",
+        "msdfgen",
+        "msdf-atlas-gen",
         {
             "name": "glad",
             "features": [

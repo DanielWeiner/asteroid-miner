@@ -226,14 +226,6 @@ Window::Window(string name, float width, float height) :
 {
 }
 
-Window& Window::_init() {
-    if (_initGlfw().isError())
-        return *this;
-    if (_initGl().isError())
-        return *this;
-    return *this;
-}
-
 void Window::close()
 {
     if (_window != NULL) {	
@@ -285,6 +277,7 @@ Window& Window::_start()
     glViewport(0, 0, _size.x, _size.y);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_ALWAYS);
+    glEnable(GL_MULTISAMPLE);
     
     while (!glfwWindowShouldClose(_window)) {
         glfwPollEvents();
@@ -318,6 +311,14 @@ glm::vec2 Window::getSize()
     return glm::vec2(_size);
 }
 
+int Window::getDpi() {
+    float scaleX, scaleY;
+    
+    glfwGetMonitorContentScale(glfwGetPrimaryMonitor(), &scaleX, &scaleY);
+
+    return (int)(scaleX * 96); //TODO: make sure this is platform agnostic
+}
+
 Window& Window::_updateSize(int width, int height)
 {
     _size = glm::vec2(width, height);
@@ -335,7 +336,7 @@ Window& Window::_setError(const ErrorType& errorType, const std::string& message
     return *this;
 }
 
-Window& Window::_initGlfw() {
+Window& Window::_init() {
     static bool handlersInitialized = false;
     if (!handlersInitialized) {
         glfwSetErrorCallback(_handleGlfwError);
@@ -344,6 +345,8 @@ Window& Window::_initGlfw() {
     if (glfwInit() == GLFW_FALSE) {
         return _setError(ErrorType::ERR_GLFW_INIT, _currentErrorMessage);
     }
+
+    glfwWindowHint(GLFW_SAMPLES, 4);
 
     //Use OpenGL 3.3 core   
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -390,10 +393,5 @@ Window& Window::_initGlfw() {
 
     glfwMaximizeWindow(_window);
 
-    return *this;
-}
-
-
-Window& Window::_initGl() {
     return *this;
 }

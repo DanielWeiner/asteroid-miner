@@ -12,10 +12,12 @@
 using ms = std::chrono::milliseconds;
 
 class OuterSpaceScene;
+class LineRenderer;
 
 class Drone {
 public:
     enum class DroneState {
+        INITIAL,
         SEARCHING,
         WANDERING,
         PURSUING,
@@ -28,9 +30,12 @@ public:
     void moveTo(glm::vec2 position);
     void step(OuterSpaceScene& scene);
 
+    void render(LineRenderer& lineRenderer);
+
     glm::vec2 getSpeed();
     glm::vec2 getPosition();
     glm::vec2 getSize();
+
 private:
     static constexpr double DRONE_MAX_SPEED_2 = DRONE_MAX_SPEED * DRONE_MAX_SPEED;
     static constexpr double DRONE_SIGHT_RADIUS_2 = DRONE_SIGHT_RADIUS * DRONE_SIGHT_RADIUS;
@@ -43,11 +48,8 @@ private:
     double                    _sightRadius2 = DRONE_SIGHT_RADIUS_2;
     double                    _beamRange = DRONE_BEAM_RANGE;
     double                    _beamRange2 = DRONE_BEAM_RANGE_2;
-    double                    _acceleration = 0;
     ms                        _wanderDuration = DRONE_WANDER_DURATION;
     ms                        _pursueDuration = DRONE_PURSUE_DURATION;
-
-
 
     long long                 _pursueStart = 0ll;
     long long                 _wanderStart = 0ll;
@@ -55,17 +57,11 @@ private:
     std::shared_ptr<Asteroid> _targetAsteroid;
     std::unique_ptr<Sprite>   _sprite;
     glm::vec2                 _speed = glm::vec2(0);
-    int                       _accelerationRate = 0;
-    float                     _angle = 0;
-    glm::vec2                 _engine = glm::vec2(0);
-    
-    DroneState                _state = DroneState::WANDERING;
+    glm::vec2                 _acceleration = glm::vec2(0);
 
-    void _accelerateDecelerate(
-        double maxSpeed,
-        long long distance,
-        long long progress
-    );
+    DroneState                _state = DroneState::INITIAL;
+
+    void _accelerateToward(glm::vec2 point);
 
     void _rotateDirection();
     void _searchForAsteroid(OuterSpaceScene& scene);

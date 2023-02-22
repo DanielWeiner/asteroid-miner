@@ -8,6 +8,8 @@
 #include "asteroidSpawner.h"
 #include "drone.h"
 
+class LineRenderer;
+
 #include <vector>
 #include <memory>
 #include <span>
@@ -27,6 +29,7 @@ public:
 
     void step();
     void init();
+    void render(LineRenderer& lineRenderer);
 private:
     std::unique_ptr<DroneFactory>       _droneFactory;
     std::unique_ptr<AsteroidSpawner>    _asteroidSpawner;

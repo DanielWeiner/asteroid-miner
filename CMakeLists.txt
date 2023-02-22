@@ -19,17 +19,14 @@ set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
 # On Linux use relative RPATH.
 set(CMAKE_BUILD_RPATH_USE_ORIGIN ON)
 
-# Setup vcpkg.
-if(AM_USE_VCPKG)
-	include(vcpkg_bootstrap.cmake)
-	x_vcpkg_bootstrap()
+include(vcpkg_bootstrap.cmake)
+x_vcpkg_bootstrap()
 
-	set(VCPKG_BOOTSTRAP_OPTIONS "-disableMetrics")
-	set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
-	set(X_VCPKG_APPLOCAL_DEPS_INSTALL ON)
-	set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake"
-		CACHE STRING "Vcpkg toolchain file")
-endif()
+set(VCPKG_BOOTSTRAP_OPTIONS "-disableMetrics")
+set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
+set(X_VCPKG_APPLOCAL_DEPS_INSTALL ON)
+set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake"
+    CACHE STRING "Vcpkg toolchain file")
 
 if(AM_USE_SYSTEM_LIBRARIES)
 	if(UNIX AND NOT APPLE)
@@ -52,21 +49,6 @@ project("Asteroid Miner" VERSION 0.0.0
 	DESCRIPTION ""
 	LANGUAGES CXX)
 
-# file(GLOB_RECURSE ASSETS "${CMAKE_CURRENT_SOURCE_DIR}/data/*")
-# set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/data")
-
-# foreach(FILE ${ASSETS})
-#     set_property(SOURCE APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${FILE}")
-#     # # Get the relative path from the root folder to the current file.
-#     file(RELATIVE_PATH NEW_FILE "${CMAKE_CURRENT_SOURCE_DIR}" "${FILE}")
-#     # # Get the parent directory for the new location.
-#     get_filename_component(FILE_PATH "${NEW_FILE}" DIRECTORY)
-
-#     file(COPY ${FILE} DESTINATION "${CMAKE_BINARY_DIR}/Release/${FILE_PATH}")
-#     file(COPY ${FILE} DESTINATION "${CMAKE_BINARY_DIR}/Debug/${FILE_PATH}")
-# endforeach()
-# target_sources(AsteroidMiner PRIVATE "${ASSETS}")
-
 
 # Find the needed library dependencies.
 find_package(glad CONFIG REQUIRED)
@@ -74,12 +56,15 @@ find_package(glfw3 CONFIG REQUIRED)
 find_package(PNG REQUIRED)
 find_package(glm REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
+find_package(msdfgen CONFIG REQUIRED)
+find_package(msdf-atlas-gen CONFIG REQUIRED)
+find_package(Freetype REQUIRED)
 
 # Find the MinGW runtime DLLs.
 if(MINGW AND WIN32)
 	# On Windows copy the MinGW runtime DLLs to the output folder as well.
 	# This is to avoid the situation where a user has other MinGW runtime DLLs
-	# in their PATH that are incompatible with the MinGW used to compile ES.
+	# in their PATH that are incompatible with the MinGW used to compile ES.    
 	get_filename_component(PARENT_DIR "${CMAKE_CXX_COMPILER}" DIRECTORY)
 	get_filename_component(MINGW_RUNTIME_DIR "${PARENT_DIR}" DIRECTORY)
 
@@ -247,4 +232,15 @@ foreach(BUILD_TARGET "Debug" "Release")
             COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/data/sprites/sprites.png" "${PROJECT_BINARY_DIR}/${BUILD_TARGET}/data/sprites/sprites.png"
     )
     add_dependencies(AsteroidMiner "AmSprites_${BUILD_TARGET}")
+endforeach()
+
+foreach(BUILD_TARGET "Debug" "Release")
+    add_custom_target(
+        "AMFonts_${BUILD_TARGET}"
+        ALL
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMAND
+            COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/data/fonts" "${PROJECT_BINARY_DIR}/${BUILD_TARGET}/data/fonts"
+    )
+    add_dependencies(AsteroidMiner "AMFonts_${BUILD_TARGET}")
 endforeach()

@@ -58,12 +58,14 @@ SpriteRenderer::SpriteRenderer(
     std::shared_ptr<Window> window,
     std::shared_ptr<SpriteSheet> spriteSheet,
     std::shared_ptr<SpriteBuffer> spriteBuffer,
-    std::shared_ptr<ShaderProgram> shaderProgram
+    std::shared_ptr<ShaderProgram> shaderProgram,
+    bool useLinearScaling
 ) : 
 _window(window), 
 _spriteSheet(spriteSheet), 
 _spriteBuffer(spriteBuffer),
-_shaderProgram(shaderProgram)
+_shaderProgram(shaderProgram),
+_useLinearScaling(useLinearScaling)
 {}
 
 void SpriteRenderer::init() {
@@ -82,7 +84,7 @@ void SpriteRenderer::init() {
     auto sheetSize = _spriteSheet->getSize();
 
 
-    _texture = _shaderProgram->loadTexture(_spriteSheet->getRawImage(), sheetSize.x, sheetSize.y);
+    _texture = _shaderProgram->loadTexture(_spriteSheet->getRawImage(), sheetSize.x, sheetSize.y, _useLinearScaling);
     _shaderProgram->addFragmentShader(fragmentShaderSource);
     _shaderProgram->addVertexShader(vertexShaderSource);
     _shaderProgram->linkShaders();

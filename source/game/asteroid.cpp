@@ -29,6 +29,11 @@ glm::vec2 Asteroid::getPosition()
     return _sprite->getPosition();
 }
 
+glm::vec2 Asteroid::getCenter()
+{
+    return _sprite->getCenter();
+}
+
 glm::vec2 Asteroid::getSize()
 {
     return _sprite->getSize();
@@ -43,5 +48,4 @@ void Asteroid::step(glm::vec2 topLeft, glm::vec2 bottomRight)
 
     _sprite->moveTo(topLeft + relativePosition - size * glm::floor(relativePosition / size));
     _sprite->rotate(_spin);
-    _sprite->update();
 }

@@ -11,7 +11,7 @@
 
 class ShaderProgram {
 public:
-    GLuint loadTexture(unsigned char* image, int width, int height);
+    GLuint loadTexture(unsigned char* image, int width, int height, bool useLinearScaling);
 
     template<typename>
     void defineAttribute(const char* name, GLint dimensions);
@@ -32,6 +32,10 @@ public:
     template<GLsizei S>
     void loadIndices(const GLuint (&data)[S]);
 
+    /// @brief 
+    /// @param size  total buffer size
+    /// @param count vertex object count
+    /// @param data  vertex buffer pointer
     void loadData(GLsizei size, GLsizei count, const GLvoid* data);
     void loadInstanceData(unsigned int id, GLsizeiptr size, GLsizei count, const GLvoid* data);
     void loadIndices(GLsizei size, GLsizei count, const GLuint* data);
@@ -134,6 +138,11 @@ struct ShaderProgram::GlTypes<glm::vec4> {
     static constexpr GLenum type = GL_FLOAT;
 };
 
+template<>
+struct ShaderProgram::GlTypes<glm::vec2> {
+    static constexpr GLenum type = GL_FLOAT;
+};
+
 template <typename T>
 inline void ShaderProgram::defineAttribute(const char* name, GLint dimensions) 
 {
@@ -181,6 +190,12 @@ template<>
 inline void ShaderProgram::setUniform(const char* name, float value)
 {
     glUniform1f(_getUniformLocation(name), value);
+}
+
+template<>
+inline void ShaderProgram::setUniform(const char* name, glm::vec2 value)
+{
+    glUniform2f(_getUniformLocation(name), value[0], value[1]);
 }
 
 template<>

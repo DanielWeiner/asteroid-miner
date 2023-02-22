@@ -14,11 +14,12 @@ const char* vertexShaderSource = R"glsl(
 layout (location = 0) in vec2 inPos;
 
 uniform mat4 projection;
+uniform mat4 view;
 uniform mat4 modelMatrix;
 
 void main()
 {
-    gl_Position = projection * modelMatrix * vec4(inPos.xy, 0.0, 1.0);
+    gl_Position = projection * view * modelMatrix * vec4(inPos.xy, 0.0, 1.0);
 }  
 /*--------------------------------------------*/
 )glsl";
@@ -66,6 +67,16 @@ void LineRenderer::init() {
     _shaderProgram->loadData(vertices);
 }
 
+void LineRenderer::setProjection(glm::mat4 projection) 
+{
+    _projection = projection;
+}
+
+void LineRenderer::setView(glm::mat4 view) 
+{
+    _view = view;
+}
+
 void LineRenderer::lineTo(glm::vec2 from, glm::vec2 to, glm::vec4 color, float width) 
 {
     auto angleVector = to - from;
@@ -77,10 +88,9 @@ void LineRenderer::lineTo(glm::vec2 from, glm::vec2 to, glm::vec4 color, float w
     modelMatrix = glm::translate(modelMatrix, glm::vec3(0, -width / 2, 0.0));
     modelMatrix = glm::scale(modelMatrix, glm::vec3(distance, width, 1.0f));
 
-    glm::vec2 size = _window->getSize();
-    glm::mat4 projection = glm::ortho(0.0f, size.x, size.y, 0.0f, 0.0f, 1.0f);
     _shaderProgram->use();
-    _shaderProgram->setUniform("projection", projection);
+    _shaderProgram->setUniform("projection", _projection);
+    _shaderProgram->setUniform("view", _view);
     _shaderProgram->setUniform("modelMatrix", modelMatrix);
     _shaderProgram->setUniform("color", color);
     _shaderProgram->drawArrays();

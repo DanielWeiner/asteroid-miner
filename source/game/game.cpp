@@ -47,6 +47,7 @@ void Game::init()
 
     auto spriteFactory = std::make_unique<SpriteFactory>(spriteSheet, _window);
     auto asteroidSpriteFactory = std::make_unique<SpriteFactory>(spriteSheet, _window);
+    auto uiSpriteFactory = std::make_unique<SpriteFactory>(spriteSheet, _window);
 
     _spriteRenderer = spriteFactory->createRenderer();
     _asteroidRenderer = asteroidSpriteFactory->createRenderer();
@@ -57,6 +58,12 @@ void Game::init()
     _outerSpaceScene = std::make_unique<OuterSpaceScene>(std::move(droneFactory), std::move(asteroidSpawner), _scene);
     _scene->zoomIn(-100.f);
     _outerSpaceScene->init();
+
+    _lineRenderer = std::make_unique<LineRenderer>(_window);
+    _lineRenderer->init();
+
+    _outerSpaceUi = std::make_unique<OuterSpaceUi>(std::move(uiSpriteFactory), _window);
+    _outerSpaceUi->init();
 }
 
 void Game::render() 
@@ -65,6 +72,7 @@ void Game::render()
     const int numRenderers = 2;
 
     _outerSpaceScene->step();
+    
 
     std::shared_ptr<SpriteRenderer> renderers[numRenderers] = {
         _asteroidRenderer,
@@ -76,4 +84,9 @@ void Game::render()
         renderers[i]->setView(_scene->getView());
         renderers[i]->draw();
     }
+    _lineRenderer->setProjection(_scene->getProjection());
+    _lineRenderer->setView(_scene->getView());
+
+    _outerSpaceScene->render(*_lineRenderer);
+    _outerSpaceUi->drawPanel(glm::vec2(50.f,50.f), glm::vec2(150.f, 150.f));
 }
