@@ -68,7 +68,7 @@ ShaderProgram::~ShaderProgram()
     }
 }
 
-GLuint ShaderProgram::loadTexture(unsigned char* image, int width, int height, bool useLinearScaling) {
+GLuint ShaderProgram::loadTexture(unsigned char* image, int width, int height, int colorChannels, bool useLinearScaling) {
     GLuint texture;
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -86,7 +86,16 @@ GLuint ShaderProgram::loadTexture(unsigned char* image, int width, int height, b
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     }
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
+    if (colorChannels == 4) {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
+    } else if (colorChannels == 3) {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+    } else if (colorChannels == 2) {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RG8, width, height, 0, GL_RG, GL_UNSIGNED_BYTE, image);
+    } else if (colorChannels == 1) {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, width, height, 0, GL_R, GL_UNSIGNED_BYTE, image);
+    }
+    
     glGenerateMipmap(GL_TEXTURE_2D);
 
     _textures.push_back(texture);

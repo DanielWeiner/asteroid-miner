@@ -11,7 +11,7 @@
 
 class ShaderProgram {
 public:
-    GLuint loadTexture(unsigned char* image, int width, int height, bool useLinearScaling);
+    GLuint loadTexture(unsigned char* image, int width, int height, int colorChannels, bool useLinearScaling);
 
     template<typename>
     void defineAttribute(const char* name, GLint dimensions);

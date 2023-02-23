@@ -7,9 +7,9 @@
 
 namespace {
 
-const double pixelRange     = 5.0;
-const double glyphScale     = 3.0;
-const double miterLimit     = 3.0;
+const double pixelRange     = 5;
+const double glyphScale     = 2.5;
+const double miterLimit     = 1.0;
 const double maxCornerAngle = 3.0;
 const int    threadCount    = 3;
 
@@ -44,6 +44,9 @@ uniform sampler2D uTex0;
 
 uniform vec4 fgColor;
 
+const float kThickness = 0.125;
+const float kNormalization = kThickness * 0.5 * sqrt( 2.0 );
+
 float median(float r, float g, float b) {
     return max(min(r, g), min(max(r, g), b));
 }
@@ -75,8 +78,6 @@ void main(void)
     vec2 grad = vec2( gradDist.x * Jdx.x + gradDist.y * Jdy.x, gradDist.x * Jdx.y + gradDist.y * Jdy.y );
     
     // Apply anti-aliasing.
-    const float kThickness = 0.125;
-    const float kNormalization = kThickness * 0.5 * sqrt( 2.0 );
     float afwidth = min( kNormalization * length( grad ), 0.5 );
     float opacity = smoothstep( 0.0 - afwidth, 0.0 + afwidth, sigDist );
     
@@ -89,24 +90,6 @@ void main(void)
 
 }
 
-void TextRenderer::msdfGenerator(const msdfgen::BitmapRef<float, 4>& output, const msdf_atlas::GlyphGeometry& glyph, const msdf_atlas::GeneratorAttributes& attribs)
-{
-    std::unique_ptr<float[]> output3Pixels(new float[3 * output.width * output.height]);
-    const msdfgen::BitmapRef<float, 3> output3(output3Pixels.get(), output.width, output.height);
-    msdf_atlas::msdfGenerator(output3, glyph, attribs);
-
-    for (int y = 0; y < output3.height; y++) {
-        for (int x = 0; x < output3.width; x++) {
-            auto pixel = output(x, y);
-            auto pixel3 = output3(x, y);
-            pixel[0] = pixel3[0];
-            pixel[1] = pixel3[1];
-            pixel[2] = pixel3[2];
-            pixel[3] = 1.f;
-        }
-    }
-}
-
 TextRenderer::TextRenderer(std::shared_ptr<Window> window) : _window(window) {}
 
 void TextRenderer::renderText(ustring str, glm::vec2 position, float fontScale, glm::vec4 color) 
@@ -115,8 +98,24 @@ void TextRenderer::renderText(ustring str, glm::vec2 position, float fontScale, 
     _renderText(str, position, fontScale, color);
 }
 
-void TextRenderer::init(std::string font) 
+void TextRenderer::init(std::string font, std::string fontName) 
 {
+    auto config = FcConfigCreate();
+    fcstring fcstr(Global::GetExeDir() + "/data/fonts");
+    FcConfigAppFontAddDir(config, fcstr.c_str());
+    FcConfigSetCurrent(config);
+    FcInit();
+
+    PangoFontMap* fontMap = pango_cairo_font_map_new_for_font_type(CAIRO_FONT_TYPE_FT);
+    _pangoContext = pango_font_map_create_context(fontMap);
+    _pangoAttrs = pango_attr_list_new();
+    
+    auto desc = pango_font_description_from_string(font.c_str());
+    _pangoFont = pango_font_map_load_font(fontMap, _pangoContext, desc);
+
+    pango_attr_list_insert(_pangoAttrs, pango_attr_family_new(fontName.c_str()));
+    _pangoAttrIterator = pango_attr_list_get_iterator(_pangoAttrs);
+
     _atlas.atlasGenerator().setThreadCount(threadCount);
     _shaderProgram = std::make_unique<ShaderProgram>();
     _shaderProgram->init();
@@ -131,9 +130,6 @@ void TextRenderer::init(std::string font)
     _shaderProgram->bindAttributes();
     
     _initMsdf(_getFontPath(font));
-    _addGlyphs("");
-
-    _shaderProgram->use();
 }
 
 void TextRenderer::setProjection(glm::mat4 projection)
@@ -207,7 +203,7 @@ void TextRenderer::_addGlyphs(ustring codepoints)
     for (auto it = newChars.begin(); it != newChars.end(); it++ ) {
         GlyphGeometry glyph;
         glyph.load(_font, 1.0, *it);
-        glyph.edgeColoring(&edgeColoringByDistance, maxCornerAngle, 0);
+        glyph.edgeColoring(&edgeColoringSimple, maxCornerAngle, 0);
         glyph.wrapBox(glyphScale, pixelRange/glyphScale, miterLimit);
         _glyphIndices[*it] = _glyphs.size();
         _glyphs.push_back(glyph);
@@ -216,12 +212,16 @@ void TextRenderer::_addGlyphs(ustring codepoints)
 
     Bitmap storage = (Bitmap)_atlas.atlasGenerator().atlasStorage();
 
+    _shaderProgram->use();
     _texture = _shaderProgram->loadTexture(
         storage(0,0), 
         storage.width(),
         storage.height(),
+        3,
         true
     );
+
+    _shaderProgram->unbindVao();
 }
 
 void TextRenderer::_renderText(ustring str, glm::vec2 position, float fontScale, glm::vec4 color) 
@@ -231,69 +231,90 @@ void TextRenderer::_renderText(ustring str, glm::vec2 position, float fontScale,
     _shaderProgram->setUniform("fgColor", color);
 
     std::vector<float> values;
+
+    std::string bytes = "";
+    for (auto ch : str) {
+        while (ch > 0) {
+            const char byte = ch >> 24;
+            if (byte != 0) {
+                bytes.push_back(byte);
+            }
+            ch <<= 8;
+        }
+    }
+
     const int vertexSize = 4;
     if (_glyphCache.contains(str)) {
         values = _glyphCache[str];
     } else {
-        codepoint lastChar = 0;
-        for (auto ch : str) {
-            auto glyph = _glyphs[_glyphIndices[ch]];
+        auto scaleAdjustment = 0.98;
+        auto items = pango_itemize(_pangoContext, bytes.c_str(), 0, bytes.size(), _pangoAttrs, _pangoAttrIterator);
+        do {
+            PangoItem* item = (PangoItem*)items->data;
+            auto glyphString = pango_glyph_string_new();
+            pango_shape_full(&bytes[item->offset], item->num_chars, bytes.c_str(), -1, &item->analysis, glyphString);
 
-            if (glyph.isWhitespace()) {
-                double spaceWidth, tabWidth;
-                msdfgen::getFontWhitespaceWidth(spaceWidth, tabWidth, _font);
+            auto glyphs = glyphString->glyphs;
+            for (int i = 0; i < glyphString->num_glyphs; i++) {
+                auto glyph = glyphs[i];
+                auto mGlyph = _glyphs[_glyphIndices[bytes[i]]];
 
-                if (ch == ' ') {
-                    position.x += spaceWidth * fontScale;
-                } else {
-                    position.x += tabWidth * fontScale;
+
+                if (mGlyph.isWhitespace()) {
+                    double spaceWidth, tabWidth;
+                    msdfgen::getFontWhitespaceWidth(spaceWidth, tabWidth, _font);
+
+                    auto spaceAdjustment = 1.7;
+
+                    if (glyph.glyph == ' ') {
+                        position.x += spaceWidth * fontScale * scaleAdjustment / spaceAdjustment;
+                    } else {
+                        position.x += tabWidth * fontScale * scaleAdjustment / spaceAdjustment;
+                    }
+
+                    continue;
                 }
+                
+                Bitmap atlas(_atlas.atlasGenerator().atlasStorage());
 
-                continue;
+                int width, height;
+                int atlasWidth = atlas.width();
+                int atlasHeight = atlas.height();
+                
+                double pLeft, pBottom, pRight, pTop;
+                double aLeft, aBottom, aRight, aTop;
+
+                mGlyph.getBoxSize(width, height);
+                mGlyph.getQuadPlaneBounds(pLeft, pBottom, pRight, pTop);
+                mGlyph.getQuadAtlasBounds(aLeft, aBottom, aRight, aTop);
+
+                float rLeft  = position.x + pLeft * fontScale;
+                float rTop  = position.y - pTop * fontScale;
+                float rRight  = position.x + pRight * fontScale;
+                float rBottom  = position.y - pBottom * fontScale;
+                                
+                float left = aLeft / atlasWidth;
+                float top = aTop / atlasHeight;
+                float right = aRight / atlasWidth;
+                float bottom = aBottom / atlasHeight;
+
+                values.insert(values.end(), { 
+                    rLeft,  rTop,    left, top,    // top left
+                    rRight, rTop,    right, top,   // top right
+                    rLeft,  rBottom, left, bottom, // bottom left
+
+                    rRight, rTop,    right, top,    // top right
+                    rLeft,  rBottom, left, bottom,  // bottom left
+                    rRight, rBottom, right, bottom, // bottom right
+                });
+
+                position.x += ((float)glyph.geometry.width / (float)PANGO_SCALE) * fontScale * scaleAdjustment;
             }
-            
-            Bitmap atlas(_atlas.atlasGenerator().atlasStorage());
+            items = items->next;
+            pango_glyph_string_free(glyphString);
+        } while(items != NULL);
 
-            int width, height;
-            int atlasWidth = atlas.width();
-            int atlasHeight = atlas.height();
-            
-            double pLeft, pBottom, pRight, pTop;
-            double aLeft, aBottom, aRight, aTop;
-
-            glyph.getBoxSize(width, height);
-            glyph.getQuadPlaneBounds(pLeft, pBottom, pRight, pTop);
-            glyph.getQuadAtlasBounds(aLeft, aBottom, aRight, aTop);
-
-            float rLeft  = position.x + pLeft * fontScale;
-            float rTop  = position.y - pTop * fontScale;
-            float rRight  = position.x + pRight * fontScale;
-            float rBottom  = position.y - pBottom * fontScale;
-                            
-            float left = aLeft / atlasWidth;
-            float top = aTop / atlasHeight;
-            float right = aRight / atlasWidth;
-            float bottom = aBottom / atlasHeight;
-
-            values.insert(values.end(), { 
-                rLeft,  rTop,    left, top,    // top left
-                rRight, rTop,    right, top,   // top right
-                rLeft,  rBottom, left, bottom, // bottom left
-
-                rRight, rTop,    right, top,    // top right
-                rLeft,  rBottom, left, bottom,  // bottom left
-                rRight, rBottom, right, bottom, // bottom right
-            });
-
-            if (lastChar == 0) {
-                position.x += glyph.getAdvance() * fontScale;
-            } else {
-                double kerning;
-                msdfgen::getKerning(kerning, _font, lastChar, ch);
-                position.x += (glyph.getAdvance() + kerning) * fontScale;
-            }
-            lastChar = ch;
-        }
+        msdfgen::GlyphIndex lastChar;
         _glyphCache[str] = values;
     }
     
@@ -308,5 +329,13 @@ TextRenderer::ustring::ustring(const char* chars)
     std::string str(chars);
     for (auto ch : str) {
         (*this).push_back((codepoint)ch);
+    }
+}
+
+TextRenderer::fcstring::fcstring(const char *chars) 
+{
+    std::string str(chars);
+    for (auto ch : str) {
+        (*this).push_back((FcChar8)ch);
     }
 }

@@ -11,6 +11,10 @@
         "glfw3",
         "msdfgen",
         "msdf-atlas-gen",
+        "pango",
+        "fontconfig",
+        "glib",
+        "cairo",
         {
             "name": "glad",
             "features": [

@@ -84,7 +84,7 @@ void SpriteRenderer::init() {
     auto sheetSize = _spriteSheet->getSize();
 
 
-    _texture = _shaderProgram->loadTexture(_spriteSheet->getRawImage(), sheetSize.x, sheetSize.y, _useLinearScaling);
+    _texture = _shaderProgram->loadTexture(_spriteSheet->getRawImage(), sheetSize.x, sheetSize.y, 4, _useLinearScaling);
     _shaderProgram->addFragmentShader(fragmentShaderSource);
     _shaderProgram->addVertexShader(vertexShaderSource);
     _shaderProgram->linkShaders();
