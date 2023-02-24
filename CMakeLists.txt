@@ -221,7 +221,7 @@ if (WIN32)
     set(AM_TEXUREPACKER_BIN "C:/Program\ Files/CodeAndWeb/TexturePacker/bin/TexturePacker.exe")
 endif()
 
-add_custom_command(TARGET AsteroidMiner POST_BUILD
+add_custom_command(TARGET AsteroidMiner PRE_LINK 
     COMMAND
         ${AM_TEXUREPACKER_BIN} sprites.tps
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
@@ -230,43 +230,11 @@ add_custom_command(TARGET AsteroidMiner POST_BUILD
 file(
 GLOB_RECURSE RESOURCES
 RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
-
 "data/fonts/*" 
 "data/sprites/*" 
-
 )
 foreach(FILE ${RESOURCES})
-    add_custom_command(TARGET AsteroidMiner POST_BUILD
+    add_custom_command(TARGET AsteroidMiner PRE_LINK
         COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/${FILE}" "$<TARGET_FILE_DIR:AsteroidMiner>/${FILE}"
         COMMAND_EXPAND_LISTS VERBATIM)
 endforeach()
-
-set(PANGO_INCLUDE_DIR "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/include/pango-1.0")
-set(PANGO_LIBRARY "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib/pango-1.0.lib")
-set(PANGO_CAIRO_LIBRARY "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib/pangocairo-1.0.lib")
-
-set(GLIB_INCLUDE_DIR "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/include/glib-2.0")
-set(GLIB_LIBRARY "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib/glib-2.0.lib")
-
-set(GLIB_CONFIG_INCLUDE_DIR "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib/glib-2.0/include")
-
-set(HARFBUZZ_INCLUDE_DIR "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/include/harfbuzz")
-set(HARFBUZZ_LIBRARY "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib/harfbuzz.lib")
-
-set(CAIRO_INCLUDE_DIR "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/include/cairo")
-set(CAIRO_LIBRARY "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib/cairo.lib")
-
-find_path(PANGO_INCLUDE_DIR pango/pango.h)
-find_library(PANGO_LIBRARY pango-1.0)
-
-find_path(GLIB_INCLUDE_DIR glib/glib.h)
-find_path(GLIB_CONFIG_INCLUDE_DIR glibconfig.h)
-find_library(GLIB_LIBRARY glib-2.0)
-
-find_path(HARFBUZZ_INCLUDE_DIR hb.h)
-find_library(HARFBUZZ_LIBRARY harfbuzz)
-
-find_path(HARFBUZZ_INCLUDE_DIR cairo.h)
-find_library(HARFBUZZ_LIBRARY cairo)
-
-target_include_directories(AsteroidMiner PRIVATE ${CAIRO_INCLUDE_DIR} ${PANGO_INCLUDE_DIR} ${GLIB_INCLUDE_DIR} ${GLIB_CONFIG_INCLUDE_DIR} ${HARFBUZZ_INCLUDE_DIR})

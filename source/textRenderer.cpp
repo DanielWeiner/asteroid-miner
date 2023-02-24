@@ -4,14 +4,19 @@
 #include <iostream>
 #include <set>
 #include <thread>
+#include <glib-object.h>
 
 namespace {
 
-const double pixelRange     = 5;
-const double glyphScale     = 2.5;
-const double miterLimit     = 1.0;
-const double maxCornerAngle = 3.0;
-const int    threadCount    = 3;
+const int pangoFontSize = 8;
+const std::string pangoFontSuffix = " Regular " + std::to_string(pangoFontSize);
+
+const double pixelRange      = 4;
+const double glyphScale      = 3;
+const double miterLimit      = 1.0;
+const double maxCornerAngle  = 3.0;
+const int    threadCount     = 3;
+const double glyphPadding    = pixelRange/glyphScale;
 
 const char* vertexShaderSource = R"glsl(
 /*-------------------VERTEX------------------*/
@@ -98,23 +103,29 @@ void TextRenderer::renderText(ustring str, glm::vec2 position, float fontScale, 
     _renderText(str, position, fontScale, color);
 }
 
-void TextRenderer::init(std::string font, std::string fontName) 
+void TextRenderer::init(std::string fontName) 
 {
-    auto config = FcConfigCreate();
-    fcstring fcstr(Global::GetExeDir() + "/data/fonts");
-    FcConfigAppFontAddDir(config, fcstr.c_str());
-    FcConfigSetCurrent(config);
-    FcInit();
+    _fontName = fontName;
+    _initFontConfig();
 
-    PangoFontMap* fontMap = pango_cairo_font_map_new_for_font_type(CAIRO_FONT_TYPE_FT);
+    auto pattern = FcPatternBuild (0, FC_FAMILY, FcTypeString, _fontName.c_str(), (char *) 0);
+    FcResult result;
+    auto foundResult = FcFontMatch(_fcConfig, pattern, &result);
+    if (result != FcResult::FcResultMatch) {
+        _isError = true;
+        return;
+    }
+    FcValue v;
+    FcPatternGet(foundResult, "file", 0, &v);
+    std::string fileName((const char*)v.u.s);
+
+    PangoFontMap* fontMap = pango_cairo_font_map_new_for_font_type(CAIRO_FONT_TYPE_FT);    
     _pangoContext = pango_font_map_create_context(fontMap);
-    _pangoAttrs = pango_attr_list_new();
     
-    auto desc = pango_font_description_from_string(font.c_str());
+    auto desc = pango_font_description_new();
+    pango_font_description_set_family(desc, fontName.c_str());
     _pangoFont = pango_font_map_load_font(fontMap, _pangoContext, desc);
-
-    pango_attr_list_insert(_pangoAttrs, pango_attr_family_new(fontName.c_str()));
-    _pangoAttrIterator = pango_attr_list_get_iterator(_pangoAttrs);
+    pango_font_description_free(desc);
 
     _atlas.atlasGenerator().setThreadCount(threadCount);
     _shaderProgram = std::make_unique<ShaderProgram>();
@@ -129,7 +140,7 @@ void TextRenderer::init(std::string font, std::string fontName)
     _shaderProgram->defineAttribute<float>("inTexCoord", 2);
     _shaderProgram->bindAttributes();
     
-    _initMsdf(_getFontPath(font));
+    _initMsdf(fileName);
 }
 
 void TextRenderer::setProjection(glm::mat4 projection)
@@ -152,14 +163,33 @@ TextRenderer::~TextRenderer()
     if (_ft) {
         msdfgen::deinitializeFreetype(_ft);
     }
+
+    if (_pangoContext) {
+        g_object_unref(_pangoContext);
+    }
+    FcConfigDestroy(_fcConfig);
+    FcFini();
 }
 
 std::string TextRenderer::_getFontPath(std::string fontName) {
-    return Global::GetExeDir() + "/data/fonts/" + fontName;
+    return _getFontDir() + "/" + fontName;
 }
 
-void TextRenderer::_initMsdf(std::string fontPath) 
+std::string TextRenderer::_getFontDir()
 {
+    return Global::GetExeDir() + "/data/fonts";
+}
+
+void TextRenderer::_initFontConfig() 
+{
+    _fcConfig = FcConfigCreate();
+    fcstring fcstr(_getFontDir());
+    FcConfigAppFontAddDir(_fcConfig, fcstr.c_str());
+    FcConfigSetCurrent(_fcConfig);
+    FcInit();
+}
+
+void TextRenderer::_initMsdf(std::string fontPath) {
     using namespace msdfgen;
     _ft = initializeFreetype();
     if (!_ft) {
@@ -204,10 +234,11 @@ void TextRenderer::_addGlyphs(ustring codepoints)
         GlyphGeometry glyph;
         glyph.load(_font, 1.0, *it);
         glyph.edgeColoring(&edgeColoringSimple, maxCornerAngle, 0);
-        glyph.wrapBox(glyphScale, pixelRange/glyphScale, miterLimit);
+        glyph.wrapBox(glyphScale, glyphPadding, miterLimit);
         _glyphIndices[*it] = _glyphs.size();
         _glyphs.push_back(glyph);
     }
+
     _atlas.add(&_glyphs[initialGlyphCount], _glyphs.size() - initialGlyphCount, false);
 
     Bitmap storage = (Bitmap)_atlas.atlasGenerator().atlasStorage();
@@ -226,95 +257,81 @@ void TextRenderer::_addGlyphs(ustring codepoints)
 
 void TextRenderer::_renderText(ustring str, glm::vec2 position, float fontScale, glm::vec4 color) 
 {
+    const double pangoScale = PANGO_SCALE / fontScale;
+    const int vertexSize = 4;
+
     _shaderProgram->use();
     _shaderProgram->bindTexture(_texture);
     _shaderProgram->setUniform("fgColor", color);
 
     std::vector<float> values;
-
-    std::string bytes = "";
-    for (auto ch : str) {
-        while (ch > 0) {
-            const char byte = ch >> 24;
-            if (byte != 0) {
-                bytes.push_back(byte);
-            }
-            ch <<= 8;
-        }
-    }
-
-    const int vertexSize = 4;
+    std::string bytes(str.begin(), str.end());
+    
     if (_glyphCache.contains(str)) {
         values = _glyphCache[str];
     } else {
-        auto scaleAdjustment = 0.98;
-        auto items = pango_itemize(_pangoContext, bytes.c_str(), 0, bytes.size(), _pangoAttrs, _pangoAttrIterator);
+        auto layout = pango_layout_new(_pangoContext);
+
+        auto desc = pango_font_description_new();
+        pango_font_description_set_family(desc, _fontName.c_str());
+        pango_layout_set_font_description(layout, desc);
+        pango_font_description_free(desc);
+
+        pango_layout_set_text(layout, bytes.c_str(), bytes.size());
+        
+        auto iter = pango_layout_get_iter(layout);
         do {
-            PangoItem* item = (PangoItem*)items->data;
-            auto glyphString = pango_glyph_string_new();
-            pango_shape_full(&bytes[item->offset], item->num_chars, bytes.c_str(), -1, &item->analysis, glyphString);
-
-            auto glyphs = glyphString->glyphs;
-            for (int i = 0; i < glyphString->num_glyphs; i++) {
-                auto glyph = glyphs[i];
-                auto mGlyph = _glyphs[_glyphIndices[bytes[i]]];
-
-
-                if (mGlyph.isWhitespace()) {
-                    double spaceWidth, tabWidth;
-                    msdfgen::getFontWhitespaceWidth(spaceWidth, tabWidth, _font);
-
-                    auto spaceAdjustment = 1.7;
-
-                    if (glyph.glyph == ' ') {
-                        position.x += spaceWidth * fontScale * scaleAdjustment / spaceAdjustment;
-                    } else {
-                        position.x += tabWidth * fontScale * scaleAdjustment / spaceAdjustment;
-                    }
-
-                    continue;
-                }
-                
-                Bitmap atlas(_atlas.atlasGenerator().atlasStorage());
-
-                int width, height;
-                int atlasWidth = atlas.width();
-                int atlasHeight = atlas.height();
-                
-                double pLeft, pBottom, pRight, pTop;
-                double aLeft, aBottom, aRight, aTop;
-
-                mGlyph.getBoxSize(width, height);
-                mGlyph.getQuadPlaneBounds(pLeft, pBottom, pRight, pTop);
-                mGlyph.getQuadAtlasBounds(aLeft, aBottom, aRight, aTop);
-
-                float rLeft  = position.x + pLeft * fontScale;
-                float rTop  = position.y - pTop * fontScale;
-                float rRight  = position.x + pRight * fontScale;
-                float rBottom  = position.y - pBottom * fontScale;
-                                
-                float left = aLeft / atlasWidth;
-                float top = aTop / atlasHeight;
-                float right = aRight / atlasWidth;
-                float bottom = aBottom / atlasHeight;
-
-                values.insert(values.end(), { 
-                    rLeft,  rTop,    left, top,    // top left
-                    rRight, rTop,    right, top,   // top right
-                    rLeft,  rBottom, left, bottom, // bottom left
-
-                    rRight, rTop,    right, top,    // top right
-                    rLeft,  rBottom, left, bottom,  // bottom left
-                    rRight, rBottom, right, bottom, // bottom right
-                });
-
-                position.x += ((float)glyph.geometry.width / (float)PANGO_SCALE) * fontScale * scaleAdjustment;
+            auto charIndex = pango_layout_iter_get_index(iter);
+            auto byte = bytes[charIndex];
+            if (byte == ' ' || byte == '\t') {
+                continue;
             }
-            items = items->next;
-            pango_glyph_string_free(glyphString);
-        } while(items != NULL);
 
-        msdfgen::GlyphIndex lastChar;
+            auto mGlyph = _glyphs[_glyphIndices[byte]];
+
+            PangoRectangle logicalRect;
+            pango_layout_iter_get_cluster_extents(iter, NULL, &logicalRect);
+            
+            Bitmap atlas(_atlas.atlasGenerator().atlasStorage());
+
+            int atlasWidth = atlas.width();
+            int atlasHeight = atlas.height();
+            
+            double aLeft, aBottom, aRight, aTop,
+                   pLeft, pBottom, pRight, pTop;
+
+            mGlyph.getQuadAtlasBounds(aLeft, aBottom, aRight, aTop);
+            mGlyph.getQuadPlaneBounds(pLeft, pBottom, pRight, pTop);
+            
+            double baseline = pango_layout_iter_get_baseline(iter) / pangoScale;
+
+            float lLeft  = logicalRect.x / pangoScale + position.x;
+            float lTop  = logicalRect.y / pangoScale + position.y;
+
+            float rLeft  = lLeft + pLeft * fontScale;
+            float rTop  = lTop - pTop * fontScale + baseline;
+            float rRight  = lLeft + pRight * fontScale;
+            float rBottom  = lTop - pBottom * fontScale + baseline;
+            
+            float left = aLeft / atlasWidth;
+            float top = aTop / atlasHeight;
+            float right = aRight / atlasWidth;
+            float bottom = aBottom / atlasHeight;
+
+            values.insert(values.end(), { 
+                rLeft,  rTop,    left, top,    // top left
+                rRight, rTop,    right, top,   // top right
+                rLeft,  rBottom, left, bottom, // bottom left
+                
+                rRight, rTop,    right, top,    // top right
+                rLeft,  rBottom, left, bottom,  // bottom left
+                rRight, rBottom, right, bottom  // bottom right
+            });
+        } while (pango_layout_iter_next_cluster(iter));
+
+        pango_layout_iter_free(iter);
+        g_object_unref(layout);
+
         _glyphCache[str] = values;
     }
     

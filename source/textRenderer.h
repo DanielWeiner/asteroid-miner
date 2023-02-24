@@ -19,7 +19,6 @@
 #include <fontconfig/fontconfig.h>
 #include <pango/pango.h>
 #include <pango/pangocairo.h>
-
 class TextRenderer {
 private:
     using codepoint = msdf_atlas::unicode_t;
@@ -39,7 +38,7 @@ private:
 public:
     TextRenderer(std::shared_ptr<Window> window);
     void renderText(ustring str, glm::vec2 position, float fontScale, glm::vec4 color);
-    void init(std::string font, std::string fontName);
+    void init(std::string fontName);
     void setProjection(glm::mat4 projection);
     void setView(glm::mat4 view);
 
@@ -57,6 +56,8 @@ private:
     msdfgen::FreetypeHandle*               _ft;
     msdfgen::FontHandle*                   _font;
 
+    std::string                            _fontName;
+
     bool                                   _isError;
     DynamicAtlas                           _atlas;
     std::set<codepoint>                    _chars;
@@ -66,13 +67,15 @@ private:
 
     GLuint                                 _texture;
 
-    PangoAttrList*                         _pangoAttrs;
     PangoContext*                          _pangoContext;
-    PangoAttrIterator*                     _pangoAttrIterator;
     PangoFont*                             _pangoFont;
 
-    std::string _getFontPath(std::string fontName);
+    FcConfig*                              _fcConfig;
 
+    std::string _getFontPath(std::string fontName);
+    std::string _getFontDir();
+
+    void _initFontConfig();
     void _initMsdf(std::string fontPath);
     void _addGlyphs(ustring codepoints);
     void _renderText(ustring str, glm::vec2 position, float fontScale, glm::vec4 color);

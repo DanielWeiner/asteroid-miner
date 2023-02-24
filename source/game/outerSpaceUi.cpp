@@ -54,8 +54,7 @@ void OuterSpaceUi::drawPanel(glm::vec2 topLeft, glm::vec2 bottomRight)
     _textRenderer.setProjection(projection);
     _textRenderer.setView(glm::mat4(1.0));
 
-
-    float fontScale = 6;
+    float fontScale = 3;
     _textRenderer.renderText("The quick brown fox jumps over the lazy dog.", glm::vec2(200,500), fontScale, glm::vec4(1,1,1,1));
     _textRenderer.renderText("bazinga", glm::vec2(300,800), fontScale, glm::vec4(1,1,0,1));
 }
@@ -63,6 +62,5 @@ void OuterSpaceUi::drawPanel(glm::vec2 topLeft, glm::vec2 bottomRight)
 void OuterSpaceUi::init() 
 {
     _spriteRenderer = _spriteFactory->createRenderer(false);
-    //_textRenderer.init("JUST Sans Regular.otf", "JUST Sans");
-    _textRenderer.init("Hyperwave Display.otf", "Hyperwave");
+    _textRenderer.init("Leprico black");
 }

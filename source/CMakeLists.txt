@@ -7,6 +7,7 @@ set(PANGO_CAIRO_LIBRARY "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib/pang
 set(GLIB_INCLUDE_DIR "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/include/glib-2.0")
 set(GLIB_LIBRARY "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib/glib-2.0.lib")
 
+set(GLIB_OBJECT_LIBRARY "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib/gobject-2.0.lib")
 set(GLIB_CONFIG_INCLUDE_DIR "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib/glib-2.0/include")
 
 set(HARFBUZZ_INCLUDE_DIR "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/include/harfbuzz")
@@ -15,7 +16,23 @@ set(HARFBUZZ_LIBRARY "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib/harfbuz
 set(CAIRO_INCLUDE_DIR "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/include/cairo")
 set(CAIRO_LIBRARY "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib/cairo.lib")
 
-target_include_directories(AsteroidMinerLib PRIVATE ${CAIRO_INCLUDE_DIR} ${PANGO_INCLUDE_DIR} ${GLIB_INCLUDE_DIR} ${GLIB_CONFIG_INCLUDE_DIR} ${HARFBUZZ_INCLUDE_DIR})
+find_path(PANGO_INCLUDE_DIR pango/pango.h)
+find_library(PANGO_LIBRARY pango-1.0)
+
+find_path(GLIB_INCLUDE_DIR glib/glib.h)
+find_path(GLIB_INCLUDE_DIR glib/glib-object.h)
+find_path(GLIB_CONFIG_INCLUDE_DIR glibconfig.h)
+
+find_library(GLIB_LIBRARY glib-2.0)
+find_library(GLIB_OBJECT_LIBRARY gobject-2.0)
+
+find_path(HARFBUZZ_INCLUDE_DIR hb.h)
+find_library(HARFBUZZ_LIBRARY harfbuzz)
+
+find_path(HARFBUZZ_INCLUDE_DIR cairo.h)
+find_library(HARFBUZZ_LIBRARY cairo)
+
+target_include_directories(AsteroidMinerLib PUBLIC ${GLIB_INCLUDE_DIR} ${GLIB_CONFIG_INCLUDE_DIR} ${CAIRO_INCLUDE_DIR} ${PANGO_INCLUDE_DIR} ${HARFBUZZ_INCLUDE_DIR})
 
 # Set the appropriate compiler flags.
 if(MSVC)
@@ -28,7 +45,7 @@ else()
 endif()
 
 # Link with the general libraries.
-target_link_libraries(AsteroidMinerLib PUBLIC ${CAIRO_LIBRARY} ${PANGO_CAIRO_LIBRARY} ${HARFBUZZ_LIBRARY} ${GLIB_LIBRARY} ${PANGO_LIBRARY} Fontconfig::Fontconfig msdf-atlas-gen::msdf-atlas-gen Freetype::Freetype msdfgen::msdfgen msdfgen::msdfgen-ext PNG::PNG glm::glm nlohmann_json::nlohmann_json glfw glad::glad)
+target_link_libraries(AsteroidMinerLib PUBLIC ${GLIB_OBJECT_LIBRARY} ${CAIRO_LIBRARY} ${PANGO_CAIRO_LIBRARY} ${HARFBUZZ_LIBRARY} ${GLIB_LIBRARY} ${PANGO_LIBRARY} Fontconfig::Fontconfig msdf-atlas-gen::msdf-atlas-gen Freetype::Freetype msdfgen::msdfgen msdfgen::msdfgen-ext PNG::PNG glm::glm nlohmann_json::nlohmann_json glfw glad::glad)
 # Link the needed OS-specific dependencies, if any.
 if(WIN32)
     target_link_options(AsteroidMinerLib PRIVATE "/SUBSYSTEM:WINDOWS" "/ENTRY:mainCRTStartup")
