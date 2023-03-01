@@ -221,20 +221,19 @@ if (WIN32)
     set(AM_TEXUREPACKER_BIN "C:/Program\ Files/CodeAndWeb/TexturePacker/bin/TexturePacker.exe")
 endif()
 
-add_custom_command(TARGET AsteroidMiner PRE_LINK 
+add_custom_target(AmSprites ALL
     COMMAND
         ${AM_TEXUREPACKER_BIN} sprites.tps
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-file(
-GLOB_RECURSE RESOURCES
-RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
-"data/fonts/*" 
-"data/sprites/*" 
-)
-foreach(FILE ${RESOURCES})
-    add_custom_command(TARGET AsteroidMiner PRE_LINK
-        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/${FILE}" "$<TARGET_FILE_DIR:AsteroidMiner>/${FILE}"
-        COMMAND_EXPAND_LISTS VERBATIM)
+foreach(DIR "fonts" "sprites" )
+    add_custom_target(
+        "AmResources_${DIR}"
+        ALL
+        COMMAND "${CMAKE_COMMAND}" -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/data/${DIR}" "${CMAKE_CURRENT_BINARY_DIR}/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>/data/${DIR}"
+        COMMAND_EXPAND_LISTS VERBATIM
+    )
+
+    add_dependencies(AsteroidMiner "AmResources_${DIR}")
 endforeach()

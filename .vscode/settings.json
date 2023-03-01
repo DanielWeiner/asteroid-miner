@@ -93,7 +93,8 @@
         "filesystem": "cpp",
         "ranges": "cpp",
         "valarray": "cpp",
-        "numbers": "cpp"
+        "numbers": "cpp",
+        "variant": "cpp"
     },
     "editor.detectIndentation": false,
     "C_Cpp.default.cppStandard": "c++20",

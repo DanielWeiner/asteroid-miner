@@ -16,6 +16,9 @@ private:
     std::unique_ptr<SpriteRenderer> _spriteRenderer;
     std::shared_ptr<Window>         _window;
     TextRenderer                    _textRenderer;
+
+    TextRenderer::Layout            _text1;
+    TextRenderer::Layout            _text2;
 };
 
 #endif

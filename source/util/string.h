@@ -21,6 +21,22 @@ namespace Util::String {
 
         return result;
     }
+
+
+    template<typename T>
+    class String : public std::basic_string<T> {
+    public:
+        template<typename U>
+        String(String<U>& otherString) : std::basic_string<T>(otherString.begin(), otherString.end()) {};
+        template<typename U>
+        String(std::basic_string<U>& otherString) : std::basic_string<T>(otherString.begin(), otherString.end()) {};
+        template<typename U>
+        String(String<U> otherString) : std::basic_string<T>(otherString.begin(), otherString.end()) {};
+        template<typename U>
+        String(std::basic_string<U> otherString) : std::basic_string<T>(otherString.begin(), otherString.end()) {};
+        template<typename U>
+        String(const U* chars) : String(std::basic_string<U>(chars)) {};
+    };
 }
 
 #endif

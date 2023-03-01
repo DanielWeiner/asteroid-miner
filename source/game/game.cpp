@@ -88,5 +88,5 @@ void Game::render()
     _lineRenderer->setView(_scene->getView());
 
     _outerSpaceScene->render(*_lineRenderer);
-    _outerSpaceUi->drawPanel(glm::vec2(50.f,50.f), glm::vec2(150.f, 150.f));
+    _outerSpaceUi->drawPanel(glm::vec2(50.f,50.f), glm::vec2(800.f,1000.f));
 }

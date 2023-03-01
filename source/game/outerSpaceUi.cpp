@@ -3,6 +3,10 @@
 #include <glm/ext.hpp>
 #include <algorithm>
 
+namespace {
+    const float fontScale = 2;
+}
+
 OuterSpaceUi::OuterSpaceUi(std::unique_ptr<SpriteFactory> &&spriteFactory, std::shared_ptr<Window> window) 
 : _spriteFactory(std::move(spriteFactory)), _window(window), _textRenderer(_window)
 {
@@ -52,15 +56,16 @@ void OuterSpaceUi::drawPanel(glm::vec2 topLeft, glm::vec2 bottomRight)
     _spriteRenderer->draw();   
 
     _textRenderer.setProjection(projection);
-    _textRenderer.setView(glm::mat4(1.0));
-
-    float fontScale = 3;
-    _textRenderer.renderText("The quick brown fox jumps over the lazy dog.", glm::vec2(200,500), fontScale, glm::vec4(1,1,1,1));
-    _textRenderer.renderText("bazinga", glm::vec2(300,800), fontScale, glm::vec4(1,1,0,1));
+    _textRenderer.renderLayout(_text1, topLeft + borderSize / 2.f, fontScale, glm::vec4(.1,.1,.1,1));
 }
 
 void OuterSpaceUi::init() 
 {
     _spriteRenderer = _spriteFactory->createRenderer(false);
-    _textRenderer.init("Leprico black");
+    _textRenderer.init("Teorema");
+
+    auto width = 730.f / fontScale;
+    _textRenderer.createLayout(
+    R"(Apparently motionless to her passengers and crew, the Interplanetary liner Hyperion bored serenely onward through space at normal acceleration. In the railed-off sanctum in one corner of the control room a bell tinkled, a smothered whirr was heard, and Captain Bradley frowned as he studied the brief message upon the tape of the recorder--a message flashed to his desk from the operator's panel. He beckoned, and the second officer, whose watch it now was, read aloud: "Reports of scout patrols still negative." "Still negative." The officer scowled in thought. "They've already searched beyond the widest possible location of the wreckage, too. Two unexplained disappearances inside a month--first the Dione, then the Rhea--and not a plate nor a lifeboat recovered. Looks bad, sir. One might be an accident; two might possibly be a coincidence...." His voice died away. What might that coincidence mean?)", 
+    width, _text1); 
 }

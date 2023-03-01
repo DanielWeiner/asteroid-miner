@@ -10,7 +10,12 @@
         "libpng",
         "glfw3",
         "msdfgen",
-        "msdf-atlas-gen",
+        {
+            "name": "msdf-atlas-gen",
+            "features": [
+                "geometry-preprocessing"
+            ]
+        },
         "pango",
         "fontconfig",
         "glib",

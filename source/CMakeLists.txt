@@ -45,7 +45,7 @@ else()
 endif()
 
 # Link with the general libraries.
-target_link_libraries(AsteroidMinerLib PUBLIC ${GLIB_OBJECT_LIBRARY} ${CAIRO_LIBRARY} ${PANGO_CAIRO_LIBRARY} ${HARFBUZZ_LIBRARY} ${GLIB_LIBRARY} ${PANGO_LIBRARY} Fontconfig::Fontconfig msdf-atlas-gen::msdf-atlas-gen Freetype::Freetype msdfgen::msdfgen msdfgen::msdfgen-ext PNG::PNG glm::glm nlohmann_json::nlohmann_json glfw glad::glad)
+target_link_libraries(AsteroidMinerLib PUBLIC ${GLIB_OBJECT_LIBRARY} ${CAIRO_LIBRARY} ${PANGO_CAIRO_LIBRARY} ${HARFBUZZ_LIBRARY} ${GLIB_LIBRARY} ${PANGO_LIBRARY} Fontconfig::Fontconfig msdf-atlas-gen::msdf-atlas-gen unofficial::skia::skia Freetype::Freetype msdfgen::msdfgen msdfgen::msdfgen-ext PNG::PNG glm::glm nlohmann_json::nlohmann_json glfw glad::glad)
 # Link the needed OS-specific dependencies, if any.
 if(WIN32)
     target_link_options(AsteroidMinerLib PRIVATE "/SUBSYSTEM:WINDOWS" "/ENTRY:mainCRTStartup")

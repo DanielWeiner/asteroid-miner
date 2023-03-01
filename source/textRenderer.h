@@ -3,6 +3,7 @@
 
 #include "window.h"
 #include "shaderProgram.h"
+#include "util/string.h"
 
 #include <glm/glm.hpp>
 #include <string>
@@ -18,29 +19,24 @@
 #include <msdf-atlas-gen/types.h>
 #include <fontconfig/fontconfig.h>
 #include <pango/pango.h>
-#include <pango/pangocairo.h>
+
 class TextRenderer {
 private:
     using codepoint = msdf_atlas::unicode_t;
-    using ustring_base =  std::basic_string<codepoint, std::char_traits<codepoint>, std::allocator<codepoint>>;
-    using fcstring_base =  std::basic_string<FcChar8, std::char_traits<FcChar8>, std::allocator<FcChar8>>;
 
-    struct ustring : public ustring_base {
-        ustring(const char* chars);
-        ustring(const codepoint* chars) : ustring_base(chars) {}
-    };
-
-    struct fcstring : public fcstring_base {
-        fcstring(const char* chars);
-        fcstring(std::string chars) : fcstring(chars.c_str()) {};
-        fcstring(const FcChar8* chars) : fcstring_base(chars) {}
-    };
 public:
+    struct Layout {
+    friend TextRenderer;
+    private:
+        std::vector<float> vertices;
+    };
+    using fcstring = Util::String::String<FcChar8>;
+
     TextRenderer(std::shared_ptr<Window> window);
-    void renderText(ustring str, glm::vec2 position, float fontScale, glm::vec4 color);
+    void createLayout(std::string str, int width,Layout& layout);
+    void renderLayout(Layout& layout, glm::vec2 position, float fontScale, glm::vec4 color);
     void init(std::string fontName);
     void setProjection(glm::mat4 projection);
-    void setView(glm::mat4 view);
 
     ~TextRenderer();
 private:
@@ -60,10 +56,9 @@ private:
 
     bool                                   _isError;
     DynamicAtlas                           _atlas;
-    std::set<codepoint>                    _chars;
-    std::vector<msdf_atlas::GlyphGeometry> _glyphs;
-    std::map<codepoint, unsigned int>      _glyphIndices;
-    std::map<ustring, std::vector<float>>  _glyphCache;
+    std::set<PangoGlyph>                   _glyphs;
+    std::vector<msdf_atlas::GlyphGeometry> _glyphGeometries;
+    std::map<PangoGlyph, unsigned int>     _glyphIndices;
 
     GLuint                                 _texture;
 
@@ -71,14 +66,14 @@ private:
     PangoFont*                             _pangoFont;
 
     FcConfig*                              _fcConfig;
+    std::string                            _fontPath;
 
     std::string _getFontPath(std::string fontName);
     std::string _getFontDir();
 
     void _initFontConfig();
-    void _initMsdf(std::string fontPath);
-    void _addGlyphs(ustring codepoints);
-    void _renderText(ustring str, glm::vec2 position, float fontScale, glm::vec4 color);
+    void _initMsdf();
+    void _addGlyphs(std::string codepoints);
 };
 
 #endif
