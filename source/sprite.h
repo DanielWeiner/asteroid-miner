@@ -32,6 +32,13 @@ public:
     void scaleBy(float x, float y);
     void scaleBy(glm::vec2 xy);
 
+    void setScale(float x, float y);
+    void setScale(glm::vec2 xy);
+
+    void calculateEdgeTangents();
+
+    glm::vec2 getBaseSize();
+
     std::string getName();
     glm::vec2 getPosition();
     glm::vec2 getCenter();
@@ -41,7 +48,7 @@ public:
     glm::vec2 getNextPosition();
 
     void updateModelMatrix();
-    void updateTextureMatrix();
+    void updateTextureIndex();
 
     bool pointIsInHitbox(float x, float y);
 
@@ -76,6 +83,9 @@ private:
     void _useNextState(SpriteState*& state);
     void _useCurrentState(SpriteState*& state);
     void _update();
+    bool _isPixelAtEdge(int x, int y);
+    bool _findNeighborEdgePixel(int* x, int* y, glm::ivec2* direction);
+    glm::vec2 _findFirstPixel();
 };
 
 #endif

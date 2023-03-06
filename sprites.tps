@@ -4,7 +4,7 @@
         <key>fileFormatVersion</key>
         <int>6</int>
         <key>texturePackerVersion</key>
-        <string>7.0.0</string>
+        <string>7.0.2</string>
         <key>autoSDSettings</key>
         <array>
             <struct type="AutoSDSettings">
@@ -64,7 +64,7 @@
             </struct>
         </struct>
         <key>shapePadding</key>
-        <uint>3</uint>
+        <uint>2</uint>
         <key>jpgQuality</key>
         <uint>80</uint>
         <key>pngOptimizationLevel</key>
@@ -94,7 +94,7 @@
         <key>algorithmSettings</key>
         <struct type="AlgorithmSettings">
             <key>algorithm</key>
-            <enum type="AlgorithmSettings::AlgorithmId">MaxRects</enum>
+            <enum type="AlgorithmSettings::AlgorithmId">Polygon</enum>
             <key>freeSizeMode</key>
             <enum type="AlgorithmSettings::AlgorithmFreeSizeMode">Best</enum>
             <key>sizeConstraints</key>
@@ -159,11 +159,11 @@
             <key>trimThreshold</key>
             <uint>1</uint>
             <key>trimMargin</key>
-            <uint>1</uint>
+            <uint>0</uint>
             <key>trimMode</key>
-            <enum type="SpriteSettings::TrimMode">Trim</enum>
+            <enum type="SpriteSettings::TrimMode">Polygon</enum>
             <key>tracerTolerance</key>
-            <int>200</int>
+            <int>10</int>
             <key>heuristicMask</key>
             <false/>
             <key>defaultPivotPoint</key>
@@ -879,6 +879,10 @@
             <key type="filename">data/images/Power-ups/things_bronze.png</key>
             <key type="filename">data/images/Power-ups/things_gold.png</key>
             <key type="filename">data/images/Power-ups/things_silver.png</key>
+            <key type="filename">data/images/UI/crossair_black.png</key>
+            <key type="filename">data/images/UI/crossair_blue.png</key>
+            <key type="filename">data/images/UI/crossair_red.png</key>
+            <key type="filename">data/images/UI/crossair_white.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
                 <point_f>0.5,0.5</point_f>
@@ -986,6 +990,12 @@
                 <false/>
             </struct>
             <key type="filename">data/images/Effects/star3.png</key>
+            <key type="filename">data/images/UI/dotBlue.png</key>
+            <key type="filename">data/images/UI/dotGreen.png</key>
+            <key type="filename">data/images/UI/dotRed.png</key>
+            <key type="filename">data/images/UI/dotWhite.png</key>
+            <key type="filename">data/images/UI/dotYellow.png</key>
+            <key type="filename">data/images/UI/dot_shadow.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
                 <point_f>0.5,0.5</point_f>
@@ -1375,6 +1385,10 @@
             </struct>
             <key type="filename">data/images/Meteors/meteorBrown_tiny1.png</key>
             <key type="filename">data/images/Meteors/meteorGrey_tiny1.png</key>
+            <key type="filename">data/images/UI/blue_cross.png</key>
+            <key type="filename">data/images/UI/green_cross.png</key>
+            <key type="filename">data/images/UI/grey_crossGrey.png</key>
+            <key type="filename">data/images/UI/grey_crossWhite.png</key>
             <key type="filename">data/images/UI/numeral0.png</key>
             <key type="filename">data/images/UI/numeral1.png</key>
             <key type="filename">data/images/UI/numeral2.png</key>
@@ -1385,6 +1399,8 @@
             <key type="filename">data/images/UI/numeral7.png</key>
             <key type="filename">data/images/UI/numeral8.png</key>
             <key type="filename">data/images/UI/numeral9.png</key>
+            <key type="filename">data/images/UI/red_cross.png</key>
+            <key type="filename">data/images/UI/yellow_cross.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
                 <point_f>0.5,0.5</point_f>
@@ -1792,6 +1808,16 @@
                 <false/>
             </struct>
             <key type="filename">data/images/Parts/beam2.png</key>
+            <key type="filename">data/images/UI/blue_sliderLeft.png</key>
+            <key type="filename">data/images/UI/blue_sliderRight.png</key>
+            <key type="filename">data/images/UI/green_sliderLeft.png</key>
+            <key type="filename">data/images/UI/green_sliderRight.png</key>
+            <key type="filename">data/images/UI/grey_sliderLeft.png</key>
+            <key type="filename">data/images/UI/grey_sliderRight.png</key>
+            <key type="filename">data/images/UI/red_sliderLeft.png</key>
+            <key type="filename">data/images/UI/red_sliderRight.png</key>
+            <key type="filename">data/images/UI/yellow_sliderLeft.png</key>
+            <key type="filename">data/images/UI/yellow_sliderRight.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
                 <point_f>0.5,0.5</point_f>
@@ -2094,6 +2120,21 @@
                 <false/>
             </struct>
             <key type="filename">data/images/Parts/engine4.png</key>
+            <key type="filename">data/images/UI/blue_button08.png</key>
+            <key type="filename">data/images/UI/blue_button10.png</key>
+            <key type="filename">data/images/UI/blue_button12.png</key>
+            <key type="filename">data/images/UI/green_button08.png</key>
+            <key type="filename">data/images/UI/green_button10.png</key>
+            <key type="filename">data/images/UI/green_button12.png</key>
+            <key type="filename">data/images/UI/grey_button09.png</key>
+            <key type="filename">data/images/UI/grey_button11.png</key>
+            <key type="filename">data/images/UI/grey_button13.png</key>
+            <key type="filename">data/images/UI/red_button05.png</key>
+            <key type="filename">data/images/UI/red_button07.png</key>
+            <key type="filename">data/images/UI/red_button09.png</key>
+            <key type="filename">data/images/UI/yellow_button08.png</key>
+            <key type="filename">data/images/UI/yellow_button10.png</key>
+            <key type="filename">data/images/UI/yellow_button12.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
                 <point_f>0.5,0.5</point_f>
@@ -3102,6 +3143,7 @@
             <key type="filename">data/images/Power-ups/star_bronze.png</key>
             <key type="filename">data/images/Power-ups/star_gold.png</key>
             <key type="filename">data/images/Power-ups/star_silver.png</key>
+            <key type="filename">data/images/UI/cursor_hand.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
                 <point_f>0.5,0.5</point_f>
@@ -3261,6 +3303,17 @@
                 <false/>
             </struct>
             <key type="filename">data/images/Rocket parts/spaceRocketParts_013.png</key>
+            <key type="filename">data/images/UI/blue_boxCheckmark.png</key>
+            <key type="filename">data/images/UI/blue_boxCross.png</key>
+            <key type="filename">data/images/UI/green_boxCheckmark.png</key>
+            <key type="filename">data/images/UI/green_boxCross.png</key>
+            <key type="filename">data/images/UI/grey_box.png</key>
+            <key type="filename">data/images/UI/grey_boxCheckmark.png</key>
+            <key type="filename">data/images/UI/grey_boxCross.png</key>
+            <key type="filename">data/images/UI/red_boxCheckmark.png</key>
+            <key type="filename">data/images/UI/red_boxCross.png</key>
+            <key type="filename">data/images/UI/yellow_boxCheckmark.png</key>
+            <key type="filename">data/images/UI/yellow_boxCross.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
                 <point_f>0.5,0.5</point_f>
@@ -3987,6 +4040,324 @@
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
+            <key type="filename">data/images/UI/barHorizontal_blue_left.png</key>
+            <key type="filename">data/images/UI/barHorizontal_blue_right.png</key>
+            <key type="filename">data/images/UI/barHorizontal_green_left.png</key>
+            <key type="filename">data/images/UI/barHorizontal_green_right.png</key>
+            <key type="filename">data/images/UI/barHorizontal_red_left.png</key>
+            <key type="filename">data/images/UI/barHorizontal_red_right.png</key>
+            <key type="filename">data/images/UI/barHorizontal_shadow_left.png</key>
+            <key type="filename">data/images/UI/barHorizontal_shadow_right.png</key>
+            <key type="filename">data/images/UI/barHorizontal_white_left.png</key>
+            <key type="filename">data/images/UI/barHorizontal_white_right.png</key>
+            <key type="filename">data/images/UI/barHorizontal_yellow_left.png</key>
+            <key type="filename">data/images/UI/barHorizontal_yellow_right.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>2,7,3,13</rect>
+                <key>scale9Paddings</key>
+                <rect>2,7,3,13</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">data/images/UI/barHorizontal_blue_mid.png</key>
+            <key type="filename">data/images/UI/barHorizontal_green_mid.png</key>
+            <key type="filename">data/images/UI/barHorizontal_red_mid.png</key>
+            <key type="filename">data/images/UI/barHorizontal_shadow_mid.png</key>
+            <key type="filename">data/images/UI/barHorizontal_white_mid.png</key>
+            <key type="filename">data/images/UI/barHorizontal_yellow_mid.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>4,7,8,13</rect>
+                <key>scale9Paddings</key>
+                <rect>4,7,8,13</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">data/images/UI/barVertical_blue_bottom.png</key>
+            <key type="filename">data/images/UI/barVertical_blue_top.png</key>
+            <key type="filename">data/images/UI/barVertical_green_bottom.png</key>
+            <key type="filename">data/images/UI/barVertical_green_top.png</key>
+            <key type="filename">data/images/UI/barVertical_red_bottom.png</key>
+            <key type="filename">data/images/UI/barVertical_red_top.png</key>
+            <key type="filename">data/images/UI/barVertical_shadow_bottom.png</key>
+            <key type="filename">data/images/UI/barVertical_shadow_top.png</key>
+            <key type="filename">data/images/UI/barVertical_white_bottom.png</key>
+            <key type="filename">data/images/UI/barVertical_white_top.png</key>
+            <key type="filename">data/images/UI/barVertical_yellow_bottom.png</key>
+            <key type="filename">data/images/UI/barVertical_yellow_top.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>7,2,13,3</rect>
+                <key>scale9Paddings</key>
+                <rect>7,2,13,3</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">data/images/UI/barVertical_blue_mid.png</key>
+            <key type="filename">data/images/UI/barVertical_green_mid.png</key>
+            <key type="filename">data/images/UI/barVertical_red_mid.png</key>
+            <key type="filename">data/images/UI/barVertical_shadow_mid.png</key>
+            <key type="filename">data/images/UI/barVertical_white_mid.png</key>
+            <key type="filename">data/images/UI/barVertical_yellow_mid.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>7,4,13,8</rect>
+                <key>scale9Paddings</key>
+                <rect>7,4,13,8</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">data/images/UI/blue_boxTick.png</key>
+            <key type="filename">data/images/UI/blue_circle.png</key>
+            <key type="filename">data/images/UI/crossair_blackOutline.png</key>
+            <key type="filename">data/images/UI/crossair_blueOutline.png</key>
+            <key type="filename">data/images/UI/crossair_redOutline.png</key>
+            <key type="filename">data/images/UI/crossair_whiteOutline.png</key>
+            <key type="filename">data/images/UI/green_boxTick.png</key>
+            <key type="filename">data/images/UI/green_circle.png</key>
+            <key type="filename">data/images/UI/grey_boxTick.png</key>
+            <key type="filename">data/images/UI/grey_circle.png</key>
+            <key type="filename">data/images/UI/red_boxTick.png</key>
+            <key type="filename">data/images/UI/red_circle.png</key>
+            <key type="filename">data/images/UI/yellow_boxTick.png</key>
+            <key type="filename">data/images/UI/yellow_circle.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>9,9,18,18</rect>
+                <key>scale9Paddings</key>
+                <rect>9,9,18,18</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">data/images/UI/blue_button00.png</key>
+            <key type="filename">data/images/UI/blue_button02.png</key>
+            <key type="filename">data/images/UI/blue_button04.png</key>
+            <key type="filename">data/images/UI/blue_button13.png</key>
+            <key type="filename">data/images/UI/green_button00.png</key>
+            <key type="filename">data/images/UI/green_button02.png</key>
+            <key type="filename">data/images/UI/green_button04.png</key>
+            <key type="filename">data/images/UI/green_button13.png</key>
+            <key type="filename">data/images/UI/grey_button01.png</key>
+            <key type="filename">data/images/UI/grey_button03.png</key>
+            <key type="filename">data/images/UI/grey_button06.png</key>
+            <key type="filename">data/images/UI/grey_button14.png</key>
+            <key type="filename">data/images/UI/grey_button15.png</key>
+            <key type="filename">data/images/UI/red_button01.png</key>
+            <key type="filename">data/images/UI/red_button10.png</key>
+            <key type="filename">data/images/UI/red_button11.png</key>
+            <key type="filename">data/images/UI/red_button13.png</key>
+            <key type="filename">data/images/UI/yellow_button00.png</key>
+            <key type="filename">data/images/UI/yellow_button02.png</key>
+            <key type="filename">data/images/UI/yellow_button04.png</key>
+            <key type="filename">data/images/UI/yellow_button13.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>48,12,95,25</rect>
+                <key>scale9Paddings</key>
+                <rect>48,12,95,25</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">data/images/UI/blue_button01.png</key>
+            <key type="filename">data/images/UI/blue_button03.png</key>
+            <key type="filename">data/images/UI/blue_button05.png</key>
+            <key type="filename">data/images/UI/green_button01.png</key>
+            <key type="filename">data/images/UI/green_button03.png</key>
+            <key type="filename">data/images/UI/green_button05.png</key>
+            <key type="filename">data/images/UI/grey_button00.png</key>
+            <key type="filename">data/images/UI/grey_button02.png</key>
+            <key type="filename">data/images/UI/grey_button04.png</key>
+            <key type="filename">data/images/UI/red_button00.png</key>
+            <key type="filename">data/images/UI/red_button02.png</key>
+            <key type="filename">data/images/UI/red_button12.png</key>
+            <key type="filename">data/images/UI/yellow_button01.png</key>
+            <key type="filename">data/images/UI/yellow_button03.png</key>
+            <key type="filename">data/images/UI/yellow_button05.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>48,11,95,23</rect>
+                <key>scale9Paddings</key>
+                <rect>48,11,95,23</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">data/images/UI/blue_button06.png</key>
+            <key type="filename">data/images/UI/blue_button07.png</key>
+            <key type="filename">data/images/UI/blue_button09.png</key>
+            <key type="filename">data/images/UI/blue_button11.png</key>
+            <key type="filename">data/images/UI/green_button06.png</key>
+            <key type="filename">data/images/UI/green_button07.png</key>
+            <key type="filename">data/images/UI/green_button09.png</key>
+            <key type="filename">data/images/UI/green_button11.png</key>
+            <key type="filename">data/images/UI/grey_button07.png</key>
+            <key type="filename">data/images/UI/grey_button08.png</key>
+            <key type="filename">data/images/UI/grey_button10.png</key>
+            <key type="filename">data/images/UI/grey_button12.png</key>
+            <key type="filename">data/images/UI/red_button03.png</key>
+            <key type="filename">data/images/UI/red_button04.png</key>
+            <key type="filename">data/images/UI/red_button06.png</key>
+            <key type="filename">data/images/UI/red_button08.png</key>
+            <key type="filename">data/images/UI/yellow_button06.png</key>
+            <key type="filename">data/images/UI/yellow_button07.png</key>
+            <key type="filename">data/images/UI/yellow_button09.png</key>
+            <key type="filename">data/images/UI/yellow_button11.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>12,12,25,25</rect>
+                <key>scale9Paddings</key>
+                <rect>12,12,25,25</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">data/images/UI/blue_checkmark.png</key>
+            <key type="filename">data/images/UI/green_checkmark.png</key>
+            <key type="filename">data/images/UI/grey_checkmarkGrey.png</key>
+            <key type="filename">data/images/UI/grey_checkmarkWhite.png</key>
+            <key type="filename">data/images/UI/red_checkmark.png</key>
+            <key type="filename">data/images/UI/yellow_checkmark.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>5,5,11,10</rect>
+                <key>scale9Paddings</key>
+                <rect>5,5,11,10</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">data/images/UI/blue_panel.png</key>
+            <key type="filename">data/images/UI/glassPanel.png</key>
+            <key type="filename">data/images/UI/glassPanel_cornerBL.png</key>
+            <key type="filename">data/images/UI/glassPanel_cornerBR.png</key>
+            <key type="filename">data/images/UI/glassPanel_cornerTL.png</key>
+            <key type="filename">data/images/UI/glassPanel_cornerTR.png</key>
+            <key type="filename">data/images/UI/glassPanel_corners.png</key>
+            <key type="filename">data/images/UI/glassPanel_projection.png</key>
+            <key type="filename">data/images/UI/green_panel.png</key>
+            <key type="filename">data/images/UI/grey_panel.png</key>
+            <key type="filename">data/images/UI/metalPanel.png</key>
+            <key type="filename">data/images/UI/metalPanel_blue.png</key>
+            <key type="filename">data/images/UI/metalPanel_blueCorner.png</key>
+            <key type="filename">data/images/UI/metalPanel_green.png</key>
+            <key type="filename">data/images/UI/metalPanel_greenCorner.png</key>
+            <key type="filename">data/images/UI/metalPanel_red.png</key>
+            <key type="filename">data/images/UI/metalPanel_redCorner.png</key>
+            <key type="filename">data/images/UI/metalPanel_yellow.png</key>
+            <key type="filename">data/images/UI/metalPanel_yellowCorner.png</key>
+            <key type="filename">data/images/UI/red_panel.png</key>
+            <key type="filename">data/images/UI/yellow_panel.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>25,25,50,50</rect>
+                <key>scale9Paddings</key>
+                <rect>25,25,50,50</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">data/images/UI/blue_sliderDown.png</key>
+            <key type="filename">data/images/UI/blue_sliderUp.png</key>
+            <key type="filename">data/images/UI/green_sliderDown.png</key>
+            <key type="filename">data/images/UI/green_sliderUp.png</key>
+            <key type="filename">data/images/UI/grey_sliderDown.png</key>
+            <key type="filename">data/images/UI/grey_sliderUp.png</key>
+            <key type="filename">data/images/UI/red_sliderDown.png</key>
+            <key type="filename">data/images/UI/red_sliderUp.png</key>
+            <key type="filename">data/images/UI/yellow_sliderDown.png</key>
+            <key type="filename">data/images/UI/yellow_sliderUp.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>7,11,14,21</rect>
+                <key>scale9Paddings</key>
+                <rect>7,11,14,21</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">data/images/UI/blue_tick.png</key>
+            <key type="filename">data/images/UI/green_tick.png</key>
+            <key type="filename">data/images/UI/grey_tickGrey.png</key>
+            <key type="filename">data/images/UI/grey_tickWhite.png</key>
+            <key type="filename">data/images/UI/numeralX.png</key>
+            <key type="filename">data/images/UI/red_tick.png</key>
+            <key type="filename">data/images/UI/yellow_tick.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>4,4,9,9</rect>
+                <key>scale9Paddings</key>
+                <rect>4,4,9,9</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
             <key type="filename">data/images/UI/buttonBlue.png</key>
             <key type="filename">data/images/UI/buttonGreen.png</key>
             <key type="filename">data/images/UI/buttonRed.png</key>
@@ -4020,7 +4391,8 @@
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
-            <key type="filename">data/images/UI/numeralX.png</key>
+            <key type="filename">data/images/UI/cursor_pointer3D.png</key>
+            <key type="filename">data/images/UI/cursor_pointerFlat.png</key>
             <struct type="IndividualSpriteSettings">
                 <key>pivotPoint</key>
                 <point_f>0.5,0.5</point_f>
@@ -4029,9 +4401,215 @@
                 <key>scale9Enabled</key>
                 <false/>
                 <key>scale9Borders</key>
-                <rect>4,4,9,9</rect>
+                <rect>5,6,10,12</rect>
                 <key>scale9Paddings</key>
-                <rect>4,4,9,9</rect>
+                <rect>5,6,10,12</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">data/images/UI/cursor_pointer3D_shadow.png</key>
+            <key type="filename">data/images/UI/cursor_pointerFlat_shadow.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>5,7,10,13</rect>
+                <key>scale9Paddings</key>
+                <rect>5,7,10,13</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">data/images/UI/dropdownBottom.png</key>
+            <key type="filename">data/images/UI/dropdownMid.png</key>
+            <key type="filename">data/images/UI/dropdownTop.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>48,6,95,12</rect>
+                <key>scale9Paddings</key>
+                <rect>48,6,95,12</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">data/images/UI/glassPanel_tab.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>25,28,50,56</rect>
+                <key>scale9Paddings</key>
+                <rect>25,28,50,56</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">data/images/UI/grey_arrowDownGrey.png</key>
+            <key type="filename">data/images/UI/grey_arrowDownWhite.png</key>
+            <key type="filename">data/images/UI/grey_arrowUpGrey.png</key>
+            <key type="filename">data/images/UI/grey_arrowUpWhite.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>4,3,7,5</rect>
+                <key>scale9Paddings</key>
+                <rect>4,3,7,5</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">data/images/UI/grey_button05.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>49,12,97,25</rect>
+                <key>scale9Paddings</key>
+                <rect>49,12,97,25</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">data/images/UI/grey_sliderEnd.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>2,3,4,5</rect>
+                <key>scale9Paddings</key>
+                <rect>2,3,4,5</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">data/images/UI/grey_sliderHorizontal.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>48,1,95,2</rect>
+                <key>scale9Paddings</key>
+                <rect>48,1,95,2</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">data/images/UI/grey_sliderVertical.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>1,25,2,50</rect>
+                <key>scale9Paddings</key>
+                <rect>1,25,2,50</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">data/images/UI/metalPanel/bottom.png</key>
+            <key type="filename">data/images/UI/metalPanel/top.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>0,3,1,5</rect>
+                <key>scale9Paddings</key>
+                <rect>0,3,1,5</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">data/images/UI/metalPanel/bottomLeft.png</key>
+            <key type="filename">data/images/UI/metalPanel/bottomRight.png</key>
+            <key type="filename">data/images/UI/metalPanel/topLeft.png</key>
+            <key type="filename">data/images/UI/metalPanel/topRight.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>3,3,5,5</rect>
+                <key>scale9Paddings</key>
+                <rect>3,3,5,5</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">data/images/UI/metalPanel/center.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>0,0,1,1</rect>
+                <key>scale9Paddings</key>
+                <rect>0,0,1,1</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">data/images/UI/metalPanel/left.png</key>
+            <key type="filename">data/images/UI/metalPanel/right.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>3,0,5,1</rect>
+                <key>scale9Paddings</key>
+                <rect>3,0,5,1</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">data/images/UI/metalPanel_plate.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>20,20,40,40</rect>
+                <key>scale9Paddings</key>
+                <rect>20,20,40,40</rect>
                 <key>scale9FromFile</key>
                 <false/>
             </struct>
@@ -4086,6 +4664,26 @@
                 <rect>8,7,16,13</rect>
                 <key>scale9Paddings</key>
                 <rect>8,7,16,13</rect>
+                <key>scale9FromFile</key>
+                <false/>
+            </struct>
+            <key type="filename">data/images/UI/squareBlue.png</key>
+            <key type="filename">data/images/UI/squareGreen.png</key>
+            <key type="filename">data/images/UI/squareRed.png</key>
+            <key type="filename">data/images/UI/squareWhite.png</key>
+            <key type="filename">data/images/UI/squareYellow.png</key>
+            <key type="filename">data/images/UI/square_shadow.png</key>
+            <struct type="IndividualSpriteSettings">
+                <key>pivotPoint</key>
+                <point_f>0.5,0.5</point_f>
+                <key>spriteScale</key>
+                <double>1</double>
+                <key>scale9Enabled</key>
+                <false/>
+                <key>scale9Borders</key>
+                <rect>5,7,9,13</rect>
+                <key>scale9Paddings</key>
+                <rect>5,7,9,13</rect>
                 <key>scale9FromFile</key>
                 <false/>
             </struct>

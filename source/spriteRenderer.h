@@ -32,7 +32,7 @@ private:
     std::shared_ptr<SpriteBuffer>  _spriteBuffer;
     std::shared_ptr<ShaderProgram> _shaderProgram;
     unsigned int                   _vbo1;
-    unsigned int                   _vbo2;
+    unsigned int                   _ssbo;
     bool                           _spritesDirty = false;
     unsigned int                   _lastSpriteId = 0;
     GLuint                         _texture;

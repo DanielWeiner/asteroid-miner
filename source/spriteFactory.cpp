@@ -22,8 +22,8 @@ std::unique_ptr<Sprite> SpriteFactory::createSprite(std::string name)
         _spriteSheet, 
         _spriteBuffer
     );
-    sprite->updateTextureMatrix();
-    sprite->scaleBy(_spriteSheet->getSize(name.c_str()));
+    sprite->updateTextureIndex();
+    sprite->setScale(sprite->getBaseSize());
     sprite->init();
 
     return std::move(sprite);

@@ -10,6 +10,7 @@
 #include <memory>
 #include <vector>
 #include <set>
+#include <map>
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -26,17 +27,27 @@ private:
 
 public:
     struct Layout {
+        using Alignment = PangoAlignment;
+        struct ALIGN {
+            static constexpr Alignment LEFT = PANGO_ALIGN_LEFT;
+            static constexpr Alignment RIGHT = PANGO_ALIGN_RIGHT;
+            static constexpr Alignment CENTER = PANGO_ALIGN_CENTER;
+        };
     friend TextRenderer;
     private:
-        std::vector<float> vertices;
+        bool               _dirty{false};
+        glm::vec2          _size;
+        std::vector<float> _vertices;
+        unsigned int       _count;
     };
     using fcstring = Util::String::String<FcChar8>;
 
     TextRenderer(std::shared_ptr<Window> window);
-    void createLayout(std::string str, int width,Layout& layout);
+    void createLayout(std::string str, double width, Layout& layout, Layout::Alignment alignment, bool justify);
     void renderLayout(Layout& layout, glm::vec2 position, float fontScale, glm::vec4 color);
     void init(std::string fontName);
     void setProjection(glm::mat4 projection);
+    glm::vec2 getLayoutSize(Layout& layout);
 
     ~TextRenderer();
 private:

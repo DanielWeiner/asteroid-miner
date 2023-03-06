@@ -36,6 +36,7 @@ void OuterSpaceScene::init()
 {
     for (int i = 0; i < 1; i++) {
         auto drone = _droneFactory->createDrone();
+        drone->calculateEdgeTangents();
         drone->moveTo(_scene->toWorldCoordinates(glm::vec2(0)) + _scene->getWorldSize() / 2.f);
         _drones.push_back(std::move(drone));
     }

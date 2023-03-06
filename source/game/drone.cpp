@@ -77,6 +77,11 @@ glm::vec2 Drone::getSize()
     return _sprite->getSize();
 }
 
+void Drone::calculateEdgeTangents()
+{
+    _sprite->calculateEdgeTangents();
+}
+
 void Drone::_accelerateToward(glm::vec2 point)
 {
     auto difference = _sprite->getCenter() - glm::vec2(point);

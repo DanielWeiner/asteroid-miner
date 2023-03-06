@@ -21,6 +21,7 @@ public:
 
     void addVertexShader(const char* data);
     void addFragmentShader(const char* data);
+    void addGeometryShader(const char* data);
     void linkShaders();
     void bindAttributes();
     void bindAttributes(unsigned int id);
@@ -31,6 +32,8 @@ public:
     void loadInstanceData(unsigned int id, T (&data)[S]);
     template<GLsizei S>
     void loadIndices(const GLuint (&data)[S]);
+    template<GLsizei S, typename T>
+    void loadShaderStorageData(int bindIndex, T (&data)[S]);
 
     /// @brief 
     /// @param size  total buffer size
@@ -38,9 +41,11 @@ public:
     /// @param data  vertex buffer pointer
     void loadData(GLsizei size, GLsizei count, const GLvoid* data);
     void loadInstanceData(unsigned int id, GLsizeiptr size, GLsizei count, const GLvoid* data);
+    void loadShaderStorageData(int bindIndex, GLsizei size, const GLvoid* data);
     void loadIndices(GLsizei size, GLsizei count, const GLuint* data);
     const unsigned int initInstanceBuffer(GLenum type = GL_STATIC_DRAW);
     void initVertexBuffer(GLenum type = GL_STATIC_DRAW);
+    void initShaderStorageBuffer(GLenum type = GL_STATIC_DRAW);
 
     void bindVao();
     void unbindVao();
@@ -75,6 +80,7 @@ private:
     std::unique_ptr<GLuint>  _vao;
     std::unique_ptr<GLuint>  _vbo;
     std::unique_ptr<GLuint>  _ebo;
+    std::unique_ptr<GLuint>  _ssbo;
     std::vector<GLuint>      _instanceVbos;
     std::vector<GLenum>      _instanceVboTypes;
     std::vector<GLuint>      _textures;
@@ -85,10 +91,12 @@ private:
     GLsizei                  _numInstances;
 
     GLenum                   _vboType = GL_STATIC_DRAW;
+    GLenum                   _ssboType = GL_STATIC_DRAW;
     
     void  _addShader(GLenum shaderType, const char* data);
     void _defineAttribute(const char* name, GLint dimensions, GLenum type, GLsizei size, 
             bool instance, GLuint vbo);
+    void _initSsbo();
     void _initVao();
     void _initVbo();
     void _initInstanceVbo();
@@ -173,6 +181,13 @@ inline void ShaderProgram::loadInstanceData(unsigned int id, T (&data)[size])
 {
     loadInstanceData(id, size * sizeof(T), size, data);
 }
+
+template<GLsizei size, typename T>
+inline void ShaderProgram::loadShaderStorageData(int bindIndex, T (&data)[size]) 
+{
+    loadShaderStorageData(bindIndex, size * sizeof(T), size, data);
+}
+
 
 template<>
 inline void ShaderProgram::setUniform(const char* name, bool value)

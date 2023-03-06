@@ -15,30 +15,94 @@
 #include "window.h"
 
 namespace  {
+static constexpr int MODEL_SIZE = ((sizeof(glm::mat4) + sizeof(float)) / sizeof(float));
+
+template<typename T>
+std::string replace(std::string source, std::string find, T replace) {
+    std::string replaceStr = std::to_string(replace);
+    std::size_t index = source.find(find);
+    while (index != std::string::npos) {
+        source.replace(index, find.size(), replaceStr);
+        index += replaceStr.size();
+        index = source.find(find);
+    }
+    return source;
+}
 
 const char* vertexShaderSource = R"glsl(
 /*-------------------VERTEX------------------*/
-#version 330 core
-layout (location = 0) in vec2 aPos;
-layout (location = 1) in mat4 instanceModel;
-layout (location = 5) in mat4 instanceTexModel;
+#version 430 core
+layout (location = 0) in mat4 inModel;
+layout (location = 4) in float inSpriteIndex;
+
+out mat4 model;
+out float spriteIndex;
+
+void main()
+{
+    model = inModel;
+    spriteIndex = inSpriteIndex;
+}  
+/*--------------------------------------------*/
+)glsl";
+
+const char* geometryShaderSource = R"glsl(
+/*------------------GEOMETRY------------------*/
+#version 430 core
+
+layout (points) in;
+layout (triangle_strip, max_vertices = MAX_VERTICES) out;
+layout(std430, binding = 0) readonly buffer spriteGeometry
+{ 
+    int[SPRITE_COUNT]   trianglesOffset;
+    int[SPRITE_COUNT]   trianglesCount;
+
+    int[SPRITE_COUNT]   verticesOffset;
+    int[SPRITE_COUNT]   verticesCount;
+
+    int[NUM_TRIANGLES]  triangles;
+    float[NUM_VERTICES] vertices;
+};
 
 out vec2 TexCoord;
+
+in mat4[] model;
+in float[] spriteIndex;
 
 uniform mat4 projection;
 uniform mat4 view;
 
-void main()
-{
-    gl_Position = projection * view * instanceModel * vec4(aPos.xy, 0.0, 1.0);
-    TexCoord = vec2(instanceTexModel * vec4(aPos.xy, 0.0, 1.0));
-}  
+void main() {
+    int idx = int(spriteIndex[0]);
+
+    int trianglesStart = trianglesOffset[idx];
+    int verticesStart = verticesOffset[idx];
+    
+    for (int i = 0; i < trianglesCount[idx]; i++) {
+        int triangle = trianglesStart + i * 3;
+
+        for (int j = 0; j < 3; j++) {
+            int vertex = verticesStart + triangles[triangle + j] * 4;
+
+            float x = vertices[vertex + 0];
+            float y = vertices[vertex + 1];
+            float uvX = vertices[vertex + 2];
+            float uvY = vertices[vertex + 3];
+
+            gl_Position = projection * view * model[0] * vec4(x, y, 0.0, 1.0);
+            TexCoord = vec2(uvX, uvY);
+            EmitVertex();
+        }
+
+        EndPrimitive();
+    }
+}
 /*--------------------------------------------*/
 )glsl";
 
 const char* fragmentShaderSource = R"glsl(
 /*------------------FRAGMENT------------------*/
-#version 330 core
+#version 430 core
 out vec4 FragColor;
 
 in vec2 TexCoord;
@@ -71,35 +135,31 @@ _useLinearScaling(useLinearScaling)
 void SpriteRenderer::init() {
     _view = glm::mat4(1.0);
     _fov = 45.f;
-    const float vertices[] = {
-        // positions
-         1.0f, 0.0f, // top right
-         1.0f, 1.0f, // bottom right
-         0.0f, 0.0f, // top left 
-
-         1.0f, 1.0f, // bottom right
-         0.0f, 1.0f, // bottom left
-         0.0f, 0.0f // top left 
-    };
     auto sheetSize = _spriteSheet->getSize();
 
+    std::string geometryShaderStr(geometryShaderSource);
+    geometryShaderStr = replace(geometryShaderStr, "MAX_VERTICES", _spriteSheet->getMaxVertices());
+    geometryShaderStr = replace(geometryShaderStr, "SPRITE_COUNT", _spriteSheet->getSpriteCount());
+    geometryShaderStr = replace(geometryShaderStr, "NUM_VERTICES", _spriteSheet->getVertexScalarCount());
+    geometryShaderStr = replace(geometryShaderStr, "NUM_TRIANGLES", _spriteSheet->getTriangleScalarCount());
 
     _texture = _shaderProgram->loadTexture(_spriteSheet->getRawImage(), sheetSize.x, sheetSize.y, 4, _useLinearScaling);
-    _shaderProgram->addFragmentShader(fragmentShaderSource);
     _shaderProgram->addVertexShader(vertexShaderSource);
+    _shaderProgram->addGeometryShader(geometryShaderStr.c_str());
+    _shaderProgram->addFragmentShader(fragmentShaderSource);
     _shaderProgram->linkShaders();
 
-    _shaderProgram->loadData(vertices);
-    _shaderProgram->defineAttribute<float>("aPos", 2);
+    _shaderProgram->initShaderStorageBuffer();
+    _shaderProgram->loadShaderStorageData(
+        0, 
+        _spriteSheet->getBufferSize(), 
+        _spriteSheet->getSpriteInfoBuffer()
+    );
+
+    _shaderProgram->initVertexBuffer();
+    _shaderProgram->defineAttribute<glm::vec4>("inModel", 4);
+    _shaderProgram->defineAttribute<float>("inSpriteIndex", 1);
     _shaderProgram->bindAttributes();
-
-    _vbo1 = _shaderProgram->initInstanceBuffer();
-    _shaderProgram->defineInstanceAttribute<glm::vec4>(_vbo1, "instanceModel", 4);
-    _shaderProgram->bindAttributes(_vbo1);
-
-    _vbo2 = _shaderProgram->initInstanceBuffer();
-    _shaderProgram->defineInstanceAttribute<glm::vec4>(_vbo2, "instanceTexModel", 4);
-    _shaderProgram->bindAttributes(_vbo2);
 }
 
 void SpriteRenderer::setView(glm::mat4 view) 
@@ -118,14 +178,11 @@ void SpriteRenderer::draw() {
     }
     _shaderProgram->use();
     _shaderProgram->bindTexture(_texture);
-    if (_spriteBuffer->areTexturesDirty()) {
-        _shaderProgram->loadInstanceData(_vbo2, sizeof(glm::mat4) * _spriteBuffer->size(), _spriteBuffer->size(), _spriteBuffer->textureData());
-    }
-    _shaderProgram->loadInstanceData(_vbo1, sizeof(glm::mat4) *  _spriteBuffer->size(), _spriteBuffer->size(), _spriteBuffer->modelData());
+    _shaderProgram->loadData(_spriteBuffer->size() * sizeof(float), _spriteBuffer->size() / MODEL_SIZE, _spriteBuffer->modelData());
     _shaderProgram->setUniform<int>("spriteSheet", _texture);
     _shaderProgram->setUniform("projection", _projection);
     _shaderProgram->setUniform("view", _view);
-    _shaderProgram->drawInstances();
+    _shaderProgram->drawArrays(GL_POINTS);
     _shaderProgram->unbindTextures();
     _shaderProgram->unbindVao();
     _spriteBuffer->resetDirtyFlag();

@@ -98,6 +98,8 @@ target_sources(AsteroidMinerLib PRIVATE
     game/outerSpaceScene.h
     game/outerSpaceUi.cpp
     game/outerSpaceUi.h
+    ui/panel.cpp
+    ui/panel.h
     random.cpp
     random.h
     util/range.h
@@ -115,6 +117,8 @@ target_sources(AsteroidMinerLib PRIVATE
     spriteSheet.h
     stb_image.h
     util/string.h
+    ui/textBox.cpp
+    ui/textBox.h
     textRenderer.cpp
     textRenderer.h
     time.cpp

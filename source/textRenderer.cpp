@@ -1,24 +1,28 @@
 #include "textRenderer.h"
 #include "global.h"
 #include "util/range.h"
+#include "constants.h"
+
 #include <glib-object.h>
 #include <glm/ext.hpp>
 #include <pango/pangocairo.h>
+#include <algorithm>
 
 namespace {
 // scaling factor to help pango to properly layout text at subpixel ranges
 const double internalPangoScale = 10;
 
-const double pixelRange      = 7;
+const double pixelRange      = 8;
 const double glyphScale      = 3;
 const double miterLimit      = 5.0;
 const double maxCornerAngle  = 5.0;
 const int    threadCount     = 3;
-const double glyphPadding    = pixelRange/glyphScale;
+const double glyphPadding    = pixelRange / glyphScale;
 
 const char* vertexShaderSource = R"glsl(
 /*-------------------VERTEX------------------*/
-#version 330 core
+#version 430 core
+
 layout (location = 0) in vec2 pos;
 layout (location = 1) in vec2 inTexCoord;
 
@@ -38,7 +42,7 @@ void main()
 // see: https://discourse.libcinder.org/t/cinder-sdftext-initial-release-wip/171/15
 const char* fragmentShaderSource = R"glsl(
 /*------------------FRAGMENT------------------*/
-#version 330 core
+#version 430 core
 
 in vec2 texCoord;
 out vec4 color;
@@ -71,10 +75,10 @@ void main(void)
     vec2 Jdy = dFdy( uv );
     
     // Sample SDF texture (3 channels).
-    vec3 sample = texture( uTex0, texCoord ).rgb;
+    vec3 msdf = texture( uTex0, texCoord ).rgb;
 
     // calculate signed distance (in texels).
-    float sigDist = median( sample.r, sample.g, sample.b ) - 0.5;
+    float sigDist = median( msdf.r, msdf.g, msdf.b ) - 0.5;
     
     // For proper anti-aliasing, we need to calculate signed distance in pixels. We do this using derivatives.
     vec2 gradDist = safeNormalize( vec2( dFdx( sigDist ), dFdy( sigDist ) ) );
@@ -95,37 +99,45 @@ void main(void)
 
 TextRenderer::TextRenderer(std::shared_ptr<Window> window) : _window(window) {}
 
-void TextRenderer::createLayout(std::string str, int width, TextRenderer::Layout& layoutVertices)
+void TextRenderer::createLayout(std::string str, double width, TextRenderer::Layout& layout, Layout::Alignment alignment, bool justify)
 {
     _addGlyphs(str.c_str());
     std::string bytes(str.begin(), str.end());
 
-    auto layout = pango_layout_new(_pangoContext);
-    pango_layout_set_width(layout, width * internalPangoScale * PANGO_SCALE);
+    auto pangoLayout = pango_layout_new(_pangoContext);
+    pango_layout_set_width(pangoLayout, width * internalPangoScale * PANGO_SCALE);
+    pango_layout_set_alignment(pangoLayout, alignment);
+    pango_layout_set_justify(pangoLayout, justify);
 
     auto desc = pango_font_description_new();
     pango_font_description_set_family(desc, _fontName.c_str());
-    pango_layout_set_font_description(layout, desc);
+    pango_layout_set_font_description(pangoLayout, desc);
     pango_font_description_free(desc);
 
     auto attrs = pango_attr_list_new();
     pango_attr_list_insert(attrs, pango_attr_scale_new(internalPangoScale));
-    pango_layout_set_attributes(layout, attrs);
+    pango_layout_set_attributes(pangoLayout, attrs);
     pango_attr_list_unref(attrs);
 
-    pango_layout_set_text(layout, bytes.c_str(), bytes.size());
+    pango_layout_set_text(pangoLayout, bytes.c_str(), bytes.size());
     Bitmap atlas(_atlas.atlasGenerator().atlasStorage());
 
     int atlasWidth = atlas.width();
     int atlasHeight = atlas.height();
     
-    auto iter = pango_layout_get_iter(layout);
+    auto iter = pango_layout_get_iter(pangoLayout);
 
     PangoRectangle firstLineRect;
     pango_layout_iter_get_line_extents(iter, &firstLineRect, NULL);
     double initialHeight = PANGO_PIXELS(firstLineRect.y + firstLineRect.height / 2) / internalPangoScale;
     
     PangoGlyphItemIter clusterIter;
+    float textLeft = MAX_FLOAT;
+    float textRight = MIN_FLOAT;
+    float textTop = MAX_FLOAT;
+    float textBottom = MIN_FLOAT;
+
+    layout._dirty = true;
 
     do {
         auto run = pango_layout_iter_get_run_readonly(iter);
@@ -141,8 +153,9 @@ void TextRenderer::createLayout(std::string str, int width, TextRenderer::Layout
 
         PangoRectangle lineRect;
         pango_layout_iter_get_line_extents(iter, NULL, &lineRect);
-        int y = PANGO_PIXELS(lineRect.y);
-
+        pango_extents_to_pixels(&lineRect, NULL);
+        int y = lineRect.y;
+        int lineX = lineRect.x;
         do {
             PangoGlyph pangoGlyph = run->glyphs->glyphs[clusterIter.start_glyph].glyph;
             if (!_glyphIndices.contains(pangoGlyph)) {
@@ -151,7 +164,7 @@ void TextRenderer::createLayout(std::string str, int width, TextRenderer::Layout
 
             int x;
             pango_glyph_string_index_to_x(run->glyphs, &bytes[pangoItem.offset], pangoItem.length, &pangoItem.analysis, clusterIter.start_char, false, &x);
-            x = PANGO_PIXELS(x);
+            x = PANGO_PIXELS(x) + lineX;
 
             auto mGlyph = _glyphGeometries[_glyphIndices[pangoGlyph]];
 
@@ -179,7 +192,8 @@ void TextRenderer::createLayout(std::string str, int width, TextRenderer::Layout
             float scaledAtlasRight = atlasRight / atlasWidth;
             float scaledAtlasBottom = atlasBottom / atlasHeight;
 
-            layoutVertices.vertices.insert(layoutVertices.vertices.end(), { 
+            layout._count += 6;
+            layout._vertices.insert(layout._vertices.end(), { 
                 vertexLeft,  vertexTop,    scaledAtlasLeft,  scaledAtlasTop,    // top left
                 vertexRight, vertexTop,    scaledAtlasRight, scaledAtlasTop,    // top right
                 vertexLeft,  vertexBottom, scaledAtlasLeft,  scaledAtlasBottom, // bottom left
@@ -188,18 +202,27 @@ void TextRenderer::createLayout(std::string str, int width, TextRenderer::Layout
                 vertexLeft,  vertexBottom, scaledAtlasLeft,  scaledAtlasBottom, // bottom left
                 vertexRight, vertexBottom, scaledAtlasRight, scaledAtlasBottom  // bottom right
             });
+
+            textRight = std::max(textRight, vertexRight);
+            textLeft = std::min(textLeft, vertexLeft);
+            textBottom = std::max(textBottom, vertexBottom);
+            textTop = std::min(textTop, vertexTop);
         } while(pango_glyph_item_iter_next_cluster(&clusterIter));
     } while (pango_layout_iter_next_run(iter));
 
     pango_glyph_item_iter_free(&clusterIter);
     pango_layout_iter_free(iter);
-    g_object_unref(layout);
+    g_object_unref(pangoLayout);
+
+    layout._size = glm::vec2(textRight - textLeft, (textBottom - textTop));
 }
 
 void TextRenderer::renderLayout(TextRenderer::Layout& layout, glm::vec2 position, float fontScale, glm::vec4 color) 
 {
-    const int vertexSize = 4;
-
+    if (layout._vertices.size() == 0) {
+        return;
+    }
+    
     glm::mat4 view(1.0);
     view = glm::translate(view, glm::vec3(position, 0.f));
     view = glm::scale(view, glm::vec3(glm::vec2(fontScale), 1.f));
@@ -208,7 +231,10 @@ void TextRenderer::renderLayout(TextRenderer::Layout& layout, glm::vec2 position
     _shaderProgram->bindTexture(_texture);
     _shaderProgram->setUniform("fgColor", color);
     _shaderProgram->setUniform("view", view);
-    _shaderProgram->loadData(layout.vertices.size() * sizeof(float), layout.vertices.size() / vertexSize, layout.vertices.data());
+    if (layout._dirty) {
+        layout._dirty = false;
+        _shaderProgram->loadData(layout._vertices.size() * sizeof(float), layout._count, layout._vertices.data());
+    }
     _shaderProgram->drawArrays();
     _shaderProgram->unbindTextures();
     _shaderProgram->unbindVao();
@@ -259,6 +285,14 @@ void TextRenderer::setProjection(glm::mat4 projection)
 {
     _shaderProgram->use();
     _shaderProgram->setUniform("projection", projection);
+}
+
+glm::vec2 TextRenderer::getLayoutSize(Layout& layout)
+{
+    if (layout._vertices.size()) {
+        return layout._size;
+    }
+    return glm::vec2(0);
 }
 
 TextRenderer::~TextRenderer() 
@@ -359,7 +393,7 @@ void TextRenderer::_addGlyphs(std::string bytes)
             GlyphGeometry glyph;
 
             glyph.load(_font, 1.0, GlyphIndex(pangoGlyph)); 
-            glyph.edgeColoring(&edgeColoringInkTrap, maxCornerAngle, 0);
+            glyph.edgeColoring(&edgeColoringByDistance, maxCornerAngle, 0);
             glyph.wrapBox(glyphScale, glyphPadding, miterLimit);
             _glyphIndices[pangoGlyph] = _glyphGeometries.size();
             _glyphGeometries.push_back(glyph);

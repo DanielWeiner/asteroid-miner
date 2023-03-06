@@ -31,6 +31,7 @@ public:
     void step(OuterSpaceScene& scene);
 
     void render(LineRenderer& lineRenderer);
+    void calculateEdgeTangents();
 
     glm::vec2 getSpeed();
     glm::vec2 getPosition();

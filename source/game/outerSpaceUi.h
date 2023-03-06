@@ -3,22 +3,25 @@
 
 #include "../spriteFactory.h"
 #include "../textRenderer.h"
+#include "../ui/panel.h"
+#include "../ui/textBox.h"
 #include <memory>
 #include <glm/glm.hpp>
 
 class OuterSpaceUi {
 public:
     OuterSpaceUi(std::unique_ptr<SpriteFactory>&& spriteFactory, std::shared_ptr<Window> window);
-    void drawPanel(glm::vec2 topLeft, glm::vec2 bottomRight);
+    void setPanelBounds(glm::vec2 topLeft, glm::vec2 bottomRight);
+    void setFontSize(double fontSize);
+    void setFontColor(glm::vec4 color);
+    void setText(std::string text);
+    void render();
     void init();
 private:
-    std::unique_ptr<SpriteFactory>  _spriteFactory;
-    std::unique_ptr<SpriteRenderer> _spriteRenderer;
-    std::shared_ptr<Window>         _window;
-    TextRenderer                    _textRenderer;
+    TextBox                         _textBox;
+    Panel                           _panel;
 
-    TextRenderer::Layout            _text1;
-    TextRenderer::Layout            _text2;
+    void _resizeVertically();
 };
 
 #endif

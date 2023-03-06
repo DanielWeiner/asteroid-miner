@@ -9,7 +9,7 @@ namespace {
 
 const char* vertexShaderSource = R"glsl(
 /*-------------------VERTEX------------------*/
-#version 330 core
+#version 430 core
 
 layout (location = 0) in vec2 inPos;
 
@@ -26,7 +26,7 @@ void main()
 
 const char* fragmentShaderSource = R"glsl(
 /*------------------FRAGMENT------------------*/
-#version 330 core
+#version 430 core
 
 out vec4 FragColor;
 

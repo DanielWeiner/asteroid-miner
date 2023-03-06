@@ -113,6 +113,11 @@ void ShaderProgram::addFragmentShader(const char *data)
     _addShader(GL_FRAGMENT_SHADER, data);
 }
 
+void ShaderProgram::addGeometryShader(const char *data) 
+{
+    _addShader(GL_GEOMETRY_SHADER, data);
+}
+
 void ShaderProgram::linkShaders() 
 {
     GLuint programId = _getOrCreateProgramId();
@@ -262,6 +267,15 @@ void ShaderProgram::_defineAttribute(
     });
 }
 
+void ShaderProgram::_initSsbo() 
+{
+    if (!_ssbo) {
+        GLuint ssbo;
+        initVar(glGenBuffers, &ssbo);
+        _ssbo = std::make_unique<GLuint>(ssbo);
+    }
+}
+
 void ShaderProgram::bindVao() 
 {
     glBindVertexArray(*_vao);
@@ -358,6 +372,15 @@ void ShaderProgram::initVertexBuffer(GLenum type)
     glBindBuffer(GL_ARRAY_BUFFER, *_vbo);
 }
 
+void ShaderProgram::initShaderStorageBuffer(GLenum type) 
+{
+    _ssboType = type;
+    _initVao();
+    _initSsbo();
+    bindVao();
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, *_ssbo);
+}
+
 void ShaderProgram::loadInstanceData(unsigned int id, GLsizeiptr size, GLsizei count, const GLvoid *data) 
 {
     _initVao();
@@ -365,6 +388,16 @@ void ShaderProgram::loadInstanceData(unsigned int id, GLsizeiptr size, GLsizei c
     _numInstances = count;
     glBindBuffer(GL_ARRAY_BUFFER, _instanceVbos[id]);
     glBufferData(GL_ARRAY_BUFFER, size, data, _instanceVboTypes[id]);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+void ShaderProgram::loadShaderStorageData(int bindIndex, GLsizei size, const GLvoid* data)
+{
+    _initSsbo();
+    bindVao();
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, *_ssbo);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, size, data, _ssboType);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, bindIndex, *_ssbo);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
