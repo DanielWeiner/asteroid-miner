@@ -25,7 +25,7 @@ public:
         MINING
     };
     
-    Drone(Sprite* sprite);
+    Drone(Sprite& sprite);
     void setSpeed(glm::vec2 speed);
     void moveTo(glm::vec2 position);
     void step(OuterSpaceScene& scene);
@@ -55,7 +55,7 @@ private:
     long long                 _wanderStart = 0ll;
 
     std::shared_ptr<Asteroid> _targetAsteroid;
-    std::unique_ptr<Sprite>   _sprite;
+    Sprite&                   _sprite;
     glm::vec2                 _speed = glm::vec2(0);
     glm::vec2                 _acceleration = glm::vec2(0);
 
