@@ -9,7 +9,6 @@
 #include "window.h"
 #include "spriteRenderer.h"
 
-#include <memory>
 #include <string>
 
 class SpriteFactory {

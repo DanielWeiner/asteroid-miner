@@ -5,7 +5,6 @@
 
 #include <string>
 #include <unordered_map>
-#include <memory>
 #include <vector>
 #include <array>
 #include <nlohmann/json.hpp>
@@ -15,8 +14,6 @@ using json = nlohmann::json;
 class SpriteSheet {
 public:
     using SpriteIndexMap = std::unordered_map<std::string, int>;
-    using DimensionMap = std::unordered_map<std::string, std::unique_ptr<glm::vec2>>;
-    using LocationMap = std::unordered_map<std::string, glm::ivec2>;
 
     SpriteSheet(const char* jsonPath, const char* imagePath);
     void load(std::vector<float>& vertices);

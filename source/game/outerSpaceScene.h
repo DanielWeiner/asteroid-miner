@@ -11,7 +11,7 @@
 class LineRenderer;
 
 #include <vector>
-#include <memory>
+#include <functional>
 #include <span>
 
 class OuterSpaceScene {
@@ -21,7 +21,7 @@ public:
         FlatScene&     scene
     );
 
-    std::span<std::unique_ptr<Drone>> drones();
+    std::span<std::reference_wrapper<Drone>> drones();
 
     void handleEvent(const Event& event);
 
@@ -29,9 +29,9 @@ public:
     void init();
     void render(LineRenderer& lineRenderer);
 private:
-    DroneFactory&                       _droneFactory;
-    std::vector<std::unique_ptr<Drone>> _drones;
-    FlatScene&                          _scene;
+    DroneFactory&                              _droneFactory;
+    std::vector<std::reference_wrapper<Drone>> _drones;
+    FlatScene&                                 _scene;
 };
 
 #endif

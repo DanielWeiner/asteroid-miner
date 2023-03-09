@@ -10,7 +10,6 @@
 #include <glm/glm.hpp>
 
 #include <string>
-#include <memory>
 #include <vector>
 
 class Event;

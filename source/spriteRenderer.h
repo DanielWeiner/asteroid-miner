@@ -8,7 +8,6 @@
 #include <glm/glm.hpp>
 #include <unordered_map>
 #include <vector>
-#include <memory>
 
 class Window;
 class SpriteFactory;

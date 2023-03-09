@@ -4,7 +4,6 @@
 #include "../spriteRenderer.h"
 #include "../window.h"
 
-#include <memory>
 #include <glm/glm.hpp>
 
 class Panel {

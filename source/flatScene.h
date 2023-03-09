@@ -4,7 +4,6 @@
 #include "window.h"
 
 #include <glm/glm.hpp>
-#include <memory>
 
 class FlatScene {
 public:

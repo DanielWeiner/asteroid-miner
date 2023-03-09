@@ -11,7 +11,6 @@
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 #include <algorithm>
-#include <memory>
 #include <string>
 
 namespace  {

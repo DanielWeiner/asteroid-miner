@@ -5,7 +5,6 @@
 #include "../textRenderer.h"
 #include "../ui/panel.h"
 #include "../ui/textBox.h"
-#include <memory>
 #include <glm/glm.hpp>
 
 class OuterSpaceUi {

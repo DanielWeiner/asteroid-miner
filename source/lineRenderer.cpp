@@ -42,15 +42,14 @@ void main()
 }
 
 void LineRenderer::init() {
-    _shaderProgram = std::make_unique<ShaderProgram>();
-    _shaderProgram->init();
-    _shaderProgram->addVertexShader(vertexShaderSource);
-    _shaderProgram->addFragmentShader(fragmentShaderSource);
-    _shaderProgram->linkShaders();
+    _shaderProgram.init();
+    _shaderProgram.addVertexShader(vertexShaderSource);
+    _shaderProgram.addFragmentShader(fragmentShaderSource);
+    _shaderProgram.linkShaders();
 
-    _shaderProgram->initVertexBuffer();
-    _shaderProgram->defineAttribute<float>("inPos", 2);
-    _shaderProgram->bindAttributes();
+    _shaderProgram.initVertexBuffer();
+    _shaderProgram.defineAttribute<float>("inPos", 2);
+    _shaderProgram.bindAttributes();
 
     const float vertices[]{ 
         0.f, 0.f,
@@ -61,7 +60,7 @@ void LineRenderer::init() {
         0.f, 1.f,
         1.f, 1.f
     };
-    _shaderProgram->loadData(vertices);
+    _shaderProgram.loadData(vertices);
 }
 
 void LineRenderer::setProjection(glm::mat4 projection) 
@@ -85,10 +84,10 @@ void LineRenderer::lineTo(glm::vec2 from, glm::vec2 to, glm::vec4 color, float w
     modelMatrix = glm::translate(modelMatrix, glm::vec3(0, -width / 2, 0.0));
     modelMatrix = glm::scale(modelMatrix, glm::vec3(distance, width, 1.0f));
 
-    _shaderProgram->use();
-    _shaderProgram->setUniform("projection", _projection);
-    _shaderProgram->setUniform("view", _view);
-    _shaderProgram->setUniform("modelMatrix", modelMatrix);
-    _shaderProgram->setUniform("color", color);
-    _shaderProgram->drawArrays();
+    _shaderProgram.use();
+    _shaderProgram.setUniform("projection", _projection);
+    _shaderProgram.setUniform("view", _view);
+    _shaderProgram.setUniform("modelMatrix", modelMatrix);
+    _shaderProgram.setUniform("color", color);
+    _shaderProgram.drawArrays();
 }

@@ -5,7 +5,6 @@
 #include <unordered_map>
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
-#include <memory>
 
 class SpriteBuffer {
 public:

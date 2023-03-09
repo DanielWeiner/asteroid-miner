@@ -4,7 +4,6 @@
 #include "../textRenderer.h"
 #include "../window.h"
 
-#include <memory>
 #include <string>
 #include <glm/glm.hpp>
 

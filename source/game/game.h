@@ -10,7 +10,6 @@
 #include "../lineRenderer.h"
 #include "outerSpaceUi.h"
 
-#include <memory>
 #include <vector>
 
 class Game : public WindowedApplication {
