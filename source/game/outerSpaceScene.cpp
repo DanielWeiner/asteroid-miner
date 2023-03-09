@@ -26,9 +26,9 @@ void OuterSpaceScene::step()
 void OuterSpaceScene::init() 
 {
     for (int i = 0; i < 10000; i++) {
-        std::unique_ptr<Drone> drone(_droneFactory.createDrone());
+        Drone* drone = _droneFactory.createDrone();
         drone->moveTo(_scene.toWorldCoordinates(glm::vec2(0)) + _scene.getWorldSize() / 2.f);
-        _drones.push_back(std::move(drone));
+        _drones.emplace_back(drone);
     }
 }
 
