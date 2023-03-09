@@ -4,9 +4,8 @@
 #include <vector>
 #include <glm/glm.hpp>
 
+#include "shaderProgram.h"
 #include "window.h"
-
-class ShaderProgram;
 
 class LineRenderer {
 public:

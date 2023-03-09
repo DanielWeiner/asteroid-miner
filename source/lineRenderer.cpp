@@ -1,7 +1,5 @@
 #include "lineRenderer.h"
 
-#include "shaderProgram.h"
-
 #include <cmath>
 #include <glm/ext.hpp>
 #include <glad/glad.h>
