@@ -26,14 +26,14 @@ int main(int argc, char** argv)
 
     SpriteSheet spriteSheet("data/sprites/sprites.json", "data/sprites/sprites.png");
     SpriteFactory spriteFactory(window, spriteSheet);
-    SpriteRenderer* spriteRenderer = spriteFactory.createRenderer();
-    SpriteRenderer* asteroidSpriteRenderer = spriteFactory.createRenderer();
-    SpriteRenderer* uiSpriteRenderer = spriteFactory.createRenderer(false);
+    SpriteRenderer spriteRenderer(*spriteFactory.createRenderer());
+    SpriteRenderer asteroidSpriteRenderer(*spriteFactory.createRenderer());
+    SpriteRenderer uiSpriteRenderer(*spriteFactory.createRenderer(false));
 
-    DroneFactory droneFactory(*spriteRenderer);
+    DroneFactory droneFactory(spriteRenderer);
     FlatScene flatScene(window, glm::radians(45.f));
 
-    Game game(window, spriteSheet, *spriteRenderer, *uiSpriteRenderer, *asteroidSpriteRenderer, droneFactory, flatScene);
+    Game game(window, spriteSheet, spriteRenderer, uiSpriteRenderer, asteroidSpriteRenderer, droneFactory, flatScene);
     window.addApplication(&game);
     window.run();
 #ifdef _WIN32
