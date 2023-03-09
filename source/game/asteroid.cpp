@@ -2,9 +2,9 @@
 
 #include <utility>
 
-Asteroid::Asteroid(std::unique_ptr<Sprite> &&sprite, glm::vec2 speed, float spin) 
-: 
-_sprite(std::move(sprite)), 
+Asteroid::Asteroid(Sprite* sprite, glm::vec2 speed, float spin) 
+:
+_sprite(sprite), 
 _speed(speed),
 _spin(spin),
 _baseSpeed(speed) {}

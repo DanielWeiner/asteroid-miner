@@ -25,13 +25,12 @@ public:
         MINING
     };
     
-    Drone(std::unique_ptr<Sprite>&& sprite);
+    Drone(Sprite* sprite);
     void setSpeed(glm::vec2 speed);
     void moveTo(glm::vec2 position);
     void step(OuterSpaceScene& scene);
 
     void render(LineRenderer& lineRenderer);
-    void calculateEdgeTangents();
 
     glm::vec2 getSpeed();
     glm::vec2 getPosition();

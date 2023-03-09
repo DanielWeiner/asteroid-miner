@@ -15,15 +15,15 @@
 class AsteroidSpawner {
 public:
     AsteroidSpawner(
-        std::unique_ptr<SpriteFactory>&& factory, 
-        std::shared_ptr<FlatScene>     scene
+        SpriteRenderer& renderer, 
+        FlatScene&     scene
     );
     void setDensity(float density);
     void step();
-    std::span<std::shared_ptr<Asteroid>>   asteroids();
+    std::span<std::unique_ptr<Asteroid>>   asteroids();
 private:
-    std::unique_ptr<SpriteFactory>         _spriteFactory;
-    std::shared_ptr<FlatScene>             _scene;
+    SpriteRenderer&                        _spriteRenderer;
+    FlatScene&                             _scene;
 
     glm::vec2                              _topLeft           = glm::vec2(0);
     glm::vec2                              _bottomRight       = glm::vec2(0);
@@ -36,7 +36,7 @@ private:
     double                                 _speedSigma        = ASTEROID_SPEED_SIGMA;
     double                                 _maxSpin           = ASTEROID_MAX_SPIN;
 
-    std::vector<std::shared_ptr<Asteroid>> _asteroids;
+    std::vector<std::unique_ptr<Asteroid>> _asteroids;
 
     void      _populateChunks();
     void      _fillWithAsteroids(glm::vec2 topLeft, glm::vec2 bottomRight);

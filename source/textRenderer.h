@@ -42,7 +42,7 @@ public:
     };
     using fcstring = Util::String::String<FcChar8>;
 
-    TextRenderer(std::shared_ptr<Window> window);
+    TextRenderer(Window& window);
     void createLayout(std::string str, double width, Layout& layout, Layout::Alignment alignment, bool justify);
     void renderLayout(Layout& layout, glm::vec2 position, float fontScale, glm::vec4 color);
     void init(std::string fontName);
@@ -57,8 +57,8 @@ private:
     using AtlasGenerator = msdf_atlas::ImmediateAtlasGenerator<float, 3, &msdf_atlas::msdfGenerator, AtlasStorage>;
     using DynamicAtlas = msdf_atlas::DynamicAtlas<AtlasGenerator>;
 
-    std::shared_ptr<Window>                _window;
-    std::unique_ptr<ShaderProgram>         _shaderProgram;
+    Window                                 _window;
+    ShaderProgram                          _shaderProgram;
 
     msdfgen::FreetypeHandle*               _ft;
     msdfgen::FontHandle*                   _font;

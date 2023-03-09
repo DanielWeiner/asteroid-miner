@@ -30,7 +30,7 @@ namespace {
     
 }
 
-void ShaderProgram::init()
+ShaderProgramContext ShaderProgram::init(ShaderProgramContext fn(ShaderProgram&, void*), void* initializationData)
 {
     static bool initialized = false;
     if (!initialized) {
@@ -39,6 +39,8 @@ void ShaderProgram::init()
         
         initialized = true;
     }
+
+    return fn(*this, initializationData);
 }
 
 ShaderProgram::~ShaderProgram() 
@@ -175,6 +177,11 @@ void ShaderProgram::drawInstances()
     glDrawArraysInstanced(GL_TRIANGLES, 0, _numVertices, _numInstances);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     unbindVao();
+}
+
+ShaderProgramContext ShaderProgram::defaultInitializer(ShaderProgram&, void*)
+{
+    return ShaderProgramContext();
 }
 
 void ShaderProgram::drawElements() 

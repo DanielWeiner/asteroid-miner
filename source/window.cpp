@@ -256,15 +256,17 @@ void Window::setTitle(std::string title)
     glfwSetWindowTitle(_window, title.c_str());
 }
 
-void Window::addApplication(std::shared_ptr<WindowedApplication> app) 
+void Window::addApplication(WindowedApplication* app) 
 {
     _applications.push_back(app);
 }
 
-void Window::endLoop()
+void Window::init() 
 {
-    _done = true;
+    _init();
 }
+
+void Window::endLoop() { _done = true; }
 
 Window& Window::_start()
 {
@@ -301,7 +303,7 @@ Window& Window::_handleEvent(const Event& e)
 }
 
 void Window::run() {
-    if (_init().isError())
+    if (isError())
         return;
     _start();
 }

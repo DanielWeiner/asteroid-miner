@@ -13,8 +13,8 @@ public:
     Sprite(
         std::string spriteName, 
         unsigned int id, 
-        std::shared_ptr<SpriteSheet> spriteSheet, 
-        std::shared_ptr<SpriteBuffer> spriteBuffer
+        SpriteSheet& spriteSheet, 
+        SpriteBuffer& spriteBuffer
     );
     unsigned int id() const;
 
@@ -34,8 +34,6 @@ public:
 
     void setScale(float x, float y);
     void setScale(glm::vec2 xy);
-
-    void calculateEdgeTangents();
 
     glm::vec2 getBaseSize();
 
@@ -77,15 +75,12 @@ private:
     glm::mat4          _lastModel;
     bool               _initialized = false;
 
-    std::shared_ptr<SpriteSheet>    _sheet;
-    std::shared_ptr<SpriteBuffer>   _buffer;
+    SpriteSheet&       _sheet;
+    SpriteBuffer&      _buffer;
 
     void _useNextState(SpriteState*& state);
     void _useCurrentState(SpriteState*& state);
     void _update();
-    bool _isPixelAtEdge(int x, int y);
-    bool _findNeighborEdgePixel(int* x, int* y, glm::ivec2* direction);
-    glm::vec2 _findFirstPixel();
 };
 
 #endif

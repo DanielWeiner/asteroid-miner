@@ -78,6 +78,8 @@ target_sources(AsteroidMinerLib PRIVATE
     game/asteroidSpawner.cpp
     game/asteroidSpawner.h
     constants.h
+    game/collisionTester.cpp
+    game/collisionTester.h
     game/constants.h
     game/drone.cpp
     game/drone.h
@@ -105,6 +107,7 @@ target_sources(AsteroidMinerLib PRIVATE
     util/range.h
     shaderProgram.cpp
     shaderProgram.h
+    shaderProgramContext.h
     sprite.cpp
     sprite.h
     spriteBuffer.cpp

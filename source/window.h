@@ -27,15 +27,16 @@ public:
     string getErrorMessage();
     
     void setTitle(std::string title);
-    void addApplication(std::shared_ptr<WindowedApplication> app);
+    void addApplication(WindowedApplication* app);
     
+    void init();
     void endLoop();
     void run();
 
     glm::vec2 getSize();
     int getDpi();
 private:
-    using AppArray = std::vector<std::shared_ptr<WindowedApplication>>;
+    using AppArray = std::vector<WindowedApplication*>;
 
     string      _title;
     GLFWwindow* _window = NULL;

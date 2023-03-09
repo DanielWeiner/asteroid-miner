@@ -1,21 +1,30 @@
 #include "spriteRenderer.h"
 
+#include "spriteFactory.h"
 #include "shaderProgram.h"
 #include "spriteBuffer.h"
 #include "sprite.h"
 #include "spriteSheet.h"
+#include "shaderProgramContext.h"
+
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 #include <algorithm>
 #include <memory>
 #include <string>
-#include <exception>
-#include <iostream>
-#include "window.h"
 
 namespace  {
-static constexpr int MODEL_SIZE = ((sizeof(glm::mat4) + sizeof(float)) / sizeof(float));
+static constexpr float spriteRect[]{
+    0.f, 1.f,
+    0.f, 0.f,
+    1.f, 0.f,
+
+    1.f, 1.f,
+    0.f, 1.f,
+    1.f, 0.f
+};
+
 
 template<typename T>
 std::string replace(std::string source, std::string find, T replace) {
@@ -32,71 +41,31 @@ std::string replace(std::string source, std::string find, T replace) {
 const char* vertexShaderSource = R"glsl(
 /*-------------------VERTEX------------------*/
 #version 430 core
-layout (location = 0) in mat4 inModel;
-layout (location = 4) in float inSpriteIndex;
 
-out mat4 model;
-out float spriteIndex;
+layout (location = 0) in vec2  inPos;
+layout (location = 1) in mat4  inModel;
+layout (location = 5) in float inSpriteIndex;
 
-void main()
+layout(std430, binding = 0) readonly buffer uvCoords
 {
-    model = inModel;
-    spriteIndex = inSpriteIndex;
-}  
-/*--------------------------------------------*/
-)glsl";
-
-const char* geometryShaderSource = R"glsl(
-/*------------------GEOMETRY------------------*/
-#version 430 core
-
-layout (points) in;
-layout (triangle_strip, max_vertices = MAX_VERTICES) out;
-layout(std430, binding = 0) readonly buffer spriteGeometry
-{ 
-    int[SPRITE_COUNT]   trianglesOffset;
-    int[SPRITE_COUNT]   trianglesCount;
-
-    int[SPRITE_COUNT]   verticesOffset;
-    int[SPRITE_COUNT]   verticesCount;
-
-    int[NUM_TRIANGLES]  triangles;
-    float[NUM_VERTICES] vertices;
+    vec4 spriteUv[SPRITE_COUNT];
 };
 
 out vec2 TexCoord;
 
-in mat4[] model;
-in float[] spriteIndex;
-
 uniform mat4 projection;
 uniform mat4 view;
 
-void main() {
-    int idx = int(spriteIndex[0]);
+void main()
+{
+    int idx = int(inSpriteIndex);
 
-    int trianglesStart = trianglesOffset[idx];
-    int verticesStart = verticesOffset[idx];
-    
-    for (int i = 0; i < trianglesCount[idx]; i++) {
-        int triangle = trianglesStart + i * 3;
-
-        for (int j = 0; j < 3; j++) {
-            int vertex = verticesStart + triangles[triangle + j] * 4;
-
-            float x = vertices[vertex + 0];
-            float y = vertices[vertex + 1];
-            float uvX = vertices[vertex + 2];
-            float uvY = vertices[vertex + 3];
-
-            gl_Position = projection * view * model[0] * vec4(x, y, 0.0, 1.0);
-            TexCoord = vec2(uvX, uvY);
-            EmitVertex();
-        }
-
-        EndPrimitive();
-    }
-}
+    gl_Position = projection * view * inModel * vec4(inPos.xy, 0.0, 1.0);
+    TexCoord = vec2(
+        spriteUv[idx].x + (inPos.x * spriteUv[idx].z), 
+        spriteUv[idx].y + (inPos.y * spriteUv[idx].w)
+    );
+}  
 /*--------------------------------------------*/
 )glsl";
 
@@ -119,47 +88,22 @@ void main()
 }
 
 SpriteRenderer::SpriteRenderer(
-    std::shared_ptr<Window> window,
-    std::shared_ptr<SpriteSheet> spriteSheet,
-    std::shared_ptr<SpriteBuffer> spriteBuffer,
-    std::shared_ptr<ShaderProgram> shaderProgram,
-    bool useLinearScaling
+    Window&        window,
+    SpriteSheet&   spriteSheet,
+    ShaderProgram& shaderProgram,
+    bool           useLinearScaling
 ) : 
 _window(window), 
 _spriteSheet(spriteSheet), 
-_spriteBuffer(spriteBuffer),
 _shaderProgram(shaderProgram),
 _useLinearScaling(useLinearScaling)
 {}
 
-void SpriteRenderer::init() {
+void SpriteRenderer::init(ShaderProgramContext& shaderProgramContext) {
     _view = glm::mat4(1.0);
     _fov = 45.f;
-    auto sheetSize = _spriteSheet->getSize();
-
-    std::string geometryShaderStr(geometryShaderSource);
-    geometryShaderStr = replace(geometryShaderStr, "MAX_VERTICES", _spriteSheet->getMaxVertices());
-    geometryShaderStr = replace(geometryShaderStr, "SPRITE_COUNT", _spriteSheet->getSpriteCount());
-    geometryShaderStr = replace(geometryShaderStr, "NUM_VERTICES", _spriteSheet->getVertexScalarCount());
-    geometryShaderStr = replace(geometryShaderStr, "NUM_TRIANGLES", _spriteSheet->getTriangleScalarCount());
-
-    _texture = _shaderProgram->loadTexture(_spriteSheet->getRawImage(), sheetSize.x, sheetSize.y, 4, _useLinearScaling);
-    _shaderProgram->addVertexShader(vertexShaderSource);
-    _shaderProgram->addGeometryShader(geometryShaderStr.c_str());
-    _shaderProgram->addFragmentShader(fragmentShaderSource);
-    _shaderProgram->linkShaders();
-
-    _shaderProgram->initShaderStorageBuffer();
-    _shaderProgram->loadShaderStorageData(
-        0, 
-        _spriteSheet->getBufferSize(), 
-        _spriteSheet->getSpriteInfoBuffer()
-    );
-
-    _shaderProgram->initVertexBuffer();
-    _shaderProgram->defineAttribute<glm::vec4>("inModel", 4);
-    _shaderProgram->defineAttribute<float>("inSpriteIndex", 1);
-    _shaderProgram->bindAttributes();
+    _texture = _useLinearScaling ? shaderProgramContext.textures[0] : shaderProgramContext.textures[1];
+    _instanceBuffer = shaderProgramContext.instanceVbos[0];
 }
 
 void SpriteRenderer::setView(glm::mat4 view) 
@@ -172,19 +116,73 @@ void SpriteRenderer::setProjection(glm::mat4 projection)
     _projection = projection;
 }
 
+ShaderProgramContext SpriteRenderer::initializeShaderProgram(ShaderProgram& shaderProgram, void* additionalData)
+{
+    ShaderProgramContext context;
+    ShaderProgramData* shaderProgramData = (ShaderProgramData*)additionalData;
+    auto& spriteSheet = shaderProgramData->spriteSheet;
+    auto& spriteInfoBuffer = shaderProgramData->spriteInfoBuffer;
+
+    auto sheetSize = spriteSheet.getSize();
+
+    std::string vertexShaderStr(vertexShaderSource);
+    vertexShaderStr = replace(vertexShaderStr, "SPRITE_COUNT", spriteInfoBuffer.size() / 4);
+
+    context.textures.push_back(shaderProgram.loadTexture(spriteSheet.getRawImage(), sheetSize.x, sheetSize.y, 4, true));
+    context.textures.push_back(shaderProgram.loadTexture(spriteSheet.getRawImage(), sheetSize.x, sheetSize.y, 4, false));
+
+    shaderProgram.addVertexShader(vertexShaderStr.c_str());
+    shaderProgram.addFragmentShader(fragmentShaderSource);
+    shaderProgram.linkShaders();
+
+    shaderProgram.initShaderStorageBuffer();
+    shaderProgram.loadShaderStorageData(
+       0, 
+        spriteInfoBuffer.size() * sizeof(float), 
+        spriteInfoBuffer.data()
+    );
+
+    shaderProgram.loadData(spriteRect);
+    shaderProgram.defineAttribute<float>("inPos", 2);
+    shaderProgram.bindAttributes();
+
+    auto instanceBuffer = shaderProgram.initInstanceBuffer();
+    shaderProgram.defineInstanceAttribute<glm::vec4>(instanceBuffer, "inModel", 4);
+    shaderProgram.defineInstanceAttribute<float>(instanceBuffer, "inSpriteIndex", 1);
+    shaderProgram.bindAttributes(instanceBuffer);
+    context.instanceVbos.push_back(instanceBuffer);
+
+    return context;
+}
+
+Sprite* SpriteRenderer::createSprite(std::string name)
+{
+    auto spriteId = _spriteBuffer.createResource();
+    auto sprite = new Sprite(
+        name,
+        spriteId, 
+        _spriteSheet, 
+        _spriteBuffer
+    );
+    sprite->updateTextureIndex();
+    sprite->setScale(sprite->getBaseSize());
+    sprite->init();
+
+    return sprite;  
+}
+
 void SpriteRenderer::draw() {
-    if (_spriteBuffer->size() == 0) {
+    if (_spriteBuffer.size() == 0) {
         return;
     }
-    _shaderProgram->use();
-    _shaderProgram->bindTexture(_texture);
-    _shaderProgram->loadData(_spriteBuffer->size() * sizeof(float), _spriteBuffer->size() / MODEL_SIZE, _spriteBuffer->modelData());
-    _shaderProgram->setUniform<int>("spriteSheet", _texture);
-    _shaderProgram->setUniform("projection", _projection);
-    _shaderProgram->setUniform("view", _view);
-    _shaderProgram->drawArrays(GL_POINTS);
-    _shaderProgram->unbindTextures();
-    _shaderProgram->unbindVao();
-    _spriteBuffer->resetDirtyFlag();
-    _spriteBuffer->step();
+    _shaderProgram.use();
+    _shaderProgram.bindTexture(_texture);
+    _shaderProgram.loadInstanceData(_instanceBuffer, _spriteBuffer.size() * sizeof(float), _spriteBuffer.size() / SpriteBuffer::dataSize(), _spriteBuffer.modelData());
+    _shaderProgram.setUniform<int>("spriteSheet", _texture);
+    _shaderProgram.setUniform("projection", _projection);
+    _shaderProgram.setUniform("view", _view);
+    _shaderProgram.drawInstances();
+    _shaderProgram.unbindTextures();
+    _shaderProgram.unbindVao();
+    _spriteBuffer.step();
 }

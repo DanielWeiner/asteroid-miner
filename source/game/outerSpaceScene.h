@@ -17,13 +17,11 @@ class LineRenderer;
 class OuterSpaceScene {
 public:
     OuterSpaceScene(
-        std::unique_ptr<DroneFactory>    &&droneFactory, 
-        std::unique_ptr<AsteroidSpawner> &&asteroidSpawner,
-        std::shared_ptr<FlatScene>       scene
+        DroneFactory& droneFactory,
+        FlatScene&     scene
     );
 
-    std::span<std::shared_ptr<Asteroid>> asteroids();
-    std::span<std::unique_ptr<Drone>>    drones();
+    std::span<std::unique_ptr<Drone>> drones();
 
     void handleEvent(const Event& event);
 
@@ -31,10 +29,9 @@ public:
     void init();
     void render(LineRenderer& lineRenderer);
 private:
-    std::unique_ptr<DroneFactory>       _droneFactory;
-    std::unique_ptr<AsteroidSpawner>    _asteroidSpawner;
+    DroneFactory&                       _droneFactory;
     std::vector<std::unique_ptr<Drone>> _drones;
-    std::shared_ptr<FlatScene>          _scene;
+    FlatScene&                          _scene;
 };
 
 #endif

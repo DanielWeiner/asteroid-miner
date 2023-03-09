@@ -97,7 +97,7 @@ void main(void)
 
 }
 
-TextRenderer::TextRenderer(std::shared_ptr<Window> window) : _window(window) {}
+TextRenderer::TextRenderer(Window& window) : _window(window) {}
 
 void TextRenderer::createLayout(std::string str, double width, TextRenderer::Layout& layout, Layout::Alignment alignment, bool justify)
 {
@@ -227,17 +227,17 @@ void TextRenderer::renderLayout(TextRenderer::Layout& layout, glm::vec2 position
     view = glm::translate(view, glm::vec3(position, 0.f));
     view = glm::scale(view, glm::vec3(glm::vec2(fontScale), 1.f));
 
-    _shaderProgram->use();
-    _shaderProgram->bindTexture(_texture);
-    _shaderProgram->setUniform("fgColor", color);
-    _shaderProgram->setUniform("view", view);
+    _shaderProgram.use();
+    _shaderProgram.bindTexture(_texture);
+    _shaderProgram.setUniform("fgColor", color);
+    _shaderProgram.setUniform("view", view);
     if (layout._dirty) {
         layout._dirty = false;
-        _shaderProgram->loadData(layout._vertices.size() * sizeof(float), layout._count, layout._vertices.data());
+        _shaderProgram.loadData(layout._vertices.size() * sizeof(float), layout._count, layout._vertices.data());
     }
-    _shaderProgram->drawArrays();
-    _shaderProgram->unbindTextures();
-    _shaderProgram->unbindVao();
+    _shaderProgram.drawArrays();
+    _shaderProgram.unbindTextures();
+    _shaderProgram.unbindVao();
 }
 
 void TextRenderer::init(std::string fontName) 
@@ -265,17 +265,16 @@ void TextRenderer::init(std::string fontName)
     pango_font_description_free(desc);
 
     _atlas.atlasGenerator().setThreadCount(threadCount);
-    _shaderProgram = std::make_unique<ShaderProgram>();
-    _shaderProgram->init();
 
-    _shaderProgram->addVertexShader(vertexShaderSource);
-    _shaderProgram->addFragmentShader(fragmentShaderSource);
-    _shaderProgram->linkShaders();
+    _shaderProgram.init();
+    _shaderProgram.addVertexShader(vertexShaderSource);
+    _shaderProgram.addFragmentShader(fragmentShaderSource);
+    _shaderProgram.linkShaders();
     
-    _shaderProgram->initVertexBuffer();
-    _shaderProgram->defineAttribute<float>("pos", 2);
-    _shaderProgram->defineAttribute<float>("inTexCoord", 2);
-    _shaderProgram->bindAttributes();
+    _shaderProgram.initVertexBuffer();
+    _shaderProgram.defineAttribute<float>("pos", 2);
+    _shaderProgram.defineAttribute<float>("inTexCoord", 2);
+    _shaderProgram.bindAttributes();
     
     _fontPath = fileName;
     _initMsdf();
@@ -283,8 +282,8 @@ void TextRenderer::init(std::string fontName)
 
 void TextRenderer::setProjection(glm::mat4 projection)
 {
-    _shaderProgram->use();
-    _shaderProgram->setUniform("projection", projection);
+    _shaderProgram.use();
+    _shaderProgram.setUniform("projection", projection);
 }
 
 glm::vec2 TextRenderer::getLayoutSize(Layout& layout)
@@ -412,13 +411,13 @@ void TextRenderer::_addGlyphs(std::string bytes)
 
     Bitmap storage = (Bitmap)_atlas.atlasGenerator().atlasStorage();
 
-    _shaderProgram->use();
-    _texture = _shaderProgram->loadTexture(
+    _shaderProgram.use();
+    _texture = _shaderProgram.loadTexture(
         storage(0,0), 
         storage.width(),
         storage.height(),
         3,
         true
     );
-    _shaderProgram->unbindVao();
+    _shaderProgram.unbindVao();
 }

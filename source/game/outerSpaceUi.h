@@ -10,7 +10,7 @@
 
 class OuterSpaceUi {
 public:
-    OuterSpaceUi(std::unique_ptr<SpriteFactory>&& spriteFactory, std::shared_ptr<Window> window);
+    OuterSpaceUi(Window& window, SpriteSheet& spriteSheet, SpriteRenderer& spriteRenderer);
     void setPanelBounds(glm::vec2 topLeft, glm::vec2 bottomRight);
     void setFontSize(double fontSize);
     void setFontColor(glm::vec4 color);

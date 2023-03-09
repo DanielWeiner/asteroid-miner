@@ -2,8 +2,18 @@
 
 #include <glm/ext.hpp>
 
-Panel::Panel(std::unique_ptr<SpriteFactory>&& spriteFactory, std::shared_ptr<Window> window) : 
-    _spriteFactory(std::move(spriteFactory)), _window(window) {}
+Panel::Panel(SpriteRenderer& renderer, Window& window) :  
+    _spriteRenderer(renderer),
+    _window(window),
+    _topLeftSprite(_spriteRenderer.createSprite("UI/metalPanel/topLeft.png")),  
+    _topRightSprite(_spriteRenderer.createSprite("UI/metalPanel/topRight.png")), 
+    _bottomLeftSprite(_spriteRenderer.createSprite("UI/metalPanel/bottomLeft.png")),
+    _bottomRightSprite(_spriteRenderer.createSprite("UI/metalPanel/bottomRight.png")),
+    _leftSprite(_spriteRenderer.createSprite("UI/metalPanel/left.png")),       
+    _rightSprite(_spriteRenderer.createSprite("UI/metalPanel/right.png")),      
+    _topSprite(_spriteRenderer.createSprite("UI/metalPanel/top.png")),        
+    _bottomSprite(_spriteRenderer.createSprite("UI/metalPanel/bottom.png")),     
+    _centerSprite(_spriteRenderer.createSprite("UI/metalPanel/center.png")) {}
 
 void Panel::setBounds(glm::vec2 topLeft, glm::vec2 bottomRight) 
 {
@@ -43,25 +53,14 @@ void Panel::setInnerBounds(glm::vec2 topLeft, glm::vec2 bottomRight)
 
 void Panel::init() 
 {
-    _spriteRenderer = _spriteFactory->createRenderer(false);
-
-    _topLeftSprite     = _spriteFactory->createSprite("UI/metalPanel/topLeft.png");
-    _topRightSprite    = _spriteFactory->createSprite("UI/metalPanel/topRight.png");
-    _bottomLeftSprite  = _spriteFactory->createSprite("UI/metalPanel/bottomLeft.png");
-    _bottomRightSprite = _spriteFactory->createSprite("UI/metalPanel/bottomRight.png");
-    _leftSprite        = _spriteFactory->createSprite("UI/metalPanel/left.png");
-    _rightSprite       = _spriteFactory->createSprite("UI/metalPanel/right.png");
-    _topSprite         = _spriteFactory->createSprite("UI/metalPanel/top.png");
-    _bottomSprite      = _spriteFactory->createSprite("UI/metalPanel/bottom.png");
-    _centerSprite      = _spriteFactory->createSprite("UI/metalPanel/center.png");
 }
 
 void Panel::render() 
 {
-    auto projection = glm::ortho(0.f, _window->getSize().x, _window->getSize().y, 0.f, -1.f, 1.f);
-    _spriteRenderer->setProjection(projection);
-    _spriteRenderer->setView(glm::mat4(1.0));
-    _spriteRenderer->draw();
+    auto projection = glm::ortho(0.f, _window.getSize().x, _window.getSize().y, 0.f, -1.f, 1.f);
+    _spriteRenderer.setProjection(projection);
+    _spriteRenderer.setView(glm::mat4(1.0));
+    _spriteRenderer.draw();
 }
 
 void Panel::getInnerBounds(glm::vec2* topLeft, glm::vec2* bottomRight)

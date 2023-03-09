@@ -5,9 +5,8 @@
 #include <glm/ext.hpp>
 #include <iostream>
 
-AsteroidSpawner::AsteroidSpawner(std::unique_ptr<SpriteFactory>&& factory,
-                                 std::shared_ptr<FlatScene> scene) 
-: _spriteFactory(std::move(factory)), _scene(scene)
+AsteroidSpawner::AsteroidSpawner(SpriteRenderer& renderer, FlatScene& scene) 
+: _spriteRenderer(renderer), _scene(scene)
 {}
 
 void AsteroidSpawner::setDensity(float density) 
@@ -22,9 +21,9 @@ void AsteroidSpawner::step() {
   }
 }
 
-std::span<std::shared_ptr<Asteroid>> AsteroidSpawner::asteroids()
+std::span<std::unique_ptr<Asteroid>> AsteroidSpawner::asteroids()
 {
-    std::span<std::shared_ptr<Asteroid>> asteroids{ _asteroids };
+    std::span<std::unique_ptr<Asteroid>> asteroids{ _asteroids };
 
     return asteroids;
 }
@@ -34,8 +33,8 @@ void AsteroidSpawner::_populateChunks()
     using vec2 = glm::vec2;
     using vec4 = glm::vec4;
 
-    auto worldTopLeft = _scene->getWorldPosition();
-    auto worldBottomRight = _scene->getWorldPosition() + _scene->getWorldSize();
+    auto worldTopLeft = _scene.getWorldPosition();
+    auto worldBottomRight = _scene.getWorldPosition() + _scene.getWorldSize();
 
     auto chunkTopLeft = glm::floor(worldTopLeft / _chunkSize);
     auto chunkBottomRight = glm::ceil(worldBottomRight / _chunkSize);
@@ -67,7 +66,7 @@ void AsteroidSpawner::_fillWithAsteroids(glm::vec2 topLeft, glm::vec2 bottomRigh
     auto numChunks = chunks.x * chunks.y;
 
     for (int i = 0; i < numChunks * _asteroidsPerChunk; i++) {
-        auto sprite = _spriteFactory->createSprite("Meteors/meteorGrey_med1.png");
+        auto sprite = _spriteRenderer.createSprite("Meteors/meteorGrey_med1.png");
         sprite->moveTo(glm::vec2(
             topLeft.x + Random::uniform() * (bottomRight.x - topLeft.x),
             topLeft.y + Random::uniform() * (bottomRight.y - topLeft.y)
@@ -78,8 +77,8 @@ void AsteroidSpawner::_fillWithAsteroids(glm::vec2 topLeft, glm::vec2 bottomRigh
 
         auto speed = glm::vec2(glm::cos(angle) * velocity, glm::sin(angle) * velocity);
         auto spin = (Random::uniform()  * 2.f - 1.f) * _maxSpin;
-        
-        auto asteroid = std::make_shared<Asteroid>(std::move(sprite), speed, spin);
-        _asteroids.push_back(asteroid);
+  
+        auto asteroid = std::make_unique<Asteroid>(sprite, speed, spin);
+        _asteroids.push_back(std::move(asteroid));
     }
 }

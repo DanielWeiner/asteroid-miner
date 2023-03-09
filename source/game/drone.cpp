@@ -10,7 +10,7 @@
 #include <iostream>
 #include <format>
 
-Drone::Drone(std::unique_ptr<Sprite> &&sprite) : _sprite(std::move(sprite)) {}
+Drone::Drone(Sprite* sprite) : _sprite(sprite) {}
 
 void Drone::setSpeed(glm::vec2 speed) { _speed = speed; }
 
@@ -58,7 +58,7 @@ void Drone::step(OuterSpaceScene& scene)
 void Drone::render(LineRenderer& lineRenderer)
 {
     if (_targetAsteroid) {
-        //lineRenderer.lineTo(_sprite->getCenter(), _targetAsteroid->getCenter(), glm::vec4(0,1,0,1), 3.f);
+        //lineRenderer.lineTo(_sprite.getCenter(), _targetAsteroid->getCenter(), glm::vec4(0,1,0,1), 3.f);
     }
 }
 
@@ -77,11 +77,6 @@ glm::vec2 Drone::getSize()
     return _sprite->getSize();
 }
 
-void Drone::calculateEdgeTangents()
-{
-    _sprite->calculateEdgeTangents();
-}
-
 void Drone::_accelerateToward(glm::vec2 point)
 {
     auto difference = _sprite->getCenter() - glm::vec2(point);
@@ -96,24 +91,7 @@ void Drone::_rotateDirection() {
 
 void Drone::_searchForAsteroid(OuterSpaceScene& scene) 
 {
-    std::shared_ptr<Asteroid> closestAsteroid;
-    float shortestDistance = MAX_FLOAT;
-    for (auto asteroid : scene.asteroids()) {
-        auto distance = glm::distance2(asteroid->getCenter(), _sprite->getCenter());
-        if (distance < _sightRadius2) {
-            shortestDistance = glm::min(distance, shortestDistance);
-            if (shortestDistance == distance) {
-                closestAsteroid = asteroid;
-            }
-        }
-    }
-
-    if (closestAsteroid) {
-        _targetAsteroid = closestAsteroid;
-        _state = DroneState::PURSUING;
-    } else {
-        _state = DroneState::WANDERING;
-    }
+    _state = DroneState::WANDERING;
 }
 
 void Drone::_wander() 

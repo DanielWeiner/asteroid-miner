@@ -39,10 +39,7 @@ void main()
 /*--------------------------------------------*/
 )glsl";
 
-
 }
-
-LineRenderer::LineRenderer(std::shared_ptr<Window> window) : _window(window) {}
 
 void LineRenderer::init() {
     _shaderProgram = std::make_unique<ShaderProgram>();

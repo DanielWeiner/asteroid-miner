@@ -1,6 +1,7 @@
 #ifndef SPRITE_FACTORY_H_
 #define SPRITE_FACTORY_H_
 
+#include "shaderProgramContext.h"
 #include "shaderProgram.h"
 #include "spriteBuffer.h"
 #include "sprite.h"
@@ -14,16 +15,26 @@
 class SpriteFactory {
 public:
     SpriteFactory(
-        std::shared_ptr<SpriteSheet>   spriteSheet,
-        std::shared_ptr<Window>        window
+        Window& window, 
+        SpriteSheet& spriteSheet 
     );
 
-    std::unique_ptr<Sprite> createSprite(std::string name);
-    std::unique_ptr<SpriteRenderer> createRenderer(bool useLinearScaling = false);
+    SpriteRenderer* createRenderer(bool useLinearScaling = false);
 private:
-    std::shared_ptr<SpriteSheet>   _spriteSheet;
-    std::shared_ptr<SpriteBuffer>  _spriteBuffer;
-    std::shared_ptr<Window>        _window;
+    Window&            _window;
+    SpriteSheet&       _spriteSheet;
+    std::vector<float> _spriteInfoBuffer;
+
+    SpriteRenderer::ShaderProgramData _shaderProgramData{
+        .spriteSheet      = _spriteSheet,
+        .spriteInfoBuffer = _spriteInfoBuffer
+    };
+    ShaderProgramContext              _shaderProgramContext;
+    ShaderProgram                     _shaderProgram;
+
+    bool               _initialized = false;
+
+    void _init();
 };
 
 #endif

@@ -7,10 +7,10 @@ namespace {
     const std::string fontName = "Teorema";
 }
 
-OuterSpaceUi::OuterSpaceUi(std::unique_ptr<SpriteFactory> &&spriteFactory, std::shared_ptr<Window> window) 
+OuterSpaceUi::OuterSpaceUi(Window& window, SpriteSheet& spriteSheet, SpriteRenderer& spriteRenderer) 
 : 
 _textBox(fontName, window), 
-_panel(std::move(spriteFactory), window)
+_panel(spriteRenderer, window)
 {
 }
 

@@ -5,37 +5,12 @@ namespace {
     constexpr std::size_t DATA_SIZE = MAT4_SIZE + 1;
 }
 
-void SpriteBuffer::rotateModel(unsigned int id, float radians, glm::vec3 point) 
-{
-    _setModel(id, glm::rotate(_getModel(id), radians, point));
-}
-
-void SpriteBuffer::scaleModel(unsigned int id, glm::vec3 point) 
-{
-    _setModel(id, glm::scale(_getModel(id), point));
-}
-
-void SpriteBuffer::translateModel(unsigned int id, glm::vec3 point) 
-{
-    _setModel(id, glm::translate(_getModel(id), point));
-}
-
 void SpriteBuffer::setTexture(unsigned int id, std::size_t spriteId) {
     _setTexture(id, spriteId);
 }
 
-void SpriteBuffer::initializeModel(unsigned int id, glm::mat4 matrix) {
+void SpriteBuffer::setModel(unsigned int id, glm::mat4 matrix) {
     _setModel(id, matrix);
-}
-
-bool SpriteBuffer::areTexturesDirty()
-{
-    return _texturesDirty;
-}
-
-void SpriteBuffer::resetDirtyFlag() 
-{
-    _texturesDirty = false;
 }
 
 unsigned int SpriteBuffer::size()
@@ -44,13 +19,12 @@ unsigned int SpriteBuffer::size()
 }
 float* SpriteBuffer::modelData()
 {
-
-    return &_models[0];
+    return _models.data();
 }
 
-glm::mat4 SpriteBuffer::getModelMatrix(unsigned int id)
+glm::mat4* SpriteBuffer::getModelMatrix(unsigned int id)
 {
-    return glm::mat4(_models[_resourceIds[id]]);
+    return _getModel(id);
 }
 
 unsigned int SpriteBuffer::createResource()
@@ -78,18 +52,15 @@ void SpriteBuffer::destroyResource(unsigned int id)
     }
     
     _models.erase(_models.begin() + resourceIndex, _models.begin() + resourceIndex + DATA_SIZE);
-
-    _texturesDirty = true;
 }
 
 void SpriteBuffer::moveToEnd(unsigned int id) 
 {
-    glm::mat4 model = _getModel(id);
+    float* model = (float*)_getModel(id);
     float texture = _getTexture(id);
     destroyResource(id);
-
     _resourceIds[id] = _models.size();
-    _models.insert(_models.end(), glm::value_ptr(model), glm::value_ptr(model) + MAT4_SIZE);
+    _models.insert(_models.end(), model, model + MAT4_SIZE);
     _models.push_back(texture);
 }
 
@@ -108,9 +79,14 @@ void SpriteBuffer::step()
     _step = getNextStep();
 }
 
-glm::mat4 SpriteBuffer::_getModel(unsigned int id)
+std::size_t SpriteBuffer::dataSize()
 {
-    return glm::make_mat4(&_models[_resourceIds[id]]);
+    return DATA_SIZE;
+}
+
+glm::mat4* SpriteBuffer::_getModel(unsigned int id)
+{
+    return (glm::mat4*)&_models[_resourceIds[id]];
 }
 
 float SpriteBuffer::_getTexture(unsigned int id)
@@ -120,8 +96,7 @@ float SpriteBuffer::_getTexture(unsigned int id)
 
 void SpriteBuffer::_setModel(unsigned int id, glm::mat4 model) 
 {
-    float* ptr = glm::value_ptr(model);
-    std::copy(ptr, ptr + MAT4_SIZE, _models.begin() + _resourceIds[id]);
+    *((glm::mat4*)&_models[_resourceIds[id]]) = model;
 }
 
 void SpriteBuffer::_setTexture(unsigned int id, float textureId) 

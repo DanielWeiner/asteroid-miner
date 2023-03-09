@@ -1,45 +1,34 @@
 #include "spriteFactory.h"
 
 SpriteFactory::SpriteFactory(
-    std::shared_ptr<SpriteSheet>   spriteSheet,
-    std::shared_ptr<Window>        window
-)
-: 
-_spriteSheet(spriteSheet),
-_window(window)
+    Window& window,
+    SpriteSheet& spriteSheet
+) : 
+_window(window),
+_spriteSheet(spriteSheet)
 {}
 
-std::unique_ptr<Sprite> SpriteFactory::createSprite(std::string name)
-{
-    if (!_spriteBuffer) {
-        _spriteBuffer = std::make_unique<SpriteBuffer>();
-    }
+SpriteRenderer* SpriteFactory::createRenderer(bool useLinearScaling) {
+    _init();
 
-    auto spriteId = _spriteBuffer->createResource();
-    auto sprite = std::make_unique<Sprite>(
-        name,
-        spriteId, 
+    auto renderer = new SpriteRenderer(
+        _window, 
         _spriteSheet, 
-        _spriteBuffer
+        _shaderProgram, 
+        useLinearScaling
     );
-    sprite->updateTextureIndex();
-    sprite->setScale(sprite->getBaseSize());
-    sprite->init();
-
-    return std::move(sprite);
+    renderer->init(_shaderProgramContext);
+    
+    return renderer;
 }
 
-std::unique_ptr<SpriteRenderer>
-SpriteFactory::createRenderer(bool useLinearScaling) {
-    if (!_spriteBuffer) {
-        _spriteBuffer = std::make_shared<SpriteBuffer>();
+void SpriteFactory::_init() 
+{
+    if (_initialized) {
+        return;
     }
 
-    auto shaderProgram = std::make_shared<ShaderProgram>();
-    shaderProgram->init();
-
-    auto renderer = std::make_unique<SpriteRenderer>(_window, _spriteSheet, _spriteBuffer, shaderProgram, useLinearScaling);
-    renderer->init();
-    
-    return std::move(renderer);
+    _initialized = true;
+    _spriteSheet.load(_spriteInfoBuffer);
+    _shaderProgramContext = _shaderProgram.init(SpriteRenderer::initializeShaderProgram, &_shaderProgramData);
 }

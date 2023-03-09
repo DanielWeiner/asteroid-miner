@@ -7,7 +7,7 @@
 
 class Asteroid {
 public:
-    Asteroid(std::unique_ptr<Sprite>&& sprite, glm::vec2 speed, float spin);
+    Asteroid(Sprite* sprite, glm::vec2 speed, float spin);
     unsigned int id() const;
     void         setSpeed(glm::vec2 speed);
     glm::vec2    getSpeed();

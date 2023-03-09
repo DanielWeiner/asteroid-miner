@@ -3,8 +3,6 @@
 
 class Window;
 
-using namespace std;
-
 namespace Key {
     static const int 
         KEY_SPACE = 32,

@@ -1,6 +1,6 @@
 #include "textBox.h"
 
-TextBox::TextBox(std::string fontName, std::shared_ptr<Window> window) 
+TextBox::TextBox(std::string fontName, Window& window) 
 : _fontName(fontName), _window(window), _textRenderer(window) {}
 
 void TextBox::setBounds(glm::vec2 topLeft, glm::vec2 bottomRight) 
@@ -55,7 +55,7 @@ void TextBox::init()
 
 void TextBox::render() 
 {
-    auto projection = glm::ortho(0.f, _window->getSize().x, _window->getSize().y, 0.f, -1.f, 1.f);
+    auto projection = glm::ortho(0.f, _window.getSize().x, _window.getSize().y, 0.f, -1.f, 1.f);
     _textRenderer.setProjection(projection);
     _textRenderer.renderLayout(_textLayout, _topLeft, _fontScale, _color);
 }

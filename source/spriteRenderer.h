@@ -3,43 +3,52 @@
 
 #include "sprite.h"
 #include "shaderProgram.h"
+#include "spriteBuffer.h"
+#include "window.h"
 #include <glm/glm.hpp>
 #include <unordered_map>
 #include <vector>
 #include <memory>
 
-class SpriteBuffer;
 class Window;
+class SpriteFactory;
+class ShaderProgramContext;
 
 class SpriteRenderer {
 public:
+    struct ShaderProgramData {
+        SpriteSheet&        spriteSheet;
+        std::vector<float>& spriteInfoBuffer;
+    };
+
     SpriteRenderer(
-        std::shared_ptr<Window> window,
-        std::shared_ptr<SpriteSheet> spriteSheet,
-        std::shared_ptr<SpriteBuffer> spriteBuffer,
-        std::shared_ptr<ShaderProgram> shaderProgram,
+        Window& window,
+        SpriteSheet& spriteSheet,
+        ShaderProgram& shaderProgram,
         bool useLinearScaling = true
     );
 
-    void init();
+    void init(ShaderProgramContext& shaderProgramData);
     void setView(glm::mat4 view);
     void setProjection(glm::mat4 projection);
+
+    static ShaderProgramContext initializeShaderProgram(ShaderProgram& shaderProgram, void* additionalData);
+
+    Sprite* createSprite(std::string name);
     
     void draw();
 private:
-    std::shared_ptr<Window>        _window;
-    std::shared_ptr<SpriteSheet>   _spriteSheet;
-    std::shared_ptr<SpriteBuffer>  _spriteBuffer;
-    std::shared_ptr<ShaderProgram> _shaderProgram;
-    unsigned int                   _vbo1;
-    unsigned int                   _ssbo;
-    bool                           _spritesDirty = false;
-    unsigned int                   _lastSpriteId = 0;
-    GLuint                         _texture;
-    float                          _fov;
-    glm::mat4                      _view;
-    glm::mat4                      _projection;
-    bool                           _useLinearScaling;
+    Window&        _window;
+    SpriteSheet&   _spriteSheet;
+    SpriteBuffer   _spriteBuffer;
+    ShaderProgram& _shaderProgram;
+    unsigned int   _instanceBuffer;
+    unsigned int   _lastSpriteId = 0;
+    GLuint         _texture;
+    float          _fov;
+    glm::mat4      _view;
+    glm::mat4      _projection;
+    bool           _useLinearScaling;
     friend Sprite::~Sprite();
 
 };

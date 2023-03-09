@@ -1,6 +1,7 @@
 #ifndef SHADER_PROGRAM_H_
 #define SHADER_PROGRAM_H_
 
+#include "shaderProgramContext.h"
 #include <glad/glad.h>
 #include <cstddef>
 #include <glm/glm.hpp>
@@ -60,8 +61,9 @@ public:
     void drawArrays(GLenum arrayType = GL_TRIANGLES);
     void drawElements();
     void drawInstances();
+    static ShaderProgramContext defaultInitializer(ShaderProgram&, void*);
 
-    void init();
+    ShaderProgramContext init(ShaderProgramContext fn(ShaderProgram&, void*) = defaultInitializer, void* initializationData = NULL);
     ~ShaderProgram();
 private:
     template<typename>

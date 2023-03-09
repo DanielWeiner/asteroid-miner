@@ -2,17 +2,17 @@
 #define DRONE_FACTORY_H_
 
 #include "drone.h"
-#include "../spriteFactory.h"
+#include "../spriteRenderer.h"
 
 #include <memory>
 
 class DroneFactory {
 public:
-    DroneFactory(std::unique_ptr<SpriteFactory>&& spriteFactory);
-    std::unique_ptr<Drone> createDrone();
+    DroneFactory(SpriteRenderer& spriteRenderer);
+    Drone* createDrone();
 
 private:
-    std::unique_ptr<SpriteFactory> _spriteFactory;
+    SpriteRenderer& _spriteRenderer;
 };
 
 #endif
