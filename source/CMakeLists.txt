@@ -102,6 +102,7 @@ target_sources(AsteroidMinerLib PRIVATE
     game/outerSpaceUi.h
     ui/panel.cpp
     ui/panel.h
+    util/pointerSpan.h
     random.cpp
     random.h
     util/range.h

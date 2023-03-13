@@ -1,7 +1,7 @@
 #ifndef OUTER_SPACE_SCENE_H_
 #define OUTER_SPACE_SCENE_H_
 
-
+#include "../util/pointerSpan.h"
 #include "../flatScene.h"
 #include "../spriteFactory.h"
 #include "droneFactory.h"
@@ -11,17 +11,18 @@
 class LineRenderer;
 
 #include <vector>
-#include <functional>
-#include <span>
+#include <memory>
 
 class OuterSpaceScene {
 public:
     OuterSpaceScene(
         DroneFactory& droneFactory,
-        FlatScene&     scene
+        SpriteRenderer& spriteRenderer,
+        FlatScene&    scene
     );
 
-    std::span<std::reference_wrapper<Drone>> drones();
+    Util::PointerSpan<std::vector<std::unique_ptr<Drone>>>    drones();
+    Util::PointerSpan<std::vector<std::unique_ptr<Asteroid>>> asteroids();
 
     void handleEvent(const Event& event);
 
@@ -29,9 +30,10 @@ public:
     void init();
     void render(LineRenderer& lineRenderer);
 private:
-    DroneFactory&                              _droneFactory;
-    std::vector<std::reference_wrapper<Drone>> _drones;
-    FlatScene&                                 _scene;
+    DroneFactory&                       _droneFactory;
+    std::vector<std::unique_ptr<Drone>> _drones;
+    AsteroidSpawner                     _asteroidSpawner;
+    FlatScene&                          _scene;
 };
 
 #endif

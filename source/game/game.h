@@ -31,7 +31,6 @@ private:
     OuterSpaceUi    _outerSpaceUi;
     OuterSpaceScene _outerSpaceScene;
     FlatScene&      _scene;
-    AsteroidSpawner _asteroidSpawner;
     
     void handleEvent(const Event& event);
     void render();

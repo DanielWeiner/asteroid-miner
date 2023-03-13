@@ -18,9 +18,8 @@ Game::Game(
   _spriteRenderer(spriteRenderer),
   _asteroidSpriteRenderer(asteroidSpriteRenderer),
   _outerSpaceUi(window, spriteSheet, uiSpriteRenderer),
-  _outerSpaceScene(droneFactory, flatScene),
-  _scene(flatScene),
-  _asteroidSpawner(asteroidSpriteRenderer, flatScene)
+  _outerSpaceScene(droneFactory, asteroidSpriteRenderer, flatScene),
+  _scene(flatScene)
 {
 }
 
@@ -73,7 +72,6 @@ void Game::init()
 void Game::render() 
 {
     _outerSpaceScene.step();
-    _asteroidSpawner.step();
 
     SpriteRenderer renderers[] = {
         _asteroidSpriteRenderer,

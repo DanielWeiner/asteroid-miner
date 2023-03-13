@@ -19,21 +19,21 @@ public:
 private:
     SpriteRenderer& _spriteRenderer;
 
-    Window&         _window;
-    glm::vec2       _topLeft;
-    glm::vec2       _bottomRight;
-    glm::vec2       _innerTopLeft;
-    glm::vec2       _innerBottomRight;
+    Window&                 _window;
+    glm::vec2               _topLeft;
+    glm::vec2               _bottomRight;
+    glm::vec2               _innerTopLeft;
+    glm::vec2               _innerBottomRight;
    
-    Sprite&         _topLeftSprite;    
-    Sprite&         _topRightSprite;   
-    Sprite&         _bottomLeftSprite; 
-    Sprite&         _bottomRightSprite;
-    Sprite&         _leftSprite;       
-    Sprite&         _rightSprite;      
-    Sprite&         _topSprite;        
-    Sprite&         _bottomSprite;     
-    Sprite&         _centerSprite;
+    std::unique_ptr<Sprite> _topLeftSprite;    
+    std::unique_ptr<Sprite> _topRightSprite;   
+    std::unique_ptr<Sprite> _bottomLeftSprite; 
+    std::unique_ptr<Sprite> _bottomRightSprite;
+    std::unique_ptr<Sprite> _leftSprite;       
+    std::unique_ptr<Sprite> _rightSprite;      
+    std::unique_ptr<Sprite> _topSprite;        
+    std::unique_ptr<Sprite> _bottomSprite;     
+    std::unique_ptr<Sprite> _centerSprite;
 
     glm::vec2 _getBorderSize();    
 };

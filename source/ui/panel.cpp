@@ -5,15 +5,15 @@
 Panel::Panel(SpriteRenderer& renderer, Window& window) :  
     _spriteRenderer(renderer),
     _window(window),
-    _topLeftSprite(*_spriteRenderer.createSprite("UI/metalPanel/topLeft.png")),  
-    _topRightSprite(*_spriteRenderer.createSprite("UI/metalPanel/topRight.png")), 
-    _bottomLeftSprite(*_spriteRenderer.createSprite("UI/metalPanel/bottomLeft.png")),
-    _bottomRightSprite(*_spriteRenderer.createSprite("UI/metalPanel/bottomRight.png")),
-    _leftSprite(*_spriteRenderer.createSprite("UI/metalPanel/left.png")),       
-    _rightSprite(*_spriteRenderer.createSprite("UI/metalPanel/right.png")),      
-    _topSprite(*_spriteRenderer.createSprite("UI/metalPanel/top.png")),        
-    _bottomSprite(*_spriteRenderer.createSprite("UI/metalPanel/bottom.png")),     
-    _centerSprite(*_spriteRenderer.createSprite("UI/metalPanel/center.png")) {}
+    _topLeftSprite(_spriteRenderer.createSprite("UI/metalPanel/topLeft.png")),  
+    _topRightSprite(_spriteRenderer.createSprite("UI/metalPanel/topRight.png")), 
+    _bottomLeftSprite(_spriteRenderer.createSprite("UI/metalPanel/bottomLeft.png")),
+    _bottomRightSprite(_spriteRenderer.createSprite("UI/metalPanel/bottomRight.png")),
+    _leftSprite(_spriteRenderer.createSprite("UI/metalPanel/left.png")),       
+    _rightSprite(_spriteRenderer.createSprite("UI/metalPanel/right.png")),      
+    _topSprite(_spriteRenderer.createSprite("UI/metalPanel/top.png")),        
+    _bottomSprite(_spriteRenderer.createSprite("UI/metalPanel/bottom.png")),     
+    _centerSprite(_spriteRenderer.createSprite("UI/metalPanel/center.png")) {}
 
 void Panel::setBounds(glm::vec2 topLeft, glm::vec2 bottomRight) 
 {
@@ -23,32 +23,32 @@ void Panel::setBounds(glm::vec2 topLeft, glm::vec2 bottomRight)
     auto fullSize = glm::floor(bottomRight - topLeft);
     auto innerSize = glm::floor(fullSize - _getBorderSize());
 
-    _leftSprite.setScale(_leftSprite.getBaseSize() * glm::vec2(1, innerSize.y));
-    _rightSprite.setScale(_rightSprite.getBaseSize() * glm::vec2(1, innerSize.y));
+    _leftSprite->setScale(_leftSprite->getBaseSize() * glm::vec2(1, innerSize.y));
+    _rightSprite->setScale(_rightSprite->getBaseSize() * glm::vec2(1, innerSize.y));
 
-    _topSprite.setScale(_topSprite.getBaseSize() * glm::vec2(innerSize.x, 1));
-    _bottomSprite.setScale(_bottomSprite.getBaseSize() * glm::vec2(innerSize.x, 1));
+    _topSprite->setScale(_topSprite->getBaseSize() * glm::vec2(innerSize.x, 1));
+    _bottomSprite->setScale(_bottomSprite->getBaseSize() * glm::vec2(innerSize.x, 1));
 
-    _centerSprite.setScale(_centerSprite.getBaseSize() * innerSize);
+    _centerSprite->setScale(_centerSprite->getBaseSize() * innerSize);
 
-    _innerTopLeft = glm::floor(topLeft + _topLeftSprite.getSize());
+    _innerTopLeft = glm::floor(topLeft + _topLeftSprite->getSize());
     _innerBottomRight = glm::floor(_innerTopLeft + innerSize);
 
-    _topLeftSprite.moveTo(topLeft);
-    _topRightSprite.moveTo(_innerBottomRight.x, topLeft.y);
-    _bottomLeftSprite.moveTo(topLeft.x, _innerBottomRight.y);
-    _bottomRightSprite.moveTo(_innerBottomRight);
+    _topLeftSprite->moveTo(topLeft);
+    _topRightSprite->moveTo(_innerBottomRight.x, topLeft.y);
+    _bottomLeftSprite->moveTo(topLeft.x, _innerBottomRight.y);
+    _bottomRightSprite->moveTo(_innerBottomRight);
 
-    _leftSprite.moveTo(topLeft.x, _innerTopLeft.y);
-    _rightSprite.moveTo(_innerBottomRight.x, _innerTopLeft.y);
-    _topSprite.moveTo(_innerTopLeft.x, topLeft.y);
-    _bottomSprite.moveTo(_innerTopLeft.x, _innerBottomRight.y);
-    _centerSprite.moveTo(_innerTopLeft);
+    _leftSprite->moveTo(topLeft.x, _innerTopLeft.y);
+    _rightSprite->moveTo(_innerBottomRight.x, _innerTopLeft.y);
+    _topSprite->moveTo(_innerTopLeft.x, topLeft.y);
+    _bottomSprite->moveTo(_innerTopLeft.x, _innerBottomRight.y);
+    _centerSprite->moveTo(_innerTopLeft);
 }
 
 void Panel::setInnerBounds(glm::vec2 topLeft, glm::vec2 bottomRight) 
 {
-    setBounds(topLeft - _topLeftSprite.getBaseSize(), bottomRight + _bottomRightSprite.getBaseSize());
+    setBounds(topLeft - _topLeftSprite->getBaseSize(), bottomRight + _bottomRightSprite->getBaseSize());
 }
 
 void Panel::init() 
@@ -85,5 +85,5 @@ void Panel::getOuterBounds(glm::vec2* topLeft, glm::vec2* bottomRight)
 
 glm::vec2 Panel::_getBorderSize()
 {
-    return _topLeftSprite.getBaseSize() + _bottomRightSprite.getBaseSize();
+    return _topLeftSprite->getBaseSize() + _bottomRightSprite->getBaseSize();
 }

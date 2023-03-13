@@ -5,5 +5,5 @@ DroneFactory::DroneFactory(SpriteRenderer& spriteRenderer) : _spriteRenderer(spr
 }
 
 Drone* DroneFactory::createDrone() {
-    return new Drone(*_spriteRenderer.createSprite("playerShip1_blue.png"));
+    return new Drone(_spriteRenderer.createSprite("playerShip1_blue.png"));
 }

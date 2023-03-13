@@ -16,16 +16,14 @@ void AsteroidSpawner::setDensity(float density)
 
 void AsteroidSpawner::step() {
   _populateChunks();
-  for (Asteroid &asteroid : _asteroids) {
+  for (auto& asteroid : asteroids()) {
     asteroid.step(_topLeft, _bottomRight);
   }
 }
 
-std::span<std::reference_wrapper<Asteroid>> AsteroidSpawner::asteroids()
+Util::PointerSpan<std::vector<std::unique_ptr<Asteroid>>> AsteroidSpawner::asteroids()
 {
-    std::span<std::reference_wrapper<Asteroid>> asteroids{ _asteroids };
-
-    return asteroids;
+    return _asteroids;
 }
 
 void AsteroidSpawner::_populateChunks() 
@@ -71,13 +69,13 @@ void AsteroidSpawner::_fillWithAsteroids(glm::vec2 topLeft, glm::vec2 bottomRigh
             topLeft.x + Random::uniform() * (bottomRight.x - topLeft.x),
             topLeft.y + Random::uniform() * (bottomRight.y - topLeft.y)
         ));
-        
+
         auto angle = Random::uniform() * TWO_PI;
         auto velocity = Random::normal(_avgSpeed, _speedSigma);
 
         auto speed = glm::vec2(glm::cos(angle) * velocity, glm::sin(angle) * velocity);
         auto spin = (Random::uniform()  * 2.f - 1.f) * _maxSpin;
   
-        _asteroids.push_back(*new Asteroid(*sprite, speed, spin));
+        _asteroids.push_back(std::make_unique<Asteroid>(sprite, speed, spin));
     }
 }

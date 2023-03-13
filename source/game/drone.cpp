@@ -10,13 +10,13 @@
 #include <iostream>
 #include <format>
 
-Drone::Drone(Sprite& sprite) : _sprite(sprite) {}
+Drone::Drone(Sprite* sprite) : _sprite(sprite) {}
 
 void Drone::setSpeed(glm::vec2 speed) { _speed = speed; }
 
 void Drone::moveTo(glm::vec2 position) 
 {
-    _sprite.moveTo(position - _sprite.getSize() / 2.f);
+    _sprite->moveTo(position - _sprite->getSize() / 2.f);
 }
 
 void Drone::step(OuterSpaceScene& scene) 
@@ -50,7 +50,7 @@ void Drone::step(OuterSpaceScene& scene)
         _speed = glm::vec2(glm::cos(angle), glm::sin(angle)) * (float)_maxSpeed;
     }
 
-    _sprite.move(_speed);
+    _sprite->move(_speed);
 
     _rotateDirection();
 }
@@ -58,7 +58,7 @@ void Drone::step(OuterSpaceScene& scene)
 void Drone::render(LineRenderer& lineRenderer)
 {
     if (_targetAsteroid) {
-        //lineRenderer.lineTo(_sprite.getCenter(), _targetAsteroid->getCenter(), glm::vec4(0,1,0,1), 3.f);
+        //lineRenderer.lineTo(_sprite->getCenter(), _targetAsteroid->getCenter(), glm::vec4(0,1,0,1), 3.f);
     }
 }
 
@@ -69,24 +69,24 @@ glm::vec2 Drone::getSpeed()
 
 glm::vec2 Drone::getPosition()
 {
-    return _sprite.getPosition();
+    return _sprite->getPosition();
 }
 
 glm::vec2 Drone::getSize()
 {
-    return _sprite.getSize();
+    return _sprite->getSize();
 }
 
 void Drone::_accelerateToward(glm::vec2 point)
 {
-    auto difference = _sprite.getCenter() - glm::vec2(point);
+    auto difference = _sprite->getCenter() - glm::vec2(point);
     auto angle = glm::atan(difference.y, difference.x) + PI;
 
     _acceleration = glm::dvec2(glm::cos(angle), glm::sin(angle));
 }
 
 void Drone::_rotateDirection() {
-    _sprite.rotateTo(HALF_PI + glm::atan(_speed.y, _speed.x));
+    _sprite->rotateTo(HALF_PI + glm::atan(_speed.y, _speed.x));
 }
 
 void Drone::_searchForAsteroid(OuterSpaceScene& scene) 
@@ -118,7 +118,7 @@ void Drone::_pursueAsteroid()
         return;
     }
 
-    if (glm::distance2(_sprite.getCenter(), _targetAsteroid->getCenter()) > _sightRadius2 || Time::milliseconds(_pursueDuration) + _pursueStart <= Time::timestamp()) {
+    if (glm::distance2(_sprite->getCenter(), _targetAsteroid->getCenter()) > _sightRadius2 || Time::milliseconds(_pursueDuration) + _pursueStart <= Time::timestamp()) {
         _targetAsteroid = nullptr;
         _state = DroneState::WANDERING;
         _pursueStart = 0ll;
