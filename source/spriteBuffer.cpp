@@ -2,7 +2,7 @@
 
 namespace {
     constexpr std::size_t MAT4_SIZE = sizeof(glm::mat4) / sizeof(float);
-    constexpr std::size_t DATA_SIZE = MAT4_SIZE + 1;
+    constexpr std::size_t DATA_SIZE = MAT4_SIZE + 3;
 }
 
 void SpriteBuffer::setTexture(unsigned int id, std::size_t spriteId) {
@@ -11,6 +11,11 @@ void SpriteBuffer::setTexture(unsigned int id, std::size_t spriteId) {
 
 void SpriteBuffer::setModel(unsigned int id, glm::mat4 matrix) {
     _setModel(id, matrix);
+}
+
+void SpriteBuffer::setOpacity(unsigned int id, float opacity) 
+{
+    _setOpacity(id, opacity);
 }
 
 unsigned int SpriteBuffer::size()
@@ -27,14 +32,16 @@ glm::mat4* SpriteBuffer::getModelMatrix(unsigned int id)
     return _getModel(id);
 }
 
-unsigned int SpriteBuffer::createResource()
+unsigned int SpriteBuffer::createResource(bool useLinearScaling)
 {
     unsigned int lastResourceId = _lastResourceId++;
     auto index = _models.size();
 
     glm::mat4 model(1.0);
     _models.insert(_models.end(), glm::value_ptr(model), glm::value_ptr(model) + MAT4_SIZE);
-    _models.push_back(-1.f);
+    _models.push_back(-1.f); // sprite index
+    _models.push_back(0.f);  // opacity
+    _models.push_back(useLinearScaling); // use linear scaling
 
     _resourceIds[lastResourceId] = index;
     return lastResourceId;
@@ -102,4 +109,9 @@ void SpriteBuffer::_setModel(unsigned int id, glm::mat4 model)
 void SpriteBuffer::_setTexture(unsigned int id, float textureId) 
 {
     _models[_resourceIds[id] + MAT4_SIZE] = textureId;
+}
+
+void SpriteBuffer::_setOpacity(unsigned int id, float opacity) 
+{
+    _models[_resourceIds[id] + MAT4_SIZE + 1] = opacity;
 }

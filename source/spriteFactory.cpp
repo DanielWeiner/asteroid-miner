@@ -1,21 +1,20 @@
 #include "spriteFactory.h"
 
 SpriteFactory::SpriteFactory(
-    Window& window,
+    const Window& window,
     SpriteSheet& spriteSheet
 ) : 
 _window(window),
 _spriteSheet(spriteSheet)
 {}
 
-SpriteRenderer* SpriteFactory::createRenderer(bool useLinearScaling) {
+SpriteRenderer* SpriteFactory::createRenderer() {
     _init();
 
     auto renderer = new SpriteRenderer(
         _window, 
         _spriteSheet, 
-        _shaderProgram, 
-        useLinearScaling
+        _shaderProgram
     );
     renderer->init(_shaderProgramContext);
     

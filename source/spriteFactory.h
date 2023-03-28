@@ -14,13 +14,13 @@
 class SpriteFactory {
 public:
     SpriteFactory(
-        Window& window, 
+        const Window& window, 
         SpriteSheet& spriteSheet 
     );
 
-    SpriteRenderer* createRenderer(bool useLinearScaling = false);
+    SpriteRenderer* createRenderer();
 private:
-    Window&            _window;
+    const Window&      _window;
     SpriteSheet&       _spriteSheet;
     std::vector<float> _spriteInfoBuffer;
 

@@ -17,12 +17,12 @@ public:
 
     SpriteSheet(const char* jsonPath, const char* imagePath);
     void load(std::vector<float>& vertices);
-    std::size_t getSpriteIndex(const char* itemName);
-    glm::u8vec4 pixelAt(const char* spriteName, float x, float y);
-    glm::vec2 getSize(const char* itemName);
-    glm::vec2 getSize();
+    std::size_t getSpriteIndex(const char* itemName) const;
+    glm::u8vec4 pixelAt(const char* spriteName, float x, float y) const;
+    glm::vec2 getSize(const char* itemName) const;
+    glm::vec2 getSize() const;
 
-    unsigned char* getRawImage();
+    unsigned char* getRawImage() const;
 
     ~SpriteSheet();
 private:

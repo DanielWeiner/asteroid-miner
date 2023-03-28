@@ -16,19 +16,17 @@ public:
         static constexpr Alignment CENTER  = 2;
         static constexpr Alignment JUSTIFY = 3;
     };
-    TextBox(std::string fontName, Window& window);
+    TextBox(const Window& window, TextRenderer& textRenderer);
     void setBounds(glm::vec2 topLeft, glm::vec2 bottomRight);
     void setText(std::string text);
     void setColor(glm::vec4 color);
     void setFontScale(double fontScale);
     void setAlignment(Alignment alignment);
     glm::vec2 getTextSize();
-    void init();
     void render();
 private:
-    std::string          _fontName;
-    Window&              _window;
-    TextRenderer         _textRenderer;
+    const Window&        _window;
+    TextRenderer&        _textRenderer;
     double               _fontScale = 1;
     glm::vec2            _topLeft;
     glm::vec2            _bottomRight;

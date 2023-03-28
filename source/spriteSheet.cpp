@@ -60,31 +60,32 @@ void SpriteSheet::load(std::vector<float>& spriteVertices)
     }
 }
 
-std::size_t SpriteSheet::getSpriteIndex(const char* itemName)
+std::size_t SpriteSheet::getSpriteIndex(const char* itemName) const
 {
-    return _spriteIndices[itemName];
+    return _spriteIndices.at(itemName);
 }
 
-glm::u8vec4 SpriteSheet::pixelAt(const char* spriteName, float x, float y)
+glm::u8vec4 SpriteSheet::pixelAt(const char* spriteName, float x, float y) const
 {
-    auto geometry = _spriteGeometries[spriteName];
+    auto geometry = _spriteGeometries.at(spriteName);
     glm::ivec2 location(geometry.frame.x, geometry.frame.y);
 
     unsigned char* pixel = _image + (location.x + (int)_width * location.y) * _numChannels * sizeof(unsigned char);
     return glm::u8vec4(pixel[0], pixel[1], pixel[2], pixel[3]);
 }
 
-glm::vec2 SpriteSheet::getSize(const char* itemName) {
-    auto geometry = _spriteGeometries[itemName];
+glm::vec2 SpriteSheet::getSize(const char* itemName) const 
+{
+    auto geometry = _spriteGeometries.at(itemName);
     return glm::vec2(geometry.sourceSize.width, geometry.sourceSize.height);
 }
 
-glm::vec2 SpriteSheet::getSize()
+glm::vec2 SpriteSheet::getSize() const
 {
     return glm::vec2(_width, _height);
 }
 
-unsigned char* SpriteSheet::getRawImage()
+unsigned char* SpriteSheet::getRawImage() const
 {
     return _image;
 }

@@ -45,7 +45,8 @@ else()
 endif()
 
 # Link with the general libraries.
-target_link_libraries(AsteroidMinerLib PUBLIC ${GLIB_OBJECT_LIBRARY} ${CAIRO_LIBRARY} ${PANGO_CAIRO_LIBRARY} ${HARFBUZZ_LIBRARY} ${GLIB_LIBRARY} ${PANGO_LIBRARY} Fontconfig::Fontconfig msdf-atlas-gen::msdf-atlas-gen unofficial::skia::skia Freetype::Freetype msdfgen::msdfgen msdfgen::msdfgen-ext PNG::PNG glm::glm nlohmann_json::nlohmann_json glfw glad::glad)
+target_link_libraries(AsteroidMinerLib PUBLIC ${GLIB_OBJECT_LIBRARY} ${CAIRO_LIBRARY} ${PANGO_CAIRO_LIBRARY} ${HARFBUZZ_LIBRARY} ${GLIB_LIBRARY} ${PANGO_LIBRARY} 
+    msdfgen::msdfgen-core Fontconfig::Fontconfig msdf-atlas-gen::msdf-atlas-gen unofficial::skia::skia Freetype::Freetype msdfgen::msdfgen PNG::PNG glm::glm nlohmann_json::nlohmann_json glfw glad::glad)
 # Link the needed OS-specific dependencies, if any.
 if(WIN32)
     target_link_options(AsteroidMinerLib PRIVATE "/SUBSYSTEM:WINDOWS" "/ENTRY:mainCRTStartup")
@@ -86,6 +87,7 @@ target_sources(AsteroidMinerLib PRIVATE
     game/droneFactory.cpp
     game/droneFactory.h
 	error.h	
+    event.cpp
     event.h
     flatScene.cpp
     flatScene.h
@@ -98,8 +100,6 @@ target_sources(AsteroidMinerLib PRIVATE
     util/multiRange.h
     game/outerSpaceScene.cpp
     game/outerSpaceScene.h
-    game/outerSpaceUi.cpp
-    game/outerSpaceUi.h
     ui/panel.cpp
     ui/panel.h
     util/pointerSpan.h

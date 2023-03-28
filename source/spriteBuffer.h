@@ -10,6 +10,7 @@ class SpriteBuffer {
 public:
     void setTexture(unsigned int id, std::size_t spriteId);
     void setModel(unsigned int id, glm::mat4 matrix);
+    void setOpacity(unsigned int id, float opacity);
 
     unsigned int size();
 
@@ -17,7 +18,7 @@ public:
 
     glm::mat4* getModelMatrix(unsigned int id);
 
-    unsigned int createResource();
+    unsigned int createResource(bool useLinearScaling = true);
     void destroyResource(unsigned int id);
     void moveToEnd(unsigned int id);
 
@@ -38,6 +39,7 @@ private:
 
     void _setModel(unsigned int id, glm::mat4 model);
     void _setTexture(unsigned int id, float textureId);
+    void _setOpacity(unsigned int id, float opacity);
 };
 
 #endif

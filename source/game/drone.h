@@ -41,25 +41,25 @@ private:
     static constexpr double DRONE_SIGHT_RADIUS_2 = DRONE_SIGHT_RADIUS * DRONE_SIGHT_RADIUS;
     static constexpr double DRONE_BEAM_RANGE_2 = DRONE_BEAM_RANGE * DRONE_BEAM_RANGE;
 
-    double                    _maxSpeed = DRONE_MAX_SPEED;
-    double                    _maxSpeed2 = DRONE_MAX_SPEED_2;
-    double                    _turnRate = DRONE_TURN_RATE;
-    double                    _sightRadius = DRONE_SIGHT_RADIUS;
-    double                    _sightRadius2 = DRONE_SIGHT_RADIUS_2;
-    double                    _beamRange = DRONE_BEAM_RANGE;
-    double                    _beamRange2 = DRONE_BEAM_RANGE_2;
-    ms                        _wanderDuration = DRONE_WANDER_DURATION;
-    ms                        _pursueDuration = DRONE_PURSUE_DURATION;
+    double                  _maxSpeed = DRONE_MAX_SPEED;
+    double                  _maxSpeed2 = DRONE_MAX_SPEED_2;
+    double                  _turnRate = DRONE_TURN_RATE;
+    double                  _sightRadius = DRONE_SIGHT_RADIUS;
+    double                  _sightRadius2 = DRONE_SIGHT_RADIUS_2;
+    double                  _beamRange = DRONE_BEAM_RANGE;
+    double                  _beamRange2 = DRONE_BEAM_RANGE_2;
+    ms                      _wanderDuration = DRONE_WANDER_DURATION;
+    ms                      _pursueDuration = DRONE_PURSUE_DURATION;
 
-    long long                 _pursueStart = 0ll;
-    long long                 _wanderStart = 0ll;
+    long long               _pursueStart = 0ll;
+    long long               _wanderStart = 0ll;
 
-    Asteroid*                 _targetAsteroid;
-    std::unique_ptr<Sprite>   _sprite;
-    glm::vec2                 _speed = glm::vec2(0);
-    glm::vec2                 _acceleration = glm::vec2(0);
+    Asteroid*               _targetAsteroid;
+    std::unique_ptr<Sprite> _sprite;
+    glm::vec2               _speed = glm::vec2(0);
+    glm::vec2               _acceleration = glm::vec2(0);
 
-    DroneState                _state = DroneState::INITIAL;
+    DroneState              _state = DroneState::INITIAL;
 
     void _accelerateToward(glm::vec2 point);
 

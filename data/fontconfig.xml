@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<!DOCTYPE fontconfig SYSTEM "../fontconfig.fonts.dtd">
+<fontconfig>
+    <!-- our fonts directory -->
+    <dir prefix="cwd">data/fonts</dir>
+    <!-- our cache directory -->
+    <cachedir prefix="cwd">data/fontcache</cachedir>
+</fontconfig>

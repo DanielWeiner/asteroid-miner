@@ -21,33 +21,33 @@ public:
     };
 
     SpriteRenderer(
-        Window& window,
-        SpriteSheet& spriteSheet,
-        ShaderProgram& shaderProgram,
-        bool useLinearScaling = true
+        const Window& window,
+        const SpriteSheet& spriteSheet,
+        ShaderProgram& shaderProgram
     );
 
-    void init(ShaderProgramContext& shaderProgramData);
+    void init(const ShaderProgramContext& shaderProgramData);
     void setView(glm::mat4 view);
     void setProjection(glm::mat4 projection);
 
     static ShaderProgramContext initializeShaderProgram(ShaderProgram& shaderProgram, void* additionalData);
 
-    Sprite* createSprite(std::string name);
+    Sprite* createSprite(std::string name, bool useLinearScaling = true);
     
     void draw();
 private:
-    Window&        _window;
-    SpriteSheet&   _spriteSheet;
-    SpriteBuffer   _spriteBuffer;
-    ShaderProgram& _shaderProgram;
-    unsigned int   _instanceBuffer;
-    unsigned int   _lastSpriteId = 0;
-    GLuint         _texture;
-    float          _fov;
-    glm::mat4      _view;
-    glm::mat4      _projection;
-    bool           _useLinearScaling;
+    const Window&      _window;
+    const SpriteSheet& _spriteSheet;
+    SpriteBuffer       _spriteBuffer;
+    ShaderProgram&     _shaderProgram;
+    unsigned int       _instanceBuffer;
+    unsigned int       _lastSpriteId = 0;
+    GLuint             _texture;
+    GLuint             _linearTexture;
+    float              _fov;
+    glm::mat4          _view;
+    glm::mat4          _projection;
+    bool               _useLinearScaling;
     friend Sprite::~Sprite();
 
 };

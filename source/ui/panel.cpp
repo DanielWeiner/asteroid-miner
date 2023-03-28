@@ -2,18 +2,18 @@
 
 #include <glm/ext.hpp>
 
-Panel::Panel(SpriteRenderer& renderer, Window& window) :  
+Panel::Panel(SpriteRenderer& renderer, const Window& window) :  
     _spriteRenderer(renderer),
     _window(window),
-    _topLeftSprite(_spriteRenderer.createSprite("UI/metalPanel/topLeft.png")),  
-    _topRightSprite(_spriteRenderer.createSprite("UI/metalPanel/topRight.png")), 
-    _bottomLeftSprite(_spriteRenderer.createSprite("UI/metalPanel/bottomLeft.png")),
-    _bottomRightSprite(_spriteRenderer.createSprite("UI/metalPanel/bottomRight.png")),
-    _leftSprite(_spriteRenderer.createSprite("UI/metalPanel/left.png")),       
-    _rightSprite(_spriteRenderer.createSprite("UI/metalPanel/right.png")),      
-    _topSprite(_spriteRenderer.createSprite("UI/metalPanel/top.png")),        
-    _bottomSprite(_spriteRenderer.createSprite("UI/metalPanel/bottom.png")),     
-    _centerSprite(_spriteRenderer.createSprite("UI/metalPanel/center.png")) {}
+    _topLeftSprite(_spriteRenderer.createSprite("UI/metalPanel/topLeft.png", false)),  
+    _topRightSprite(_spriteRenderer.createSprite("UI/metalPanel/topRight.png", false)), 
+    _bottomLeftSprite(_spriteRenderer.createSprite("UI/metalPanel/bottomLeft.png", false)),
+    _bottomRightSprite(_spriteRenderer.createSprite("UI/metalPanel/bottomRight.png", false)),
+    _leftSprite(_spriteRenderer.createSprite("UI/metalPanel/left.png", false)),       
+    _rightSprite(_spriteRenderer.createSprite("UI/metalPanel/right.png", false)),      
+    _topSprite(_spriteRenderer.createSprite("UI/metalPanel/top.png", false)),        
+    _bottomSprite(_spriteRenderer.createSprite("UI/metalPanel/bottom.png", false)),     
+    _centerSprite(_spriteRenderer.createSprite("UI/metalPanel/center.png", false)) {}
 
 void Panel::setBounds(glm::vec2 topLeft, glm::vec2 bottomRight) 
 {

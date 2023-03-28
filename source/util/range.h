@@ -2,15 +2,16 @@
 #define UTIL_RANGE_H_
 #include <iterator>
 #include <cstddef>
+#include <type_traits>
 
 namespace Util {
     template <typename T>
     class MultiRange;
 
-    template<typename T>
+    template<typename T, typename U>
     class Range {
     public:
-        Range(T start, T end) : _start(start), _end(end) {};
+        Range(T start, U end) : _start(start), _end((std::enable_if_t<std::is_convertible_v<T,U>,U>)end) {};
     private:
         friend MultiRange<T>;
         struct RangeIterator {

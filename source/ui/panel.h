@@ -8,7 +8,7 @@
 
 class Panel {
 public:
-    Panel(SpriteRenderer& renderer, Window& window);
+    Panel(SpriteRenderer& renderer, const Window& window);
 
     void setBounds(glm::vec2 topLeft, glm::vec2 bottomRight);
     void setInnerBounds(glm::vec2 topLeft, glm::vec2 bottomRight);
@@ -19,7 +19,7 @@ public:
 private:
     SpriteRenderer& _spriteRenderer;
 
-    Window&                 _window;
+    const Window&           _window;
     glm::vec2               _topLeft;
     glm::vec2               _bottomRight;
     glm::vec2               _innerTopLeft;

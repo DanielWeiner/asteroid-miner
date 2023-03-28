@@ -7,8 +7,7 @@
 
 class FlatScene {
 public:
-    FlatScene(const FlatScene& other);
-    FlatScene(Window& window, float fov);
+    FlatScene(const Window& window, float fov);
     
     glm::vec2 getWorldPosition();
     glm::vec2 getWorldSize();
@@ -25,10 +24,10 @@ private:
     float _getBaseZpos();
     glm::vec3 _toNdc(glm::vec2 screenCoords);
 
-    Window&   _window;
-    float     _fov;
-    float     _zoomLevel = 100.f;
-    glm::vec2 _xy = glm::vec2(0.0);
+    const Window&   _window;
+    float           _fov;
+    float           _zoomLevel = 100.f;
+    glm::vec2       _xy = glm::vec2(0.0);
 };
 
 #endif

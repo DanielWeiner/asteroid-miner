@@ -74,7 +74,7 @@ void AsteroidSpawner::_fillWithAsteroids(glm::vec2 topLeft, glm::vec2 bottomRigh
         auto velocity = Random::normal(_avgSpeed, _speedSigma);
 
         auto speed = glm::vec2(glm::cos(angle) * velocity, glm::sin(angle) * velocity);
-        auto spin = (Random::uniform()  * 2.f - 1.f) * _maxSpin;
+        auto spin = (Random::uniform() * 2.f - 1.f) * _maxSpin;
   
         _asteroids.push_back(std::make_unique<Asteroid>(sprite, speed, spin));
     }

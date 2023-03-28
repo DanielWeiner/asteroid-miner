@@ -100,5 +100,8 @@
     "C_Cpp.default.cppStandard": "c++20",
     "C_Cpp.default.configurationProvider": "ms-vscode.makefile-tools",
     "debug.terminal.clearBeforeReusing": true,
-    "terminal.integrated.defaultProfile.windows": "Command Prompt"
+    "terminal.integrated.defaultProfile.windows": "Command Prompt",
+    "xml.catalogs": [
+        "fontconfig.fonts.dtd"
+    ]
 }

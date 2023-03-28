@@ -1,7 +1,7 @@
 #include "textBox.h"
 
-TextBox::TextBox(std::string fontName, Window& window) 
-: _fontName(fontName), _window(window), _textRenderer(window) {}
+TextBox::TextBox(const Window& window, TextRenderer& textRenderer) 
+: _window(window), _textRenderer(textRenderer) {}
 
 void TextBox::setBounds(glm::vec2 topLeft, glm::vec2 bottomRight) 
 {   
@@ -46,11 +46,6 @@ void TextBox::setAlignment(Alignment alignment)
 glm::vec2 TextBox::getTextSize()
 {
     return _textRenderer.getLayoutSize(_textLayout) * (float)_fontScale;
-}
-
-void TextBox::init() 
-{
-    _textRenderer.init(_fontName.c_str());
 }
 
 void TextBox::render() 

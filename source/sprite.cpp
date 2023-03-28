@@ -12,7 +12,7 @@
 Sprite::Sprite(
     std::string spriteName, 
     unsigned int id, 
-    SpriteSheet& spriteSheet, 
+    const SpriteSheet& spriteSheet, 
     SpriteBuffer& spriteBuffer
 ) : 
     _name(spriteName), 
@@ -21,26 +21,27 @@ Sprite::Sprite(
     _buffer(spriteBuffer)
 {}
 
+Sprite& Sprite::operator=(const Sprite& sprite)
+{
+
+    Sprite::~Sprite();
+    Sprite* spritePtr(this);
+
+    new (this) Sprite(sprite);
+
+    return *spritePtr;
+}
+
+Sprite::Sprite(Sprite&& other) :
+_id(std::move(other._id)),
+_sheet(std::move(other._sheet)),
+_buffer(other._buffer)
+{
+}
+
 unsigned int Sprite::id() const
 {
     return _id;
-}
-
-Sprite& Sprite::operator=(const Sprite& sprite)
-{
-    _name = sprite._name;
-    _states[_buffer.getStep()] = sprite._states[_buffer.getStep()];
-    _states[_buffer.getNextStep()] = sprite._states[_buffer.getNextStep()];
-
-    _textureUpdated = true;
-
-    _buffer = sprite._buffer;
-    _sheet = sprite._sheet;
-
-    updateModelMatrix();
-    updateTextureIndex();
-
-    return *this;
 }
 
 void Sprite::moveTo(float x, float y) 
@@ -90,8 +91,8 @@ void Sprite::scaleBy(float x, float y)
 {
     SpriteState* nextState;
     _useNextState(nextState);
-    nextState->_width =  nextState->_width * x;
-    nextState->_height = nextState->_height * y;
+    nextState->_width *= x;
+    nextState->_height *= y;
 
     updateModelMatrix();
 }
@@ -109,6 +110,15 @@ void Sprite::setScale(float x, float y)
     nextState->_height = y;
 
     updateModelMatrix();
+}
+
+void Sprite::setOpacity(float opacity)
+{
+    SpriteState* nextState;
+    _useNextState(nextState);
+    nextState->_opacity = opacity;
+
+    updateOpacity();
 }
 
 void Sprite::setScale(glm::vec2 xy)
@@ -184,6 +194,14 @@ void Sprite::updateModelMatrix()
 void Sprite::updateTextureIndex() 
 {
     _buffer.setTexture(_id, _sheet.getSpriteIndex(_name.c_str()));   
+}
+
+void Sprite::updateOpacity() 
+{
+    SpriteState* state;
+    _useNextState(state);
+
+    _buffer.setOpacity(_id, state->_opacity);
 }
 
 bool Sprite::pointIsInHitbox(float x, float y)

@@ -2,12 +2,7 @@
 
 #include <glm/ext.hpp>
 
-FlatScene::FlatScene(const FlatScene& other)
-: _window(other._window), _fov(other._fov)
-{
-}
-
-FlatScene::FlatScene(Window& window, float fov) : 
+FlatScene::FlatScene(const Window& window, float fov) : 
 _window(window), _fov(fov) {}
 
 glm::vec2 FlatScene::getWorldPosition()

@@ -49,7 +49,6 @@ project("Asteroid Miner" VERSION 0.0.0
 	DESCRIPTION ""
 	LANGUAGES CXX)
 
-
 # Find the needed library dependencies.
 find_package(glad CONFIG REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
@@ -237,3 +236,17 @@ foreach(DIR "fonts" "sprites" )
 
     add_dependencies(AsteroidMiner "AmResources_${DIR}")
 endforeach()
+
+# Copy fontconfig.xml to the build directory.
+add_custom_target(AmResources_fontconfig ALL
+    COMMAND "${CMAKE_COMMAND}" -E copy "${CMAKE_CURRENT_SOURCE_DIR}/data/fontconfig.xml" "${CMAKE_CURRENT_BINARY_DIR}/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>/data/fontconfig.xml"
+    COMMAND_EXPAND_LISTS VERBATIM)
+
+add_dependencies(AsteroidMiner AmResources_fontconfig)
+
+# Add an empty fontcache directory to the build directory.
+add_custom_target(AmResources_fontcache ALL
+    COMMAND "${CMAKE_COMMAND}" -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:Release>/data/fontcache"
+    COMMAND_EXPAND_LISTS VERBATIM)
+
+add_dependencies(AsteroidMiner AmResources_fontcache)

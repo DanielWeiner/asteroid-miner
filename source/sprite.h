@@ -12,9 +12,11 @@ public:
     Sprite(
         std::string spriteName, 
         unsigned int id, 
-        SpriteSheet& spriteSheet, 
+        const SpriteSheet& spriteSheet, 
         SpriteBuffer& spriteBuffer
     );
+    Sprite(const Sprite& other) = default;
+    Sprite(Sprite&& other);
     unsigned int id() const;
 
     Sprite& operator=(const Sprite &);
@@ -34,6 +36,8 @@ public:
     void setScale(float x, float y);
     void setScale(glm::vec2 xy);
 
+    void setOpacity(float opacity);
+
     glm::vec2 getBaseSize();
 
     std::string getName();
@@ -46,6 +50,7 @@ public:
 
     void updateModelMatrix();
     void updateTextureIndex();
+    void updateOpacity();
 
     bool pointIsInHitbox(float x, float y);
 
@@ -63,18 +68,19 @@ private:
         float _width = 1;
         float _height = 1;
         float _rotate = 0;
+        float _opacity = 1;
     };
 
     SpriteState        _states[2];
-    bool               _textureUpdated = false;
     
     std::string        _name;
     const unsigned int _id;
     unsigned int       _lastStep = -1;
     glm::mat4          _lastModel;
     bool               _initialized = false;
+    bool               _useLinearScaling = false;
 
-    SpriteSheet&       _sheet;
+    const SpriteSheet& _sheet;
     SpriteBuffer&      _buffer;
 
     void _useNextState(SpriteState*& state);

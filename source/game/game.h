@@ -8,7 +8,6 @@
 #include "../flatScene.h"
 #include "../event.h"
 #include "../lineRenderer.h"
-#include "outerSpaceUi.h"
 
 #include <vector>
 
@@ -28,7 +27,6 @@ private:
     SpriteRenderer& _spriteRenderer;
     SpriteRenderer& _asteroidSpriteRenderer;
     LineRenderer    _lineRenderer;
-    OuterSpaceUi    _outerSpaceUi;
     OuterSpaceScene _outerSpaceScene;
     FlatScene&      _scene;
     

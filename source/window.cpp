@@ -38,18 +38,35 @@ namespace {
     ButtonState _buttonStates[GLFW_MOUSE_BUTTON_LAST + 1];
 }
 
-void Window::_handleError(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *userParam)
-{
-    std::cout << message << std::endl;
+void Window::setCursor(Window::Cursor cursor) const {
+    glfwSetCursor(_window, _cursors[(int)cursor]);
+}
+
+int Window::_getClickedMouseButton(GLFWwindow *window) {
+    int buttonsPressed = 0;
+
+    for (int button{GLFW_MOUSE_BUTTON_1}; button <= GLFW_MOUSE_BUTTON_LAST; button++) {
+        if (glfwGetMouseButton(window, button) == GLFW_PRESS) {
+            buttonsPressed |= 1 << button;
+        }
+    }
+
+    return buttonsPressed;
+ }
+
+void Window::_handleError(GLenum source, GLenum type, GLuint id,
+                          GLenum severity, GLsizei length,
+                          const GLchar *message, const void *userParam) {
+        std::cout << message << std::endl;
 }
 
 void Window::_handleResize(GLFWwindow* window, int width, int height)
 {
     _windowInstances[window]->_updateSize(width, height);
     _windowInstances[window]->_handleEvent({
-        .type = EventType::WINDOW,
+        .type   = EventType::WINDOW,
         .action = EventAction::RESIZE,
-        .width = width,
+        .width  = width,
         .height = height
     });
 }
@@ -72,11 +89,11 @@ void Window::_handleKey(GLFWwindow* window, int key, int scancode, int action, i
     }
 
     _windowInstances[window]->_handleEvent({
-        .type = EventType::KEY,
-        .action = eventAction,
-        .key = key,
+        .type     = EventType::KEY,
+        .action   = eventAction,
+        .key      = key,
         .scancode = scancode,
-        .mods = mods
+        .mods     = mods
     });
 }
 
@@ -91,10 +108,11 @@ void Window::_handleText(GLFWwindow* window, unsigned int codepoint)
 void Window::_handleCursor(GLFWwindow* window, double xpos, double ypos)
 {
     _windowInstances[window]->_handleEvent({
-        .type = EventType::MOUSE,
+        .type   = EventType::MOUSE,
         .action = EventAction::HOVER,
-        .x = xpos,
-        .y = ypos
+        .x      = xpos,
+        .y      = ypos,
+        .button = _getClickedMouseButton(window)
     });
 }
 
@@ -103,10 +121,11 @@ void Window::_handleCursorEnter(GLFWwindow* window, int entered)
     double x, y;
     glfwGetCursorPos(window, &x, &y);
     _windowInstances[window]->_handleEvent({
-        .type = EventType::MOUSE,
+        .type   = EventType::MOUSE,
         .action = entered ? EventAction::ENTER : EventAction::LEAVE,
-        .x = x,
-        .y = y
+        .x      = x,
+        .y      = y,
+        .button = _getClickedMouseButton(window)
     });
 }
 
@@ -114,6 +133,8 @@ void Window::_handleMouseButton(GLFWwindow* window, int button, int action, int 
 {
     double x, y;
     glfwGetCursorPos(window, &x, &y);
+
+    int clickedButton = _getClickedMouseButton(window);
     
     EventAction eventAction;
     EventAction additionalAction = EventAction::UNKNOWN;
@@ -143,35 +164,35 @@ void Window::_handleMouseButton(GLFWwindow* window, int button, int action, int 
     }
 
     _windowInstances[window]->_handleEvent({
-        .type = EventType::MOUSE,
+        .type   = EventType::MOUSE,
         .action = eventAction,
-        .x = x,
-        .y = y,
-        .button = button,
+        .x      = x,
+        .y      = y,
+        .button = clickedButton,
         .mods = mods
     });
 
     switch(additionalAction) {
         case EventAction::CLICK:
             _windowInstances[window]->_handleEvent({
-                .type = EventType::MOUSE,
+                .type   = EventType::MOUSE,
                 .action = additionalAction,
-                .x = x,
-                .y = y,
-                .button = button,
-                .mods = mods
+                .x      = x,
+                .y      = y,
+                .button = clickedButton,
+                .mods   = mods
             });
             return;
         case EventAction::DRAG:
             _windowInstances[window]->_handleEvent({
-                .type = EventType::MOUSE,
-                .action = additionalAction,
-                .x = x,
-                .y = y,
-                .button = button,
+                .type    = EventType::MOUSE,
+                .action  = additionalAction,
+                .x       = x,
+                .y       = y,
+                .button  = clickedButton,
                 .xoffset = _buttonStates[button].x - x,
                 .yoffset = _buttonStates[button].y - y,
-                .mods = mods
+                .mods    = mods
             });
             return;
         default:
@@ -185,10 +206,11 @@ void Window::_handleScroll(GLFWwindow* window, double xoffset, double yoffset)
     glfwGetCursorPos(window, &x, &y);
 
     _windowInstances[window]->_handleEvent({
-        .type = EventType::MOUSE,
-        .action = EventAction::SCROLL,
-        .x = x,
-        .y = y,
+        .type    = EventType::MOUSE,
+        .action  = EventAction::SCROLL,
+        .x       = x,
+        .y       = y,
+        .button  = _getClickedMouseButton(window),
         .xoffset = xoffset,
         .yoffset = yoffset
     });
@@ -202,8 +224,8 @@ void Window::_handleWindowRefresh(GLFWwindow* window)
 void Window::_render() {
     glClearColor(0.0, 0.0, 0.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    for (auto application : _applications) {
-        application->render();
+    for (WindowedApplication& application : _applications) {
+        application.render();
     }
     glfwSwapBuffers(_window);
 }
@@ -224,6 +246,73 @@ Window::Window(string name, float width, float height) :
     _title(name),
     _size(glm::vec2(width, height))
 {
+    static bool handlersInitialized = false;
+    if (!handlersInitialized) {
+        glfwSetErrorCallback(_handleGlfwError);
+        handlersInitialized = true;
+    }
+    if (glfwInit() == GLFW_FALSE) {
+        _setError(ErrorType::ERR_GLFW_INIT, _currentErrorMessage);
+        return;
+    }
+
+    glfwWindowHint(GLFW_SAMPLES, 4);
+
+    //Use OpenGL 4.3 core   
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+#ifdef TARGET_OS_X
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+#endif
+    _window = glfwCreateWindow(
+        _size.x,
+        _size.y,
+        _title.c_str(),
+        NULL,
+        NULL
+    );
+    if (_window == NULL) {
+        _setError(ErrorType::ERR_GLFW_CREATE_WINDOW, _currentErrorMessage);
+
+        return;
+    }
+
+    _populateIcon();
+
+    glfwMakeContextCurrent(_window);
+
+    if(!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+        glfwTerminate();
+        _setError(ErrorType::ERR_GLAD_LOADER, "GLAD loader error");
+
+        return;
+    }
+
+    std::cout << std::format("OpenGL version: {}\n", std::string((const char*)glGetString(GL_VERSION)));
+
+    _windowInstances[_window] = this;
+
+    glfwSetFramebufferSizeCallback(_window, _handleResize);
+    glfwSetKeyCallback(_window, _handleKey);
+    glfwSetCharCallback(_window, _handleText);
+    glfwSetCursorPosCallback(_window, _handleCursor);
+    glfwSetCursorEnterCallback(_window, _handleCursorEnter);
+    glfwSetMouseButtonCallback(_window, _handleMouseButton);
+    glfwSetScrollCallback(_window, _handleScroll);
+    glfwSetWindowRefreshCallback(_window, _handleWindowRefresh);
+
+    //Use Vsync
+    glfwSwapInterval(1);
+
+    glfwMaximizeWindow(_window);
+
+    _cursors[0] = glfwCreateStandardCursor(GLFW_HAND_CURSOR);
+    _cursors[1] = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
+    _cursors[2] = glfwCreateStandardCursor(GLFW_IBEAM_CURSOR);
+    _cursors[3] = glfwCreateStandardCursor(GLFW_CROSSHAIR_CURSOR);
+    _cursors[4] = glfwCreateStandardCursor(GLFW_HRESIZE_CURSOR);
+    _cursors[5] = glfwCreateStandardCursor(GLFW_VRESIZE_CURSOR);
 }
 
 void Window::close()
@@ -256,14 +345,9 @@ void Window::setTitle(std::string title)
     glfwSetWindowTitle(_window, title.c_str());
 }
 
-void Window::addApplication(WindowedApplication* app) 
+void Window::addApplication(WindowedApplication& app) 
 {
-    _applications.push_back(app);
-}
-
-void Window::init() 
-{
-    _init();
+    _applications.push_back(std::ref(app));
 }
 
 void Window::endLoop() { _done = true; }
@@ -272,8 +356,8 @@ Window& Window::_start()
 {
     glDebugMessageCallback(_handleError, this);
 
-    for (auto application : _applications) {
-        application->init();
+    for (WindowedApplication& application : _applications) {
+        application.init();
     }
     
     glViewport(0, 0, _size.x, _size.y);
@@ -295,8 +379,8 @@ Window& Window::_start()
 
 Window& Window::_handleEvent(const Event& e)
 {
-    for (auto application : _applications) {
-        application->handleEvent(e);
+    for (WindowedApplication& application : _applications) {
+        application.handleEvent(e);
     }
 
     return *this;
@@ -308,12 +392,12 @@ void Window::run() {
     _start();
 }
 
-glm::vec2 Window::getSize()
+glm::vec2 Window::getSize() const
 {
     return glm::vec2(_size);
 }
 
-int Window::getDpi() {
+int Window::getDpi() const {
     float scaleX, scaleY;
     
     glfwGetMonitorContentScale(glfwGetPrimaryMonitor(), &scaleX, &scaleY);
@@ -334,66 +418,6 @@ Window& Window::_setError(const ErrorType& errorType, const std::string& message
 {
     _errorType = errorType;
     _errorMessage = message;
-
-    return *this;
-}
-
-Window& Window::_init() {
-    static bool handlersInitialized = false;
-    if (!handlersInitialized) {
-        glfwSetErrorCallback(_handleGlfwError);
-        handlersInitialized = true;
-    }
-    if (glfwInit() == GLFW_FALSE) {
-        return _setError(ErrorType::ERR_GLFW_INIT, _currentErrorMessage);
-    }
-
-    glfwWindowHint(GLFW_SAMPLES, 4);
-
-    //Use OpenGL 4.3 core   
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-#ifdef TARGET_OS_X
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
-    _window = glfwCreateWindow(
-        _size.x,
-        _size.y,
-        _title.c_str(),
-        NULL,
-        NULL
-    );
-    if (_window == NULL) {
-        return _setError(ErrorType::ERR_GLFW_CREATE_WINDOW, _currentErrorMessage);
-    }
-
-    _populateIcon();
-
-    glfwMakeContextCurrent(_window);
-
-    if(!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        glfwTerminate();
-        return _setError(ErrorType::ERR_GLAD_LOADER, "GLAD loader error");
-    }
-
-    std::cout << std::format("OpenGL version: {}\n", std::string((const char*)glGetString(GL_VERSION)));
-
-    _windowInstances[_window] = this;
-
-    glfwSetFramebufferSizeCallback(_window, _handleResize);
-    glfwSetKeyCallback(_window, _handleKey);
-    glfwSetCharCallback(_window, _handleText);
-    glfwSetCursorPosCallback(_window, _handleCursor);
-    glfwSetCursorEnterCallback(_window, _handleCursorEnter);
-    glfwSetMouseButtonCallback(_window, _handleMouseButton);
-    glfwSetScrollCallback(_window, _handleScroll);
-    glfwSetWindowRefreshCallback(_window, _handleWindowRefresh);
-
-    //Use Vsync
-    glfwSwapInterval(1);
-
-    glfwMaximizeWindow(_window);
 
     return *this;
 }
