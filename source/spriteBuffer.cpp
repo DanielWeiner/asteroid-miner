@@ -1,8 +1,12 @@
 #include "spriteBuffer.h"
+#include "spriteResource.h"
+#include <box2d/b2_body.h>
+
+#include <iostream>
 
 namespace {
-    constexpr std::size_t MAT4_SIZE = sizeof(glm::mat4) / sizeof(float);
-    constexpr std::size_t DATA_SIZE = MAT4_SIZE + 3;
+    constexpr int MAT4_SIZE = sizeof(glm::mat4) / sizeof(float);
+    constexpr int DATA_SIZE = MAT4_SIZE + 3;
 }
 
 void SpriteBuffer::setTexture(unsigned int id, std::size_t spriteId) {
@@ -18,11 +22,11 @@ void SpriteBuffer::setOpacity(unsigned int id, float opacity)
     _setOpacity(id, opacity);
 }
 
-unsigned int SpriteBuffer::size()
+const unsigned int SpriteBuffer::size() const
 {
     return _models.size();
 }
-float* SpriteBuffer::modelData()
+const float* SpriteBuffer::modelData() const
 {
     return _models.data();
 }
@@ -32,26 +36,29 @@ glm::mat4* SpriteBuffer::getModelMatrix(unsigned int id)
     return _getModel(id);
 }
 
-unsigned int SpriteBuffer::createResource(bool useLinearScaling)
+SpriteResource SpriteBuffer::createResource(b2Body& body, unsigned int textureSpriteIndex, bool useLinearScaling)
 {
     unsigned int lastResourceId = _lastResourceId++;
     auto index = _models.size();
 
     glm::mat4 model(1.0);
     _models.insert(_models.end(), glm::value_ptr(model), glm::value_ptr(model) + MAT4_SIZE);
-    _models.push_back(-1.f); // sprite index
-    _models.push_back(0.f);  // opacity
+    _models.push_back(textureSpriteIndex); // sprite index
+    _models.push_back(1.f);  // opacity
     _models.push_back(useLinearScaling); // use linear scaling
 
     _resourceIds[lastResourceId] = index;
-    return lastResourceId;
+    return SpriteResource{
+        lastResourceId, 
+        body
+    };
 }
 
-void SpriteBuffer::destroyResource(unsigned int id) 
-{   
-    auto resourceIndex = _resourceIds[id];
+void SpriteBuffer::destroyResource(SpriteResource& resource) 
+{
+    auto resourceIndex = _resourceIds[resource.id];
 
-    _resourceIds.erase(id);
+    _resourceIds.erase(resource.id);
     for (auto [ resourceId, index ] : _resourceIds) {
         if (index > resourceIndex) {
             _resourceIds[resourceId] -= DATA_SIZE;
@@ -61,32 +68,7 @@ void SpriteBuffer::destroyResource(unsigned int id)
     _models.erase(_models.begin() + resourceIndex, _models.begin() + resourceIndex + DATA_SIZE);
 }
 
-void SpriteBuffer::moveToEnd(unsigned int id) 
-{
-    float* model = (float*)_getModel(id);
-    float texture = _getTexture(id);
-    destroyResource(id);
-    _resourceIds[id] = _models.size();
-    _models.insert(_models.end(), model, model + MAT4_SIZE);
-    _models.push_back(texture);
-}
-
-unsigned int SpriteBuffer::getStep()
-{
-    return _step;
-}
-
-unsigned int SpriteBuffer::getNextStep()
-{
-    return (_step + 1) % 2; 
-}
-
-void SpriteBuffer::step() 
-{
-    _step = getNextStep();
-}
-
-std::size_t SpriteBuffer::dataSize()
+const int SpriteBuffer::dataSize()
 {
     return DATA_SIZE;
 }

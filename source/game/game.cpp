@@ -65,15 +65,15 @@ void Game::render()
 {
     _outerSpaceScene.step();
 
-    SpriteRenderer renderers[] = {
-        _asteroidSpriteRenderer,
-        _spriteRenderer
+    SpriteRenderer* renderers[] = {
+        &_asteroidSpriteRenderer,
+        &_spriteRenderer
     };
     
-    for (int i = 0; i < sizeof(renderers)/sizeof(SpriteRenderer); i++) {
-        renderers[i].setProjection(_scene.getProjection());
-        renderers[i].setView(_scene.getView());
-        renderers[i].draw();
+    for (int i = 0; i < sizeof(renderers)/sizeof(SpriteRenderer*); i++) {
+        renderers[i]->setProjection(_scene.getProjection());
+        renderers[i]->setView(_scene.getView());
+        renderers[i]->draw();
     }
     _lineRenderer.setProjection(_scene.getProjection());
     _lineRenderer.setView(_scene.getView());

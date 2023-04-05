@@ -3,6 +3,8 @@
 
 #include <glm/glm.hpp>
 
+#include "spriteGeometry.h"
+
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -13,6 +15,8 @@ using json = nlohmann::json;
 
 class SpriteSheet {
 public:
+
+    using SpriteGeometryMap = std::unordered_map<std::string, SpriteGeometry>;
     using SpriteIndexMap = std::unordered_map<std::string, int>;
 
     SpriteSheet(const char* jsonPath, const char* imagePath);
@@ -21,43 +25,12 @@ public:
     glm::u8vec4 pixelAt(const char* spriteName, float x, float y) const;
     glm::vec2 getSize(const char* itemName) const;
     glm::vec2 getSize() const;
+    const SpriteGeometry& getSpriteGeometry(const char* itemName) const;
 
     unsigned char* getRawImage() const;
 
     ~SpriteSheet();
 private:
-    struct SpriteDimensions {
-        SpriteDimensions(const json& json);
-
-        const int width;
-        const int height;
-    };
-
-    struct SpriteBox : SpriteDimensions {
-        SpriteBox(const json& json);
-
-        const int x;
-        const int y;
-    };
-
-    struct SpriteGeometry {
-        SpriteGeometry() = default;
-        SpriteGeometry(const SpriteGeometry& other);
-        SpriteGeometry(const json& json);
-        
-        const bool                    rotated{false};
-        const bool                    trimmed{false};
-        const SpriteBox               frame{{ {"x", 0}, {"y", 0}, {"w", 0}, {"h", 0} }};
-        const SpriteBox               spriteSourceSize{{ {"x", 0},  {"y", 0}, {"w", 0}, {"h", 0} }};
-        const SpriteDimensions        sourceSize{{ {"w", 0}, {"h", 0} }};
-        const std::vector<glm::ivec2> vertices{};
-        const std::vector<glm::ivec2> verticesUv{};
-        const std::vector<glm::ivec3> triangles{};
-
-        SpriteGeometry& operator=(json& other);
-        SpriteGeometry& operator=(SpriteGeometry other);
-    };
-
     using SpriteGeometryMap = std::unordered_map<std::string, SpriteGeometry>;
 
     const char*       _jsonFile;
@@ -66,7 +39,6 @@ private:
     float             _height;
     unsigned char*    _image = NULL;
     int               _numChannels;
-
     SpriteIndexMap    _spriteIndices;
     SpriteGeometryMap _spriteGeometries;
 };

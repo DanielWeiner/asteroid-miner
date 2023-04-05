@@ -4,6 +4,7 @@
     "system-libs": {
       "description": "System libraries required to build Asteroid Miner.",
       "dependencies": [
+        "box2d",
         "glm",
         "glew",
         "nlohmann-json",

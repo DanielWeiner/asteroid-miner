@@ -46,7 +46,7 @@ endif()
 
 # Link with the general libraries.
 target_link_libraries(AsteroidMinerLib PUBLIC ${GLIB_OBJECT_LIBRARY} ${CAIRO_LIBRARY} ${PANGO_CAIRO_LIBRARY} ${HARFBUZZ_LIBRARY} ${GLIB_LIBRARY} ${PANGO_LIBRARY} 
-    msdfgen::msdfgen-core Fontconfig::Fontconfig msdf-atlas-gen::msdf-atlas-gen unofficial::skia::skia Freetype::Freetype msdfgen::msdfgen PNG::PNG glm::glm nlohmann_json::nlohmann_json glfw glad::glad)
+    box2d::box2d msdfgen::msdfgen-core Fontconfig::Fontconfig msdf-atlas-gen::msdf-atlas-gen unofficial::skia::skia Freetype::Freetype msdfgen::msdfgen PNG::PNG glm::glm nlohmann_json::nlohmann_json glfw glad::glad)
 # Link the needed OS-specific dependencies, if any.
 if(WIN32)
     target_link_options(AsteroidMinerLib PRIVATE "/SUBSYSTEM:WINDOWS" "/ENTRY:mainCRTStartup")
@@ -115,8 +115,14 @@ target_sources(AsteroidMinerLib PRIVATE
     spriteBuffer.h
     spriteFactory.cpp
     spriteFactory.h
+    spriteGeometry.cpp
+    spriteGeometry.h
+    spritePhysicsEngine.cpp
+    spritePhysicsEngine.h
     spriteRenderer.cpp
     spriteRenderer.h
+    spriteResource.cpp
+    spriteResource.h
     spriteSheet.cpp
     spriteSheet.h
     stb_image.h

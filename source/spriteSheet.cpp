@@ -29,8 +29,8 @@ void SpriteSheet::load(std::vector<float>& spriteVertices)
 
     int spriteCount = 0;
     for (auto& [key, value] : sprites.items()) {
-        _spriteGeometries[key] = value;
-        auto spriteGeometry = _spriteGeometries[key];
+        _spriteGeometries.emplace(key, value);
+        auto& spriteGeometry = _spriteGeometries.at(key);
 
         float x = spriteGeometry.frame.x;
         float y = spriteGeometry.frame.y;
@@ -85,6 +85,11 @@ glm::vec2 SpriteSheet::getSize() const
     return glm::vec2(_width, _height);
 }
 
+const SpriteGeometry& SpriteSheet::getSpriteGeometry(const char* itemName) const
+{
+    return _spriteGeometries.at(itemName);
+}
+
 unsigned char* SpriteSheet::getRawImage() const
 {
     return _image;
@@ -93,72 +98,4 @@ unsigned char* SpriteSheet::getRawImage() const
 SpriteSheet::~SpriteSheet()
 {
     stbi_image_free(_image);
-}
-
-
-SpriteSheet::SpriteGeometry::SpriteGeometry(const json& json) 
-: rotated(json["rotated"]), 
-  trimmed(json["trimmed"]),
-  frame(json["frame"]),
-  spriteSourceSize(json["spriteSourceSize"]),
-  sourceSize(json["sourceSize"]),
-  vertices([&json](){
-    std::vector<glm::ivec2> vec;
-    for (auto& item : json["vertices"]) {
-        vec.push_back(glm::ivec2(item[0], item[1]));
-    }
-    return vec;
-  }()),
-  verticesUv([&json](){
-    std::vector<glm::ivec2> vec;
-    for (auto& item : json["verticesUV"]) {
-        vec.push_back(glm::ivec2(item[0], item[1]));
-    }
-    return vec;
-  }()),
-  triangles([&json](){
-    std::vector<glm::ivec3> vec;
-    for (auto& item : json["triangles"]) {
-        vec.push_back(glm::ivec3(item[0], item[1], item[2]));
-    }
-    return vec;
-  }())
-{
-}
-
-SpriteSheet::SpriteGeometry& SpriteSheet::SpriteGeometry::operator=(json& other)
-{
-    this->~SpriteGeometry();
-    new (this) SpriteGeometry(other);
-    return *this;
-}
-
-SpriteSheet::SpriteGeometry& SpriteSheet::SpriteGeometry::operator=(SpriteGeometry other)
-{
-    if (this == &other) return *this;  
-    this->~SpriteGeometry(); 
-    new (this) SpriteGeometry(other); 
-    return *this;  
-}
-
-SpriteSheet::SpriteBox::SpriteBox(const json& json) : 
-SpriteDimensions(json), x(json["x"]), y(json["y"])
-{
-}
-
-SpriteSheet::SpriteDimensions::SpriteDimensions(const json& json) : 
-width(json["w"]), height(json["h"])
-{
-}
-
-SpriteSheet::SpriteGeometry::SpriteGeometry(const SpriteGeometry& other)
-: rotated(other.rotated),
-  trimmed(other.trimmed),
-  frame(other.frame),
-  spriteSourceSize(other.spriteSourceSize),
-  sourceSize(other.sourceSize),
-  vertices{other.vertices.begin(), other.vertices.end()},
-  verticesUv{other.verticesUv.begin(), other.verticesUv.end()},
-  triangles{other.triangles.begin(), other.triangles.end()}
-{
 }

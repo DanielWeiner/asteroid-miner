@@ -5,6 +5,7 @@
 #include "shaderProgram.h"
 #include "spriteBuffer.h"
 #include "window.h"
+#include <box2d/b2_world.h>
 #include <glm/glm.hpp>
 #include <unordered_map>
 #include <vector>
@@ -21,9 +22,11 @@ public:
     };
 
     SpriteRenderer(
-        const Window& window,
-        const SpriteSheet& spriteSheet,
-        ShaderProgram& shaderProgram
+        const Window&          window,
+        const SpriteSheet&     spriteSheet,
+        ShaderProgram&         shaderProgram,
+        b2World&               world,
+        Sprite::EventListener* onUpdate = new Sprite::DefaultEventListener()
     );
 
     void init(const ShaderProgramContext& shaderProgramData);
@@ -32,24 +35,25 @@ public:
 
     static ShaderProgramContext initializeShaderProgram(ShaderProgram& shaderProgram, void* additionalData);
 
-    Sprite* createSprite(std::string name, bool useLinearScaling = true);
+    Sprite* createSprite(std::string name, bool useLinearScaling = true, bool enableCollisions = true);
     
     void draw();
 private:
-    const Window&      _window;
-    const SpriteSheet& _spriteSheet;
-    SpriteBuffer       _spriteBuffer;
-    ShaderProgram&     _shaderProgram;
-    unsigned int       _instanceBuffer;
-    unsigned int       _lastSpriteId = 0;
-    GLuint             _texture;
-    GLuint             _linearTexture;
-    float              _fov;
-    glm::mat4          _view;
-    glm::mat4          _projection;
-    bool               _useLinearScaling;
-    friend Sprite::~Sprite();
+    const Window&           _window;
+    const SpriteSheet&      _spriteSheet;
+    ShaderProgram&          _shaderProgram;
+    b2World&                _world;
+    Sprite::EventListener*  _spriteEventListener;
+    SpriteBuffer            _spriteBuffer;
+    unsigned int            _instanceBuffer;
+    GLuint                  _texture;
+    GLuint                  _linearTexture;
+    float                   _fov;
+    glm::mat4               _view;
+    glm::mat4               _projection;
+    bool                    _useLinearScaling;
 
+    friend Sprite::~Sprite();
 };
 
 #endif

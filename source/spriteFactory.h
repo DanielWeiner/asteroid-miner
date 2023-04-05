@@ -10,15 +10,17 @@
 #include "spriteRenderer.h"
 
 #include <string>
+#include <vector>
+#include <box2d/b2_world.h>
 
 class SpriteFactory {
 public:
     SpriteFactory(
         const Window& window, 
-        SpriteSheet& spriteSheet 
+        SpriteSheet& spriteSheet
     );
 
-    SpriteRenderer* createRenderer();
+    SpriteRenderer* createRenderer(b2World& world, Sprite::EventListener* eventListener = new Sprite::DefaultEventListener());
 private:
     const Window&      _window;
     SpriteSheet&       _spriteSheet;
@@ -28,6 +30,7 @@ private:
         .spriteSheet      = _spriteSheet,
         .spriteInfoBuffer = _spriteInfoBuffer
     };
+
     ShaderProgramContext              _shaderProgramContext;
     ShaderProgram                     _shaderProgram;
 

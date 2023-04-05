@@ -1,19 +1,38 @@
 #ifndef SPRITE_H_
 #define SPRITE_H_
 
+#include "spriteResource.h"
 #include <glm/glm.hpp>
 #include <string>
-
+#include <memory>
+#include <box2d/b2_body.h>
+#include <box2d/b2_mouse_joint.h>
 class SpriteSheet;
 class SpriteBuffer;
+class LineRenderer;
 
 class Sprite {
 public:
+    struct EventListener {
+        virtual void onCreate(Sprite* sprite) = 0;
+        virtual void onUpdate(Sprite* sprite) = 0;
+        virtual void onDelete(Sprite* sprite) = 0;
+    };
+
+    struct DefaultEventListener : public EventListener {
+        void onCreate(Sprite* sprite) override {}
+        void onUpdate(Sprite* sprite) override {}
+        void onDelete(Sprite* sprite) override {}
+    };
+
     Sprite(
         std::string spriteName, 
-        unsigned int id, 
-        const SpriteSheet& spriteSheet, 
-        SpriteBuffer& spriteBuffer
+        const SpriteSheet& spriteSheet,
+        b2Body* body,
+        SpriteBuffer& buffer,
+        bool useLinearScaling = true,
+        bool enableCollisions = true,
+        EventListener* eventListener = new DefaultEventListener()
     );
     Sprite(const Sprite& other) = default;
     Sprite(Sprite&& other);
@@ -38,54 +57,43 @@ public:
 
     void setOpacity(float opacity);
 
-    glm::vec2 getBaseSize();
+    glm::vec2 getBaseSize() const;
+    std::string getName() const;
+    glm::vec2 getPosition() const;
+    glm::vec2 getCenter() const;
+    glm::vec2 getSize() const;
+    float getRotation() const;
 
-    std::string getName();
-    glm::vec2 getPosition();
-    glm::vec2 getCenter();
-    glm::vec2 getSize();
-    float getRotation();
+    void debugDraw(LineRenderer* renderer) const;
 
-    glm::vec2 getNextPosition();
+    void update();
 
-    void updateModelMatrix();
-    void updateTextureIndex();
-    void updateOpacity();
+    bool pointIsInHitbox(float x, float y) const;
 
-    bool pointIsInHitbox(float x, float y);
-
-    void moveToEndOfBuffer();
-
-    void init();
-
+    void switchToKinematic();
+    void switchToDynamic();
+    void switchToStatic();
     
-
     ~Sprite();
 private:
-    struct SpriteState {
-        float _x = 0;
-        float _y = 0;
-        float _width = 1;
-        float _height = 1;
-        float _rotate = 0;
-        float _opacity = 1;
-    };
+    std::string         _name;
+    const SpriteSheet&  _sheet;
+    SpriteBuffer&       _buffer;
+    SpriteResource      _bufferResource;
+    b2Body*             _body;
+    const unsigned int  _id;
+    glm::vec2           _scale{1,1};
+    glm::vec2           _nextScale{1,1};
+    float               _opacity;
+    bool                _enableCollisions;
+    EventListener*      _eventListener;
+    bool                _sizeChanged{true};
+    glm::vec2           _position{0,0};
+    float               _rotation{0};
+    const glm::vec2     _baseSize;
 
-    SpriteState        _states[2];
-    
-    std::string        _name;
-    const unsigned int _id;
-    unsigned int       _lastStep = -1;
-    glm::mat4          _lastModel;
-    bool               _initialized = false;
-    bool               _useLinearScaling = false;
-
-    const SpriteSheet& _sheet;
-    SpriteBuffer&      _buffer;
-
-    void _useNextState(SpriteState*& state);
-    void _useCurrentState(SpriteState*& state);
-    void _update();
+    void                _updateFixtures();
+    void                _setTransform();
 };
 
 #endif

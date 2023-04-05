@@ -5,15 +5,26 @@
 Panel::Panel(SpriteRenderer& renderer, const Window& window) :  
     _spriteRenderer(renderer),
     _window(window),
-    _topLeftSprite(_spriteRenderer.createSprite("UI/metalPanel/topLeft.png", false)),  
-    _topRightSprite(_spriteRenderer.createSprite("UI/metalPanel/topRight.png", false)), 
-    _bottomLeftSprite(_spriteRenderer.createSprite("UI/metalPanel/bottomLeft.png", false)),
-    _bottomRightSprite(_spriteRenderer.createSprite("UI/metalPanel/bottomRight.png", false)),
-    _leftSprite(_spriteRenderer.createSprite("UI/metalPanel/left.png", false)),       
-    _rightSprite(_spriteRenderer.createSprite("UI/metalPanel/right.png", false)),      
-    _topSprite(_spriteRenderer.createSprite("UI/metalPanel/top.png", false)),        
-    _bottomSprite(_spriteRenderer.createSprite("UI/metalPanel/bottom.png", false)),     
-    _centerSprite(_spriteRenderer.createSprite("UI/metalPanel/center.png", false)) {}
+    _topLeftSprite(_spriteRenderer.createSprite("UI/metalPanel/topLeft.png", false, false)),  
+    _topRightSprite(_spriteRenderer.createSprite("UI/metalPanel/topRight.png", false, false)), 
+    _bottomLeftSprite(_spriteRenderer.createSprite("UI/metalPanel/bottomLeft.png", false, false)),
+    _bottomRightSprite(_spriteRenderer.createSprite("UI/metalPanel/bottomRight.png", false, false)),
+    _leftSprite(_spriteRenderer.createSprite("UI/metalPanel/left.png", false, false)),       
+    _rightSprite(_spriteRenderer.createSprite("UI/metalPanel/right.png", false, false)),      
+    _topSprite(_spriteRenderer.createSprite("UI/metalPanel/top.png", false, false)),        
+    _bottomSprite(_spriteRenderer.createSprite("UI/metalPanel/bottom.png", false, false)),     
+    _centerSprite(_spriteRenderer.createSprite("UI/metalPanel/center.png", false, false)) 
+{
+    _topLeftSprite->switchToStatic();
+    _topRightSprite->switchToStatic();
+    _bottomLeftSprite->switchToStatic();
+    _bottomRightSprite->switchToStatic();
+    _leftSprite->switchToStatic();
+    _rightSprite->switchToStatic();
+    _topSprite->switchToStatic();
+    _bottomSprite->switchToStatic();
+    _centerSprite->switchToStatic();
+}
 
 void Panel::setBounds(glm::vec2 topLeft, glm::vec2 bottomRight) 
 {
@@ -23,13 +34,13 @@ void Panel::setBounds(glm::vec2 topLeft, glm::vec2 bottomRight)
     auto fullSize = glm::floor(bottomRight - topLeft);
     auto innerSize = glm::floor(fullSize - _getBorderSize());
 
-    _leftSprite->setScale(_leftSprite->getBaseSize() * glm::vec2(1, innerSize.y));
-    _rightSprite->setScale(_rightSprite->getBaseSize() * glm::vec2(1, innerSize.y));
+    _leftSprite->setScale(glm::vec2(1, innerSize.y));
+    _rightSprite->setScale(glm::vec2(1, innerSize.y));
 
-    _topSprite->setScale(_topSprite->getBaseSize() * glm::vec2(innerSize.x, 1));
-    _bottomSprite->setScale(_bottomSprite->getBaseSize() * glm::vec2(innerSize.x, 1));
+    _topSprite->setScale(glm::vec2(innerSize.x, 1));
+    _bottomSprite->setScale(glm::vec2(innerSize.x, 1));
 
-    _centerSprite->setScale(_centerSprite->getBaseSize() * innerSize);
+    _centerSprite->setScale(innerSize);
 
     _innerTopLeft = glm::floor(topLeft + _topLeftSprite->getSize());
     _innerBottomRight = glm::floor(_innerTopLeft + innerSize);

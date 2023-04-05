@@ -2,24 +2,50 @@
 #include "spriteBuffer.h"
 #include "spriteSheet.h"
 #include "time.h"
+#include "lineRenderer.h"
 
 #include <glm/ext.hpp>
+#include <box2d/b2_world.h>
+#include <box2d/b2_shape.h>
+#include <box2d/b2_polygon_shape.h>
+#include <box2d/b2_fixture.h>
 
 #include <tuple>
 #include <array>
 #include <cstddef>
 
+namespace {
+    constexpr float box2dScale = 200.0f;
+    constexpr float box2dScaleInv = 1.f / box2dScale;
+}
+
+
 Sprite::Sprite(
     std::string spriteName, 
-    unsigned int id, 
-    const SpriteSheet& spriteSheet, 
-    SpriteBuffer& spriteBuffer
-) : 
-    _name(spriteName), 
-    _id(id), 
+    const SpriteSheet& spriteSheet,
+    b2Body* body,
+    SpriteBuffer& spriteBuffer,
+    bool useLinearScaling,
+    bool enableCollisions,
+    EventListener* eventListener
+) : _name(spriteName), 
     _sheet(spriteSheet),
-    _buffer(spriteBuffer)
-{}
+    _buffer(spriteBuffer),
+    _bufferResource(spriteBuffer.createResource(
+        *body,
+        spriteSheet.getSpriteIndex(spriteName.c_str()), 
+        useLinearScaling
+    )),
+    _body(body),
+    _id(_bufferResource.id),
+    _enableCollisions(enableCollisions),
+    _eventListener(eventListener),
+    _baseSize(spriteSheet.getSize(spriteName.c_str()))
+{
+    _updateFixtures();
+    _setTransform();
+    _eventListener->onCreate(this);
+}
 
 Sprite& Sprite::operator=(const Sprite& sprite)
 {
@@ -33,10 +59,19 @@ Sprite& Sprite::operator=(const Sprite& sprite)
 }
 
 Sprite::Sprite(Sprite&& other) :
-_id(std::move(other._id)),
+_name(std::move(other._name)),
 _sheet(std::move(other._sheet)),
-_buffer(other._buffer)
+_buffer(other._buffer),
+_bufferResource(std::move(other._bufferResource)),
+_body(std::move(other._body)),
+_id(std::move(other._id)),
+_enableCollisions(std::move(other._enableCollisions)),
+_eventListener(std::move(other._eventListener)),
+_baseSize(std::move(other._baseSize))
 {
+    _updateFixtures();
+    _setTransform();
+    _eventListener->onCreate(this);
 }
 
 unsigned int Sprite::id() const
@@ -46,9 +81,9 @@ unsigned int Sprite::id() const
 
 void Sprite::moveTo(float x, float y) 
 {
-    SpriteState* nextState;
-    _useNextState(nextState);
-    return move(x - nextState->_x, y - nextState->_y);
+    _position = { x, y };
+    _setTransform();
+    _eventListener->onUpdate(this);
 }
 
 void Sprite::moveTo(glm::vec2 xy) 
@@ -58,12 +93,9 @@ void Sprite::moveTo(glm::vec2 xy)
 
 void Sprite::move(float x, float y) 
 {
-    SpriteState* nextState;
-    _useNextState(nextState);
-    nextState->_x = nextState->_x + x;
-    nextState->_y = nextState->_y + y;
-
-    updateModelMatrix();
+    _position += glm::vec2(x, y);
+    _setTransform();
+    _eventListener->onUpdate(this);
 }
 
 void Sprite::move(glm::vec2 xy) 
@@ -73,181 +105,218 @@ void Sprite::move(glm::vec2 xy)
 
 void Sprite::rotate(float radians) 
 {
-    SpriteState* nextState;
-    _useNextState(nextState);
-    nextState->_rotate = nextState->_rotate + radians;
-
-    updateModelMatrix();
+    _rotation += radians;
+    _setTransform();
+    _eventListener->onUpdate(this);
 }
 
 void Sprite::rotateTo(float radians) 
 {
-    SpriteState* nextState;
-    _useNextState(nextState);
-    return rotate(radians - nextState->_rotate);
+    _rotation = radians;
+    _setTransform();
+    _eventListener->onUpdate(this);
 }
 
 void Sprite::scaleBy(float x, float y) 
 {
-    SpriteState* nextState;
-    _useNextState(nextState);
-    nextState->_width *= x;
-    nextState->_height *= y;
-
-    updateModelMatrix();
+    return scaleBy(glm::vec2(x, y));
 }
 
 void Sprite::scaleBy(glm::vec2 xy) 
 {
-    return scaleBy(xy.x, xy.y);
+    _nextScale *= xy;
+    _updateFixtures();
+    _setTransform();
+    _eventListener->onUpdate(this);
 }
 
 void Sprite::setScale(float x, float y)
 {
-    SpriteState* nextState;
-    _useNextState(nextState);
-    nextState->_width = x;
-    nextState->_height = y;
-
-    updateModelMatrix();
+    return setScale(glm::vec2(x, y));
 }
 
 void Sprite::setOpacity(float opacity)
 {
-    SpriteState* nextState;
-    _useNextState(nextState);
-    nextState->_opacity = opacity;
-
-    updateOpacity();
+    _opacity = opacity;
+    _eventListener->onUpdate(this);
 }
 
 void Sprite::setScale(glm::vec2 xy)
 {
-    setScale(xy.x, xy.y);
+    _nextScale = xy;
+    _updateFixtures();
+    _setTransform();
+    _eventListener->onUpdate(this);
 }
 
-glm::vec2 Sprite::getBaseSize()
+glm::vec2 Sprite::getBaseSize() const
 {
-    return _sheet.getSize(_name.c_str());
+    return _baseSize;
 }
 
-std::string Sprite::getName()
+std::string Sprite::getName() const
 {
     return _name;
 }
 
-glm::vec2 Sprite::getPosition()
+glm::vec2 Sprite::getPosition() const
 {
-    SpriteState* state;
-    _useCurrentState(state);
-    return glm::vec2(state->_x, state->_y);
+    auto halfSize = _nextScale * _baseSize * 0.5f;
+    auto pos = _body->GetPosition();
+    return glm::vec2(pos.x * box2dScale, pos.y * box2dScale) - halfSize;
 }
 
-glm::vec2 Sprite::getCenter()
+glm::vec2 Sprite::getCenter() const
 {
-    SpriteState* state;
-    _useCurrentState(state);
-    
-    return glm::vec2(state->_x, state->_y) + glm::vec2(state->_width, state->_height) / 2.f;
+    return getPosition() + _scale * _baseSize * 0.5f;
 }
 
-glm::vec2 Sprite::getSize()
+glm::vec2 Sprite::getSize() const
 {
-    SpriteState* state;
-    _useCurrentState(state);
-    return glm::vec2(state->_width, state->_height);
+    return _scale * _baseSize;
 }
 
-float Sprite::getRotation()
+float Sprite::getRotation() const
 {
-    SpriteState* state;
-    _useCurrentState(state);
-    return state->_rotate;
+    return _body->GetAngle();
 }
 
-glm::vec2 Sprite::getNextPosition()
+void Sprite::debugDraw(LineRenderer* renderer) const
 {
-    SpriteState* state;
-    _useNextState(state);
-    return glm::vec2(state->_x, state->_y);
-}
+    auto fixture = _body->GetFixtureList();
 
-void Sprite::updateModelMatrix()
-{
-    SpriteState* state;
-    _useNextState(state);
+    while (fixture)
+    {
+        auto shape = fixture->GetShape();
 
-    glm::mat4* modelMatrix = _buffer.getModelMatrix(_id);
+        if (shape->GetType() == b2Shape::e_polygon)
+        {
+            auto polygon = (b2PolygonShape*)shape;
 
-    *modelMatrix = glm::mat4(1.0);
-    
-    *modelMatrix = glm::translate(*modelMatrix, glm::vec3(state->_x, state->_y, 0.0f));
+            for (int i = 0; i < polygon->m_count; i++)
+            {
+                auto& point = polygon->m_vertices[i];
+                auto& nextPoint = polygon->m_vertices[(i + 1) % polygon->m_count];
 
-    *modelMatrix = glm::translate(*modelMatrix, glm::vec3(0.5f * state->_width, 0.5f * state->_height, 0.0f));
-    *modelMatrix = glm::rotate(*modelMatrix, state->_rotate, glm::vec3(0.0f, 0.0f, 1.0f));
+                auto transform = _body->GetTransform();
 
-    *modelMatrix = glm::translate(*modelMatrix, glm::vec3(-0.5f * state->_width, -0.5f * state->_height, 0.0f));
+                auto matrix = glm::mat4(1.0);
+                matrix = glm::scale(matrix, glm::vec3(box2dScale, box2dScale, 1.0f));
+                matrix = glm::translate(matrix, glm::vec3(transform.p.x, transform.p.y, 0.0f));
+                matrix = glm::rotate(matrix, _body->GetAngle(), glm::vec3(0.0f, 0.0f, 1.0f));
+                
 
-    *modelMatrix = glm::scale(*modelMatrix, glm::vec3(state->_width, state->_height, 1.0f));
-}
+                auto transformedPoint = matrix * glm::vec4(point.x, point.y, 0.0f, 1.0f);
+                auto transformedNextPoint = matrix * glm::vec4(nextPoint.x, nextPoint.y, 0.0f, 1.0f);
 
-void Sprite::updateTextureIndex() 
-{
-    _buffer.setTexture(_id, _sheet.getSpriteIndex(_name.c_str()));   
-}
+                renderer->lineTo(glm::vec2(transformedPoint), glm::vec2(transformedNextPoint), glm::vec4(0.0f, 1.0f, 0.0f, 0.75f), 1.25);
+            }
+        }
 
-void Sprite::updateOpacity() 
-{
-    SpriteState* state;
-    _useNextState(state);
-
-    _buffer.setOpacity(_id, state->_opacity);
-}
-
-bool Sprite::pointIsInHitbox(float x, float y)
-{
-    glm::vec2 pos = _lastModel / glm::vec4(x, y, 0.0, 1.0);
-
-    if (!(pos.x < 1.f && pos.x >= 0.f && pos.y < 1.f && pos.y >= 0.f)) {
-        return false;
+        fixture = fixture->GetNext();
     }
-
-    return _sheet.pixelAt(_name.c_str(), pos.x, pos.y).a;
 }
 
-void Sprite::moveToEndOfBuffer() 
+void Sprite::update()
 {
-    _buffer.moveToEnd(_id);
-}
+    glm::mat4& model = *_buffer.getModelMatrix(_bufferResource.id);
+    _scale = _nextScale;
+    _position = getPosition();
+    _rotation = getRotation();
+    auto size = _nextScale * _baseSize;
+    
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(_position.x, _position.y, 0.0f));  
 
-void Sprite::init() 
-{
-    if (!_initialized) {
-        _initialized = true;
-        _states[_buffer.getStep()] = _states[_buffer.getNextStep()];
+    model = glm::translate(model, glm::vec3(0.5f * size.x, 0.5f * size.y, 0.0f)); 
+    model = glm::rotate(model, _rotation, glm::vec3(0.0f, 0.0f, 1.0f)); 
+    model = glm::translate(model, glm::vec3(-0.5f * size.x, -0.5f * size.y, 0.0f));
+
+    model = glm::scale(model, glm::vec3(size, 1.0f));
+
+    if (_body->GetType() != b2_staticBody) {
+        switchToDynamic();
     }
+}
+
+bool Sprite::pointIsInHitbox(float x, float y) const
+{
+    auto fixture = _body->GetFixtureList();
+    while(fixture)
+    {
+        if(fixture->TestPoint(b2Vec2(x * box2dScaleInv, y * box2dScaleInv)))
+        {
+            return true;
+        }
+        fixture = fixture->GetNext();
+    }
+    return false;
+}
+
+void Sprite::switchToKinematic() 
+{
+    _body->SetType(b2_kinematicBody);
+}
+
+void Sprite::switchToDynamic() 
+{
+    _body->SetType(b2_dynamicBody);
+}
+
+void Sprite::switchToStatic() 
+{
+    _body->SetType(b2_staticBody);
 }
 
 Sprite::~Sprite() 
 {
-    _buffer.destroyResource(_id);
+    _eventListener->onDelete(this);
+    _buffer.destroyResource(_bufferResource);
+    _body->GetWorld()->DestroyBody(_body);
 }
 
-void Sprite::_useNextState(SpriteState*& state)
+void Sprite::_updateFixtures() 
 {
-    _update();
-    state = &_states[(_lastStep + 1) % 2];
-}
-
-void Sprite::_useCurrentState(SpriteState*& state)
-{
-    _update();
-    state = &_states[_lastStep];
-}
-
-void Sprite::_update(){
-    if (_lastStep != _buffer.getStep()) {
-        _states[_buffer.getNextStep()] = _states[_buffer.getStep()];
+    auto& geometry = _sheet.getSpriteGeometry(_name.c_str());
+    b2Fixture* fixture = _body->GetFixtureList();
+    while(fixture) {
+        _body->DestroyFixture(fixture);
+        fixture = _body->GetFixtureList();
     }
-    _lastStep = _buffer.getStep();
+
+    auto triangles = geometry.getTriangles();
+
+    for(auto& triangle : triangles) {
+        b2PolygonShape shape;
+        b2Vec2 vertices[3];
+        
+        auto nextSize = _nextScale * _baseSize;
+
+        for(int i = 0; i < 3; i++) {
+            glm::vec2 transformedPoint = nextSize * triangle[i];
+
+            vertices[i] = b2Vec2(transformedPoint.x * box2dScaleInv, transformedPoint.y * box2dScaleInv);
+        }
+
+        shape.Set(vertices, 3);
+
+        b2FixtureDef fixtureDef;
+        fixtureDef.shape = &shape;
+        fixtureDef.density = 1.0f;
+        fixtureDef.filter.maskBits = _enableCollisions ? 0xFFFF : 0x0000;
+
+        _body->CreateFixture(&fixtureDef);
+    }
+}
+
+void Sprite::_setTransform() 
+{
+    if (_body->GetType() != b2_staticBody) {
+        switchToKinematic();
+        _body->SetAngularVelocity(0.0f);
+        _body->SetLinearVelocity(b2Vec2(0.0f, 0.0f));
+    }
+    
+    auto halfSize = _nextScale * _baseSize * 0.5f;
+    _body->SetTransform(b2Vec2((_position.x + halfSize.x) * box2dScaleInv, (_position.y + halfSize.y) * box2dScaleInv), _rotation);
 }

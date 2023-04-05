@@ -59,6 +59,7 @@ find_package(msdfgen CONFIG REQUIRED)
 find_package(msdf-atlas-gen CONFIG REQUIRED)
 find_package(Freetype REQUIRED)
 find_package(Fontconfig REQUIRED)
+find_package(box2d CONFIG REQUIRED)
 
 # Find the MinGW runtime DLLs.
 if(MINGW AND WIN32)

@@ -8,14 +8,18 @@ _window(window),
 _spriteSheet(spriteSheet)
 {}
 
-SpriteRenderer* SpriteFactory::createRenderer() {
+SpriteRenderer* SpriteFactory::createRenderer(b2World& world, Sprite::EventListener* eventListener)
+{
     _init();
 
     auto renderer = new SpriteRenderer(
         _window, 
         _spriteSheet, 
-        _shaderProgram
+        _shaderProgram,
+        world,
+        eventListener
     );
+
     renderer->init(_shaderProgramContext);
     
     return renderer;

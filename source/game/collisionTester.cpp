@@ -1,20 +1,41 @@
 #include "collisionTester.h"
 #include "../util/range.h"
 #include "../time.h"
+#include "constants.h"
 
 #include <iostream>
 
 #include <glm/glm.hpp>
 
 namespace {
-    const double CLEAR_BUTTON_FONT_SCALE = 2;
-    double frameCount = 0;
-    double lastFps = 0;
-    long long lastTime = Time::timestamp(); // last time in milliseconds
+    const bool DEBUG_DRAW = false;
+}
+
+namespace {
+    const double CLEAR_BUTTON_FONT_SCALE = 2.25;
+    int prevButtons = 0;
+    long long prevTime = Time::timestamp();
+    /**
+     * Determine if the button was pressed or released based on the previous and current state of the buttons.
+     * 
+     * @param prev The previous state of the buttons
+     * @param current The current state of the buttons
+     * @param button The button to check
+     * @param action The action to check. 1 for pressed, 0 for released
+     * 
+     * @return true if the button was pressed or released, false otherwise
+     * */ 
+    bool isNewButtonAction(int prev, int current, int button, int action) {
+        return 1 << button & (prev ^ current) & (prev ^ -action);
+    }
 
     std::string getFps() 
     {
-        int sampleTimeMs = 100;
+        static double frameCount = 0;
+        static double lastFps = 0;
+        static long long lastTime = Time::timestamp(); // last time in milliseconds
+
+        const int sampleTimeMs = 100;
         frameCount++;
         long long currentTime = Time::timestamp();
         if (currentTime - lastTime >= sampleTimeMs) {
@@ -28,12 +49,15 @@ namespace {
 
 CollisionTester::CollisionTester(
     const Window& window, 
-    SpriteRenderer& spriteRenderer,
-    SpriteRenderer& uiSpriteRenderer
+    SpriteFactory& spriteFactory
 ) : 
 _window(window), 
-_spriteRenderer(spriteRenderer),
-_uiSpriteRenderer(uiSpriteRenderer)
+_spriteRenderers{ 
+    std::unique_ptr<SpriteRenderer>(spriteFactory.createRenderer(_world, &_spriteEventListener)), 
+    std::unique_ptr<SpriteRenderer>(spriteFactory.createRenderer(_world, &_spriteEventListener)) 
+},
+_spriteRenderer(*_spriteRenderers[0]),
+_uiSpriteRenderer(*_spriteRenderers[1])
 {
 }
 
@@ -41,15 +65,19 @@ void CollisionTester::handleEvent(const Event& event)
 {
     if (event.type == EventType::MOUSE) {
         _handleMouseEvent(event);
+        prevButtons = event.button;
     }
 }
 
 void CollisionTester::render() 
 {
+    _spritePhysicsEngine.update();
+
     _textRenderer.setProjection(_uiScene.getProjection());
     _uiSpriteRenderer.setProjection(_uiScene.getProjection());
     _uiSpriteRenderer.setView(_uiScene.getView());
     _uiSpriteRenderer.draw();
+
     _clearButtonText.render();
 
     _spriteRenderer.setProjection(_scene.getProjection());
@@ -58,11 +86,28 @@ void CollisionTester::render()
     
     _fpsCounter.setText(getFps());
     _fpsCounter.render();
+
+    if (DEBUG_DRAW) {
+        _lineRenderer.setProjection(_scene.getProjection());
+        _lineRenderer.setView(_scene.getView());
+
+        for (auto& sprite : _droppedSprites) {
+            sprite->debugDraw(&_lineRenderer);
+        }
+
+        if (_selectedSpriteDragging) {
+            _selectedSpriteDragging->debugDraw(&_lineRenderer);
+        }
+        if (_selectedSpriteRotating) {
+            _selectedSpriteRotating->debugDraw(&_lineRenderer);
+        }
+    }
 }
 
 void CollisionTester::init() 
 {
     _textRenderer.init("Teorema");
+    _lineRenderer.init();
 
     _addPanel({ 100, 100 }, { 150, 150 }, "playerShip1_blue.png");
     _addPanel({ 100, 300 }, { 150, 150 }, "playerShip2_orange.png");
@@ -72,8 +117,9 @@ void CollisionTester::init()
 
     _fpsCounter.setFontScale(2);
     _fpsCounter.setBounds({ 10, 10 }, { 1000, 1000 });
-    // make it a pleasing yellow
     _fpsCounter.setColor({ 1, 0.9, 0.1, 1 });
+
+    prevTime = Time::timestamp();
 }
 
 void CollisionTester::_addPanel(glm::vec2 location, glm::vec2 size, std::string icon) 
@@ -82,9 +128,11 @@ void CollisionTester::_addPanel(glm::vec2 location, glm::vec2 size, std::string 
     _panels.push_back(std::unique_ptr<Panel>(panelPtr));
     Panel& panel = *panelPtr;
 
-    Sprite* spritePtr = _uiSpriteRenderer.createSprite(icon);
+    Sprite* spritePtr = _uiSpriteRenderer.createSprite(icon, true, false);
     _panelSprites.push_back(std::unique_ptr<Sprite>(spritePtr));
     Sprite& sprite = *spritePtr;
+
+    sprite.switchToStatic();
 
     panel.setBounds(location, location + size);
     glm::vec2 innerTopLeft, innerBottomRight;
@@ -94,14 +142,18 @@ void CollisionTester::_addPanel(glm::vec2 location, glm::vec2 size, std::string 
 
     glm::vec2 scaleFactor = panelSize / sprite.getBaseSize();
 
-    if (panelSize.x < panelSize.y) {
-        glm::vec2 scaledSize = sprite.getBaseSize() * scaleFactor.y;
-        sprite.setScale(scaledSize);
-        sprite.moveTo(innerTopLeft + glm::vec2((panelSize.x - scaledSize.x) / 2.0, 0));
+    if (sprite.getBaseSize().x < sprite.getBaseSize().y) {
+        auto scale = scaleFactor.y * glm::vec2(1.f);
+        auto size = sprite.getBaseSize() * scale;
+
+        sprite.setScale(scaleFactor.y * glm::vec2(1.f));
+        sprite.moveTo(((panelSize - size) / 2.f).x + innerTopLeft.x, innerTopLeft.y);
     } else {
-        glm::vec2 scaledSize = sprite.getBaseSize() * scaleFactor.x;
-        sprite.setScale(scaledSize);
-        sprite.moveTo(innerTopLeft + glm::vec2(0, (panelSize.y - scaledSize.y) / 2.0));
+        auto scale = scaleFactor.x * glm::vec2(1.f);
+        auto size = sprite.getBaseSize() * scale;
+
+        sprite.setScale(scaleFactor.x * glm::vec2(1.f));
+        sprite.moveTo(innerTopLeft.x, ((panelSize - size) / 2.f).y + innerTopLeft.y);
     }
 }
 
@@ -130,7 +182,7 @@ void CollisionTester::_createClearButton(glm::vec2 location, glm::vec2 size, std
     _clearButtonText.setAlignment(TextBox::ALIGN::CENTER);
     _clearButtonText.setFontScale(CLEAR_BUTTON_FONT_SCALE);
     _clearButtonText.setBounds(innerTopLeft, innerBottomRight);
-    _clearButtonText.setColor({ 0, 0, 0, 1 });
+    _clearButtonText.setColor({ 0.2, 0.2, 0.2, 1 });
     _clearButtonText.setText(text);
 
     auto textHeight = _clearButtonText.getTextSize().y;
@@ -143,8 +195,7 @@ void CollisionTester::_createClearButton(glm::vec2 location, glm::vec2 size, std
     _clearButtonText.setBounds({
         innerTopLeft.x,
         innerTopLeft.y + topTextPadding + offset
-    }, 
-    { 
+    }, { 
         innerBottomRight.x,
         innerBottomRight.y - topTextPadding + offset
     });
@@ -168,101 +219,177 @@ void CollisionTester::_handleMouseEvent(const Event &event)
 
 void CollisionTester::_handleMouseScroll(const Event& event)
 {
+    if (event.mods & KeyModifier::KEY_MOD_SHIFT) {
+        _scene.zoomIn(event.yoffset * 10);
+        return;
+    }
+
     // if hovering over a sprite, enlarge or shrink it
-    auto worldCoords = _uiScene.toWorldCoordinates({ event.x, event.y });
-
-    for (auto i : Util::Range((int)_droppedSprites.size() - 1, -1)) {
-        auto position = _droppedSprites[i]->getPosition();
-        auto size = _droppedSprites[i]->getSize();
-
-        if (worldCoords.x >= position.x && worldCoords.y >= position.y && worldCoords.x < position.x + size.x && worldCoords.y < position.y + size.y) {
-            auto newSize = size + ((float)event.yoffset * -0.1f * _droppedSprites[i]->getSize());
-            _droppedSprites[i]->setScale(newSize);
-            _droppedSprites[i]->moveTo(_droppedSprites[i]->getPosition() + (size - newSize) / 2.0f);
-            return;
+    auto worldCoords = _scene.toWorldCoordinates({ event.x, event.y });
+    bool foundSprite = _selectedSpriteDragging != nullptr;
+    bool spriteSelected = foundSprite;
+    
+    if (_selectedSpriteDragging) {
+        spriteSelected = false;
+        foundSprite = true;
+    } else if(!_isAnySpriteSelected()) {
+        _trySelectSprite(worldCoords, _selectedSpriteDragging);
+        if (_selectedSpriteDragging) {
+            spriteSelected = true;
+            foundSprite = true;
         }
+    }
+    if (foundSprite) {
+        auto size = _selectedSpriteDragging->getSize() / _selectedSpriteDragging->getBaseSize();
+        auto newSize = size + ((float)event.yoffset * -0.1f * size);
+
+        _selectedSpriteDragging->setScale(newSize);
+        _selectedSpriteDragging->moveTo(worldCoords - newSize * _selectedSpriteDragging->getBaseSize() / 2.0f);
+    }
+    if (spriteSelected) {
+        _putSpriteBack(_selectedSpriteDragging);
     }
 }
 
 void CollisionTester::_handleMouseRelease(const Event& event) 
 {
-if (event.isButtonPressed(MouseButton::BUTTON_LEFT) || !(_selectedSprite || _selectedPanelIndex.has_value())) {
-        return;
+    for (int i{MouseButton::BUTTON_0}; i <= MouseButton::BUTTON_LAST; i++) {
+        if (isNewButtonAction(prevButtons, event.button, i, 0)) {
+           _handleMouseRelease(event, i);
+        }
     }
-    _selectedPanelIndex = std::nullopt;
-    if (!_selectedSprite) {
-        return;
-    }
-
-    _droppedSprites.push_back(std::move(_selectedSprite));
-    // sort the sprites by id so that the last one added is on top
-    std::sort(_droppedSprites.begin(), _droppedSprites.end(), [](const auto& a, const auto& b) {
-        return a->id() < b->id();
-    });
-    _selectedSprite = nullptr;
 }
 
 void CollisionTester::_handleMousePress(const Event& event)
 {
-    if (!event.isButtonPressed(MouseButton::BUTTON_LEFT) || _selectedPanelIndex.has_value()) {
+    // For each mouse button, use isNewButtonAction to see if the button has been newly pressed.
+    for (int i{MouseButton::BUTTON_0}; i <= MouseButton::BUTTON_LAST; i++) {
+        if (isNewButtonAction(prevButtons, event.button, i, 1)) {
+           _handleMousePress(event, i);
+        }
+    }
+}
+
+void CollisionTester::_handleMousePress(const Event& event, int button)
+{
+    auto uiWorldCoords = _uiScene.toWorldCoordinates({ event.x, event.y });
+    auto worldCoords = _scene.toWorldCoordinates({ event.x, event.y });
+
+    if (button == MouseButton::BUTTON_LEFT) {
+        if (!_selectedPanelIndex.has_value()) {
+            _selectedPanelIndex = _getSelectedSpriteVariation(uiWorldCoords);
+            if (_selectedPanelIndex.has_value()) {
+                return;
+            }
+        }
+
+        // if we didn't click on a panel, check if we clicked on the clear button
+        glm::vec2 topLeft, bottomRight;
+        _clearButton->getOuterBounds(&topLeft, &bottomRight);
+        if (uiWorldCoords.x >= topLeft.x && uiWorldCoords.y >= topLeft.y && uiWorldCoords.x < bottomRight.x && uiWorldCoords.y < bottomRight.y) {
+            _droppedSprites.clear();
+            _selectedSpriteDragging.reset();
+            _selectedSpriteRotating.reset();
+            return;
+        }
+    }
+
+    if (_isAnySpriteSelected()) {
         return;
     }
 
-    _selectedPanelIndex = _getSelectedSpriteVariation(_uiScene.toWorldCoordinates({ event.x, event.y }));
-    if (_selectedPanelIndex.has_value()) {
+    if (button == MouseButton::BUTTON_LEFT) {
+        _trySelectSprite(worldCoords, _selectedSpriteDragging);
+    }
+    else if (button == MouseButton::BUTTON_RIGHT) {
+        _trySelectSprite(worldCoords, _selectedSpriteRotating);
+    }
+}
+
+void CollisionTester::_trySelectSprite(const glm::vec2& worldCoords, std::unique_ptr<Sprite>& spritePtr)
+{
+    if (spritePtr) {
         return;
     }
 
-    // if we didn't click on a panel, check if we clicked on the clear button
-    glm::vec2 topLeft, bottomRight;
-    _clearButton->getOuterBounds(&topLeft, &bottomRight);
-    if (event.x >= topLeft.x && event.y >= topLeft.y && event.x < bottomRight.x && event.y < bottomRight.y) {
-        _droppedSprites.clear();
+    for (auto it{_droppedSprites.rbegin() }; it != _droppedSprites.rend(); ++it) {
+        auto& sprite = *it;
 
-        return;
-    }
-
-
-    auto worldCoords = _uiScene.toWorldCoordinates({ event.x, event.y });
-    // if we didn't click on a panel or the clear button, check if we clicked on a dropped sprite. If we did, then 
-    // assign it to the selected sprite and remove it from the dropped sprites list.
-    for (auto i : Util::Range((int)_droppedSprites.size() -1, -1)) {
-        auto position = _droppedSprites[i]->getPosition();
-        auto size = _droppedSprites[i]->getSize();
-
-        if (worldCoords.x >= position.x && worldCoords.y >= position.y && worldCoords.x < position.x + size.x && worldCoords.y < position.y + size.y) {
-            _selectedSprite = std::move(_droppedSprites[i]);
-            _droppedSprites.erase(_droppedSprites.begin() + i);
+        if (sprite->pointIsInHitbox(worldCoords.x, worldCoords.y)) {
+            spritePtr = std::move(sprite);
+            _droppedSprites.erase(std::next(it).base());
             return;
         }
     }
 }
 
-void CollisionTester::_handleMouseMove(const Event& event) 
+void CollisionTester::_handleMouseRelease(const Event& event, int button)
 {
-    _window.setCursor(Window::Cursor::ARROW);
-    if (_selectedPanelIndex) {
-        if (!_selectedSprite) {
-            _selectedSprite.reset(_spriteRenderer.createSprite(_panelSprites[*_selectedPanelIndex]->getName()));
-        }
+    if (button == MouseButton::BUTTON_LEFT) {
+        _selectedPanelIndex = std::nullopt;
+        _putSpriteBack(_selectedSpriteDragging);
     }
+    else if (button == MouseButton::BUTTON_RIGHT) {
+        _putSpriteBack(_selectedSpriteRotating);
+    }
+}
 
-    if (_selectedSprite) {
-        _selectedSprite->moveTo(_uiScene.toWorldCoordinates({ event.x, event.y }) - _selectedSprite->getSize() / 2.f);
-
+void CollisionTester::_putSpriteBack(std::unique_ptr<Sprite>& spritePtr)
+{
+    if (!spritePtr) {
         return;
     }
 
-    auto position = _uiScene.toWorldCoordinates({ event.x, event.y });
-    std::vector<Panel*> panels{ _clearButton.get() };
-    panels.insert(panels.end(), (Panel**)&_panels[0], (Panel**)&_panels[_panels.size() - 1] + 1);
+    // insert the sprite back into the list of dropped sprites, by order of id
+    auto it = std::upper_bound(_droppedSprites.begin(), _droppedSprites.end(), spritePtr, [](const auto& a, const auto& b) {
+        return a->id() < b->id();
+    });
 
-    for (auto panel : panels) {
+    _droppedSprites.insert(it, std::move(spritePtr));
+    spritePtr = nullptr;
+}
+
+bool CollisionTester::_isAnySpriteSelected()
+{
+    return _selectedSpriteDragging || _selectedSpriteRotating;
+}
+
+void CollisionTester::_handleMouseMove(const Event& event) 
+{
+    auto worldCoords = _scene.toWorldCoordinates({ event.x, event.y });
+    auto uiWorldCoords = _uiScene.toWorldCoordinates({ event.x, event.y });
+
+    std::vector<std::reference_wrapper<Panel>> panels{ std::ref(*_clearButton) };
+    for (auto& panel : _panels) {
+        panels.push_back(std::ref(*panel));
+    }
+    
+    _window.setCursor(Window::Cursor::ARROW);
+    for (auto& panel : panels) {
         glm::vec2 topLeft, bottomRight;
-        panel->getOuterBounds(&topLeft, &bottomRight);
-        if (position.x >= topLeft.x && position.y >= topLeft.y && position.x < bottomRight.x && position.y < bottomRight.y) {
+        panel.get().getOuterBounds(&topLeft, &bottomRight);
+        if (uiWorldCoords.x >= topLeft.x && uiWorldCoords.y >= topLeft.y && uiWorldCoords.x < bottomRight.x && uiWorldCoords.y < bottomRight.y) {
             _window.setCursor(Window::Cursor::HAND);
-            return;
+            break;
         }
+    }
+
+    if (_selectedPanelIndex.has_value()) {
+        if (!_selectedSpriteDragging) {
+            _selectedSpriteDragging.reset(_spriteRenderer.createSprite(_panelSprites[*_selectedPanelIndex]->getName()));
+        }
+        _selectedPanelIndex = std::nullopt;
+    }
+
+    if (_selectedSpriteDragging) {
+        _selectedSpriteDragging->moveTo(worldCoords - _selectedSpriteDragging->getSize() / 2.f);
+        return;
+    }
+
+    if (_selectedSpriteRotating) {
+        auto spriteCenter = _selectedSpriteRotating->getCenter();
+        auto angle = glm::atan(worldCoords.y - spriteCenter.y, worldCoords.x - spriteCenter.x) + HALF_PI;
+        _selectedSpriteRotating->rotateTo(angle);
+        return;
     }
 }

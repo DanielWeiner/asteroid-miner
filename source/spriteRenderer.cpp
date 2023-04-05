@@ -1,5 +1,5 @@
 #include "spriteRenderer.h"
-
+#include "constants.h"
 #include "spriteFactory.h"
 #include "shaderProgram.h"
 #include "spriteBuffer.h"
@@ -7,6 +7,8 @@
 #include "spriteSheet.h"
 #include "shaderProgramContext.h"
 
+#include <box2d/b2_body.h>
+#include <box2d/b2_mouse_joint.h>
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
@@ -101,13 +103,17 @@ void main()
 }
 
 SpriteRenderer::SpriteRenderer(
-    const Window&        window,
-    const SpriteSheet&   spriteSheet,
-    ShaderProgram& shaderProgram
-) : 
+    const Window&          window,
+    const SpriteSheet&     spriteSheet,
+    ShaderProgram&         shaderProgram,
+    b2World&               world,
+    Sprite::EventListener* spriteEventListener
+) :  
 _window(window), 
 _spriteSheet(spriteSheet), 
-_shaderProgram(shaderProgram)
+_shaderProgram(shaderProgram),
+_world(world),
+_spriteEventListener(spriteEventListener)
 {}
 
 void SpriteRenderer::init(const ShaderProgramContext& shaderProgramContext) {
@@ -169,19 +175,23 @@ ShaderProgramContext SpriteRenderer::initializeShaderProgram(ShaderProgram& shad
     return context;
 }
 
-Sprite* SpriteRenderer::createSprite(std::string name, bool useLinearScaling)
+Sprite* SpriteRenderer::createSprite(std::string name, bool useLinearScaling, bool enableCollisions)
 {
-    auto spriteId = _spriteBuffer.createResource(useLinearScaling);
+    b2BodyDef bodyDef;
+    bodyDef.type = b2_dynamicBody;
+    bodyDef.enabled = true;
+    bodyDef.awake = true;
+
     auto sprite = new Sprite(
         name,
-        spriteId, 
-        _spriteSheet, 
-        _spriteBuffer
+        _spriteSheet,
+        _world.CreateBody(&bodyDef),
+        _spriteBuffer,
+        useLinearScaling,
+        enableCollisions,
+        _spriteEventListener
     );
     sprite->setOpacity(1.0);
-    sprite->updateTextureIndex();
-    sprite->setScale(sprite->getBaseSize());
-    sprite->init();
 
     return sprite;  
 }
@@ -201,5 +211,4 @@ void SpriteRenderer::draw() {
     _shaderProgram.drawInstances();
     _shaderProgram.unbindTextures();
     _shaderProgram.unbindVao();
-    _spriteBuffer.step();
 }

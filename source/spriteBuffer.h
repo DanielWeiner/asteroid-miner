@@ -1,6 +1,9 @@
 #ifndef SPRITE_BUFFER_H_
 #define SPRITE_BUFFER_H_
 
+class b2Body;
+
+#include "spriteResource.h"
 #include <vector>
 #include <unordered_map>
 #include <glm/glm.hpp>
@@ -12,27 +15,20 @@ public:
     void setModel(unsigned int id, glm::mat4 matrix);
     void setOpacity(unsigned int id, float opacity);
 
-    unsigned int size();
+    const unsigned int size() const;
 
-    float* modelData();
+    const float* modelData() const;
 
     glm::mat4* getModelMatrix(unsigned int id);
 
-    unsigned int createResource(bool useLinearScaling = true);
-    void destroyResource(unsigned int id);
-    void moveToEnd(unsigned int id);
+    SpriteResource createResource(b2Body& body, unsigned int textureSpriteIndex, bool useLinearScaling = true);
+    void         destroyResource(SpriteResource& resource);
 
-    unsigned int getStep();
-    unsigned int getNextStep();
-
-    void step();
-
-    static std::size_t dataSize();
+    static const int dataSize();
 private:
     std::unordered_map<unsigned int, unsigned int> _resourceIds;
     unsigned int                                   _lastResourceId = 0;
     std::vector<float>                             _models;
-    unsigned int                                   _step = 0;
 
     glm::mat4* _getModel(unsigned int id);
     float _getTexture(unsigned int id);

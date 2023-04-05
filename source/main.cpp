@@ -9,7 +9,8 @@
 #include "game/game.h"
 #include "game/collisionTester.h"
 #include <filesystem>
-
+#include <box2d/b2_world.h>
+#include <box2d/b2_body.h>
 
 int main(int argc, char** argv) 
 {
@@ -20,14 +21,14 @@ int main(int argc, char** argv)
     timeBeginPeriod(2);
     WinConsole::CreateNewConsole();
 #endif
-    Window window("Asteroid Miner", 2560, 1334);
+    std::vector<std::reference_wrapper<WindowedApplication>> apps;
+    Window window("Asteroid Miner", 2560, 1334, apps);
+
     SpriteSheet spriteSheet("data/sprites/sprites.json", "data/sprites/sprites.png");
     SpriteFactory spriteFactory(window, spriteSheet);
-    std::unique_ptr<SpriteRenderer> spriteRenderer(spriteFactory.createRenderer());
-    std::unique_ptr<SpriteRenderer> uiSpriteRenderer(spriteFactory.createRenderer());
-    CollisionTester collisionTester(window, *spriteRenderer, *uiSpriteRenderer);
+    CollisionTester collisionTester(window, spriteFactory);
 
-    window.addApplication(collisionTester);
+    apps.push_back(collisionTester);
     window.run();
 #ifdef _WIN32
     WinConsole::ReleaseConsole();

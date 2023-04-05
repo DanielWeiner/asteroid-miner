@@ -3,8 +3,10 @@
 
 class Window;
 #include <GLFW/glfw3.h>
+#include <initializer_list>
+#include <optional>
 
-namespace MouseButton {
+struct MouseButton {
     static const int
         BUTTON_LEFT   = GLFW_MOUSE_BUTTON_LEFT,
         BUTTON_MIDDLE = GLFW_MOUSE_BUTTON_MIDDLE,
@@ -20,9 +22,19 @@ namespace MouseButton {
         BUTTON_5      = GLFW_MOUSE_BUTTON_6,
         BUTTON_6      = GLFW_MOUSE_BUTTON_7,
         BUTTON_7      = GLFW_MOUSE_BUTTON_8;
-}
+};
 
-namespace Key {
+struct KeyModifier {
+    static const int
+        KEY_MOD_SHIFT     = GLFW_MOD_SHIFT,
+        KEY_MOD_CONTROL   = GLFW_MOD_CONTROL,
+        KEY_MOD_ALT       = GLFW_MOD_ALT,
+        KEY_MOD_SUPER     = GLFW_MOD_SUPER,
+        KEY_MOD_CAPS_LOCK = GLFW_MOD_CAPS_LOCK,
+        KEY_MOD_NUM_LOCK  = GLFW_MOD_NUM_LOCK;
+};
+
+struct Key {
     static const int 
         KEY_SPACE = 32,
         KEY_A     = 65,
@@ -53,7 +65,7 @@ namespace Key {
         KEY_Z     = 90,
         KEY_ESC   = 256,
         KEY_ENTER = 257;
-}
+};
 
 enum class EventType {
     UNKNOWN,
@@ -85,22 +97,39 @@ enum class EventAction {
 
 class Event {
     friend Window;
+    struct PartialEvent {
+        const std::optional<EventType>    type;
+        const std::optional<EventAction>  action;
+        const std::optional<int>          key;
+        const std::optional<int>          scancode;
+        const std::optional<unsigned int> codepoint;
+        const std::optional<double>       x;
+        const std::optional<double>       y;
+        const std::optional<int>          button;
+        const std::optional<double>       xoffset;
+        const std::optional<double>       yoffset;
+        const std::optional<int>          width;
+        const std::optional<int>          height;
+        const std::optional<int>          mods;
+    };
 public:
-    const EventType    type;
-    const EventAction  action;
-    const int          key;
-    const int          scancode;
-    const unsigned int codepoint;
-    const double       x;
-    const double       y;
-    const int          button;
-    const double       xoffset;
-    const double       yoffset;
-    const int          width;
-    const int          height;
-    const int          mods;
+    const EventType    type{EventType::UNKNOWN};
+    const EventAction  action{EventAction::UNKNOWN};
+    const int          key{-1};
+    const int          scancode{-1};
+    const unsigned int codepoint{(unsigned int)-1};
+    const double       x{-1};
+    const double       y{-1};
+    const int          button{-1};
+    const double       xoffset{-1};
+    const double       yoffset{-1};
+    const int          width{-1};
+    const int          height{-1};
+    const int          mods{-1};
 
     bool isButtonPressed(const int targetButton) const;
+
+    const Event add(const PartialEvent&& other) const;
 };
 
 #endif
